@@ -77,6 +77,7 @@ final class AppModel: ObservableObject {
 
     /// 打开窗口前的前台 app —— 「粘贴」要把它拉回来
     var previousApp: NSRunningApplication?
+    private var promptedAccessibility = false
 
     private let thumbs = NSCache<NSNumber, NSImage>()
     private var iconCache: [String: NSImage] = [:]
@@ -192,12 +193,13 @@ final class AppModel: ObservableObject {
     func paste(_ item: ClipItem, hideWindow: () -> Void) -> Bool {
         copy(item)
         hideWindow()
+        previousApp?.activate()
         guard Paster.accessibilityTrusted else {
-            Paster.promptAccessibility()
-            notice = "已复制；授权「辅助功能」后才能自动粘贴"
+            // 没授权：内容已在剪贴板、原 app 已拉回前台，用户按一下 ⌘V 即可；系统授权提示只弹一次
+            if !promptedAccessibility { promptedAccessibility = true; Paster.promptAccessibility() }
+            notice = "已复制并切回 \(previousApp?.localizedName ?? "原 app")；授权「辅助功能」后才会自动粘贴"
             return false
         }
-        previousApp?.activate()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { _ = Paster.sendCommandV() }
         return true
     }

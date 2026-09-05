@@ -13,8 +13,11 @@ struct GridPane: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 176, maximum: 260), spacing: 12)], spacing: 12) {
                     ForEach(model.items) { item in
                         CardView(item: item, model: model, selected: model.selection.contains(item.id))
+                            // ⌘/⇧ 点选走 TapGesture.modifiers（不依赖 NSApp.currentEvent，2026-09-05 实测后者在窗口非 key 时拿不到修饰键）
+                            .highPriorityGesture(TapGesture().modifiers(.command).onEnded { model.click(item.id, modifiers: .command) })
+                            .highPriorityGesture(TapGesture().modifiers(.shift).onEnded { model.click(item.id, modifiers: .shift) })
                             .onTapGesture(count: 2) { model.copy(item) }
-                            .onTapGesture { model.click(item.id, modifiers: NSApp.currentEvent?.modifierFlags ?? []) }
+                            .onTapGesture { model.click(item.id, modifiers: []) }
                             .contextMenu { ItemMenu(item: item, model: model, hideWindow: hideWindow) }
                     }
                 }
