@@ -1,5 +1,8 @@
 import AppKit
 import SwiftUI
+import os
+
+let clipLog = Logger(subsystem: "cyou.tianli.clipbook", category: "model")
 
 /// 面板与菜单共用的状态。所有落盘走 ClipStore；这里只做「查出来给界面」与「按键→动作」。
 @MainActor
@@ -47,6 +50,7 @@ final class AppModel: ObservableObject {
         do {
             items = try store.list(query: query)
             total = try store.count()
+            clipLog.debug("reload query=\(self.query, privacy: .public) items=\(self.items.count) total=\(self.total)")
         } catch {
             notice = "读取失败：\(error)"
             items = []

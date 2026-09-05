@@ -90,13 +90,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                                      andEventID: AEEventID(kAEGetURL))
     }
 
-    /// clipbook://show · clipbook://hide · clipbook://toggle —— 给 Hammerspoon / Raycast / 自动化用
+    /// clipbook://show[?q=关键词] · clipbook://hide · clipbook://toggle —— 给 Hammerspoon / Raycast / 自动化用
     @objc func handleURL(_ event: NSAppleEventDescriptor, _ reply: NSAppleEventDescriptor) {
         guard let s = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
               let url = URL(string: s) else { return }
         MainActor.assumeIsolated {
+            let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "q" }?.value
             switch url.host {
-            case "show":   panel.show()
+            case "show":
+                panel.show()
+                if let q, !q.isEmpty { AppModel.shared.query = q }
             case "hide":   panel.hide()
             case "toggle": panel.toggle()
             default: break
