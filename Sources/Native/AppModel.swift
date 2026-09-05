@@ -193,7 +193,11 @@ final class AppModel: ObservableObject {
     func paste(_ item: ClipItem, hideWindow: () -> Void) -> Bool {
         copy(item)
         hideWindow()
-        previousApp?.activate()
+        if let app = previousApp {
+            // macOS 14+ 协作式激活：先让位再激活，否则另一个 app 拉不到前台（2026-09-05 实测）
+            NSApp.yieldActivation(to: app)
+            app.activate()
+        }
         guard Paster.accessibilityTrusted else {
             // 没授权：内容已在剪贴板、原 app 已拉回前台，用户按一下 ⌘V 即可；系统授权提示只弹一次
             if !promptedAccessibility { promptedAccessibility = true; Paster.promptAccessibility() }
