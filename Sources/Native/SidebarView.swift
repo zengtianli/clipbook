@@ -95,7 +95,6 @@ struct CollectionEditor: View {
             }
             HStack {
                 Spacer()
-                Button("取消") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button(collection == nil ? "新建" : "保存") {
                     let n = name.trimmingCharacters(in: .whitespaces)
                     guard !n.isEmpty else { return }
@@ -103,7 +102,6 @@ struct CollectionEditor: View {
                     else { _ = model.createCollection(name: n, color: color, icon: icon) }
                     dismiss()
                 }
-                .keyboardShortcut(.defaultAction)
                 .accessibilityIdentifier("createCollection")
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
             }
