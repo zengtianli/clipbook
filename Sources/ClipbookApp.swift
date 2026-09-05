@@ -1,68 +1,36 @@
 import AppKit
 import SwiftUI
-import ServiceManagement
 
-/// Clipbook —— 自用剪贴板历史。菜单栏常驻（无 Dock 图标），⌘⇧V 唤出面板，回车粘贴。
+/// Clipbook —— 自用剪贴板库（PastePal 形态）。菜单栏常驻，点图标开主窗口；左筛、中挑、右改。
 ///
-/// 全 Swift 原生，无后端进程、无网络。数据落 ~/Library/Application Support/Clipbook/。
-/// 只做 Deck 里真在用的 20%：记录（文本/链接/图片/文件）· 搜索 · 置顶 · 回车粘贴。
-/// 不做：AI、跨设备同步、SmartRules、标签。
+/// 全 Swift 原生。除「抓链接标题」外无网络。数据落 ~/Library/Application Support/Clipbook/。
+/// **不设任何快捷键**（用户 2026-09-05 明确要求）。
 @main
 enum Boot {
     static func main() {
         if CommandLine.arguments.contains("--selftest") {
             exit(SelfTest.run())
         }
-        ClipbookApp.main()
-    }
-}
-
-struct ClipbookApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-
-    var body: some Scene {
-        MenuBarExtra {
-            MenuContent()
-        } label: {
-            Image(systemName: "doc.on.clipboard")
+        MainActor.assumeIsolated {
+            let app = NSApplication.shared
+            let delegate = AppDelegate()
+            app.delegate = delegate
+            app.run()
         }
     }
 }
 
-struct MenuContent: View {
-    @ObservedObject private var model = AppModel.shared
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
-
-    var body: some View {
-        Button("打开面板　\(HotKeyCenter.shared.label)") { AppDelegate.shared.panel.show() }
-        Toggle("暂停记录", isOn: $model.paused)
-        Divider()
-        Text("\(model.total) 条记录").foregroundStyle(.secondary)
-        Text(HotKeyCenter.shared.status).foregroundStyle(.secondary)
-        if !Paster.accessibilityTrusted {
-            Button("授权辅助功能（回车自动粘贴）…") { Paster.promptAccessibility() }
-        }
-        Divider()
-        Toggle("开机自启", isOn: $launchAtLogin)
-            .onChange(of: launchAtLogin) { _, on in
-                do { if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } }
-                catch { launchAtLogin = SMAppService.mainApp.status == .enabled }
-            }
-        Button("清空历史（保留置顶）…") { AppDelegate.shared.confirmClear() }
-        Button("打开数据目录") { NSWorkspace.shared.open(model.store.home) }
-        Divider()
-        Button("退出 Clipbook") { NSApp.terminate(nil) }.keyboardShortcut("q")
-    }
-}
-
-final class AppDelegate: NSObject, NSApplicationDelegate {
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static var shared: AppDelegate!
-    var panel: PanelController!
+    private var statusItem: NSStatusItem!
+    private var window: NSWindow!
+    private var settingsWindow: NSWindow?
+    private let menu = NSMenu()
 
     override init() {
         super.init()
         AppDelegate.shared = self
-        // 数据库开不了就直说并退出 —— 一个默默不记录的剪贴板工具比没有更糟。
         MainActor.assumeIsolated {
             do {
                 AppModel.shared = try AppModel()
@@ -78,19 +46,108 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
-            panel = PanelController(model: AppModel.shared)
             AppModel.shared.startWatching()
-            HotKeyCenter.shared.register()
-        }
-        NotificationCenter.default.addObserver(forName: HotKeyCenter.summonNotification, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { AppDelegate.shared.panel.toggle() }
+            buildStatusItem()
+            buildWindow()
+            if ProcessInfo.processInfo.environment["CLIPBOOK_SHOW_ON_LAUNCH"] == "1" { showWindow() }
+            // 首次启动且本机有 Deck → 自动把它的历史导进来（用户 2026-09-05 拍板；只读 Deck 的库）
+            if AppModel.shared.deckImportedAt == nil, DeckImporter.available() { AppModel.shared.importDeck() }
         }
         NSAppleEventManager.shared().setEventHandler(self, andSelector: #selector(handleURL(_:_:)),
-                                                     forEventClass: AEEventClass(kInternetEventClass),
-                                                     andEventID: AEEventID(kAEGetURL))
+                                                     forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
     }
 
-    /// clipbook://show[?q=关键词] · clipbook://hide · clipbook://toggle —— 给 Hammerspoon / Raycast / 自动化用
+    // MARK: 菜单栏：左键开窗口，右键出菜单
+
+    private func buildStatusItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        if let b = statusItem.button {
+            b.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clipbook")
+            b.target = self
+            b.action = #selector(statusClicked)
+            b.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
+        menu.delegate = self
+    }
+
+    @objc private func statusClicked() {
+        if NSApp.currentEvent?.type == .rightMouseUp {
+            rebuildMenu()
+            statusItem.menu = menu
+            statusItem.button?.performClick(nil)
+            statusItem.menu = nil
+        } else {
+            toggleWindow()
+        }
+    }
+
+    private func rebuildMenu() {
+        menu.removeAllItems()
+        let s = AppSettings.shared
+        menu.addItem(withTitle: "打开 Clipbook", action: #selector(menuOpen), keyEquivalent: "")
+        let pause = menu.addItem(withTitle: "暂停记录", action: #selector(menuTogglePause), keyEquivalent: "")
+        pause.state = s.paused ? .on : .off
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "\(AppModel.shared.totalAll) 条记录", action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "退出 Clipbook", action: #selector(menuQuit), keyEquivalent: "")
+        for it in menu.items { it.target = self }
+    }
+
+    @objc private func menuOpen() { showWindow() }
+    @objc private func menuTogglePause() { AppSettings.shared.paused.toggle(); AppModel.shared.applySettings() }
+    @objc private func menuSettings() { showSettings() }
+    @objc private func menuQuit() { NSApp.terminate(nil) }
+
+    // MARK: 主窗口
+
+    private func buildWindow() {
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1180, height: 720),
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                          backing: .buffered, defer: false)
+        window.title = "Clipbook"
+        window.titlebarAppearsTransparent = false
+        window.minSize = NSSize(width: 960, height: 520)
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.setFrameAutosaveName("ClipbookMain")
+        window.contentView = NSHostingView(rootView: MainView(model: AppModel.shared, hideWindow: { [weak self] in self?.window.orderOut(nil) }))
+        window.center()
+    }
+
+    func showWindow() {
+        let front = NSWorkspace.shared.frontmostApplication
+        if front?.bundleIdentifier != Bundle.main.bundleIdentifier { AppModel.shared.previousApp = front }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    func toggleWindow() {
+        if window.isVisible && window.isKeyWindow { window.orderOut(nil) } else { showWindow() }
+    }
+
+    func showSettings() {
+        if settingsWindow == nil {
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 620),
+                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            w.title = "Clipbook 设置"
+            w.isReleasedWhenClosed = false
+            w.contentView = NSHostingView(rootView: SettingsView(model: AppModel.shared, settings: AppSettings.shared))
+            w.center()
+            settingsWindow = w
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    /// 关窗口 = 隐藏，不退出（菜单栏常驻）
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        sender.orderOut(nil)
+        return false
+    }
+
+    /// clipbook://show[?q=关键词] · clipbook://hide · clipbook://toggle · clipbook://settings
     @objc func handleURL(_ event: NSAppleEventDescriptor, _ reply: NSAppleEventDescriptor) {
         guard let s = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
               let url = URL(string: s) else { return }
@@ -98,10 +155,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "q" }?.value
             switch url.host {
             case "show":
-                panel.show()
-                if let q, !q.isEmpty { AppModel.shared.query = q }
-            case "hide":   panel.hide()
-            case "toggle": panel.toggle()
+                showWindow()
+                if let q { AppModel.shared.search = q }
+            case "hide":     window.orderOut(nil)
+            case "toggle":   toggleWindow()
+            case "settings": showSettings()
             default: break
             }
         }
@@ -110,7 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func confirmClear() {
         let a = NSAlert()
         a.messageText = "清空剪贴板历史？"
-        a.informativeText = "置顶的条目会保留，其余全部删除，不可恢复。"
+        a.informativeText = "置顶的和收藏夹里的会保留，其余全部删除，不可恢复。"
         a.addButton(withTitle: "清空")
         a.addButton(withTitle: "取消")
         a.alertStyle = .warning
@@ -120,3 +178,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 }
+
+extension AppDelegate: NSMenuDelegate {}

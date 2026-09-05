@@ -4,9 +4,8 @@
 #
 # 门，全部 fail-closed（禁 `|| true` / 禁 `2>/dev/null`）：
 #   ① 舰队通用 CodingKeys × convertFromSnakeCase 静态门
-#   ② 全局热键候选表门（总部 hotkeys.yaml，两两零交集）
-#   ③ 二进制 --selftest（Store 去重/搜索/留存 + Watcher 抓取优先级）
-#   ④ 装机后 Info.plist 回读 ⟺ catalog.yaml
+#   ② 二进制 --selftest（Store/Classifier/Importer/Watcher 全走生产函数）
+#   ③ 装机后 Info.plist 回读 ⟺ catalog.yaml
 
 if [ "${SKIP_FLEET_GATE:-0}" != "1" ]; then
   _GATE="$HOME/Dev/tools/dev/lib/tools/macapp/check_codingkeys.py"
@@ -16,14 +15,6 @@ if [ "${SKIP_FLEET_GATE:-0}" != "1" ]; then
   else
     echo "❌ 找不到舰队门 ${_GATE} —— 拒绝静默跳过"; exit 1
   fi
-fi
-
-_HKGATE="$HOME/Dev/tools/dev/lib/tools/macapp/hotkey_registry.py"
-if [[ -f "$_HKGATE" ]]; then
-  /opt/homebrew/bin/python3 "$_HKGATE" --quiet \
-    || { echo "❌ 全局热键候选表门未过，拒绝构建 —— 本门无逃生开关"; exit 1; }
-else
-  echo "❌ 找不到热键门 $_HKGATE —— 拒绝静默跳过"; exit 1
 fi
 
 set -euo pipefail
@@ -113,4 +104,4 @@ if [ "$_GOT_DN" != "$DISPLAY_NAME" ] || [ "$_GOT_ID" != "$BUNDLE_ID" ]; then
   echo "❌ 装机 plist 与 catalog.yaml 漂移：[$_GOT_DN/$_GOT_ID] vs [$DISPLAY_NAME/$BUNDLE_ID]"; exit 1
 fi
 echo "✅ 已安装 → ${DEST}"
-echo "   启动: open -a \"${DISPLAY_NAME}\"   菜单栏常驻；${DISPLAY_NAME} 面板 = 全局快捷键（首选 ⌘⇧V）或 open 'clipbook://show'"
+echo "   启动: open -a \"${DISPLAY_NAME}\"   菜单栏常驻，点图标开窗口；自动化 open 'clipbook://show'（无快捷键）"

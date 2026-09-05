@@ -1,20 +1,20 @@
 import AppKit
 import ApplicationServices
 
-/// 把一条记录写回剪贴板，并（授权了辅助功能时）替用户按一下 ⌘V。
-///
-/// 面板是 nonactivating 的 NSPanel，所以从头到尾前台 app 都是用户原来那个 —— ⌘V 直接落在它身上，
-/// 不需要「记住上一个 app 再切回去」那套。
+/// 把一条记录写回剪贴板；「粘贴」按钮再把用户原来的 app 拉回前台并补一下 ⌘V（需辅助功能授权）。
 enum Paster {
-    enum Outcome { case pasted, copiedOnly }
-
     /// 写剪贴板。返回写完后的 changeCount，Watcher 用它跳过自己这次写入。
     @discardableResult
     static func write(_ item: ClipItem, store: ClipStore) -> Int {
         let pb = NSPasteboard.general
         pb.clearContents()
         switch item.kind {
-        case .text, .link:
+        case .text, .link, .code, .color:
+            pb.setString(item.text, forType: .string)
+        case .richText:
+            if let url = store.rtfURL(item), let rtf = try? Data(contentsOf: url) {
+                pb.setData(rtf, forType: .rtf)
+            }
             pb.setString(item.text, forType: .string)
         case .file:
             let urls = item.filePaths.map { URL(fileURLWithPath: $0) as NSURL }
@@ -29,7 +29,6 @@ enum Paster {
 
     static var accessibilityTrusted: Bool { AXIsProcessTrusted() }
 
-    /// 弹系统那个「打开辅助功能设置」提示（只在用户真按了粘贴、又没授权时才弹一次）。
     static func promptAccessibility() {
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(opts)

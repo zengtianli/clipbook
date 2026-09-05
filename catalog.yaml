@@ -1,27 +1,32 @@
 name: clipbook
 domain: apps-mac
 function: >-
-  自用剪贴板历史（替代 Deck）。菜单栏常驻，⌘⇧V 唤出 nonactivating 浮动面板：
-  记录文本/链接/图片/文件（优先级 文件>文本>图片，跳过密码管理器的 Concealed/Transient），
-  子串搜索、置顶、回车粘贴（授权辅助功能后自动补 ⌘V）、同内容去重顶到最上、超 5000 条淘汰。
-  **全 Swift 原生**（swiftc 直编，无 SPM / 无 xcodeproj / 无后端进程 / 无网络）。
-  只做 Deck 实测在用的 20%：不做 AI、跨设备同步、SmartRules、标签。
-public_api: "TL Clipbook.app（菜单栏常驻）· 全局 ⌘⇧V · clipbook://show|hide|toggle · build/Clipbook --selftest"
+  自用剪贴板库（PastePal 形态，替代 Deck）。菜单栏常驻，点图标开主窗口：左栏按类型/来源 app/收藏夹筛，
+  中栏自适应网格多选，右栏直接改正文（保存覆盖 / 另存新条）、改标题、一键转换、加收藏夹、复制/粘贴。
+  记录文本/富文本/链接/图片/文件/代码/颜色，同内容去重顶上，置顶与收藏夹永不淘汰；首次启动自动导入 Deck 历史（只读）。
+  **全 Swift 原生**（swiftc 直编，无 SPM / 无 xcodeproj / 无后端进程）；唯一网络访问 = 抓链接标题（可关）。
+  **不设任何快捷键**（用户 2026-09-05 明确要求）。
+public_api: "TL Clipbook.app（菜单栏常驻，点图标开窗口）· clipbook://show[?q=]|hide|toggle|settings · build/Clipbook --selftest"
 key_scripts:
-  - Sources/ClipbookApp.swift          # @main：--selftest 分流；MenuBarExtra 菜单；AppDelegate 起面板/热键/URL scheme
-  - Sources/Native/Store.swift         # SQLite 落盘：去重顶上、LIKE 搜索（含转义）、置顶、留存淘汰、blob 管理
-  - Sources/Native/Watcher.swift       # 轮询 changeCount；extract() 纯函数 = 抓取优先级 SSOT
-  - Sources/Native/Paster.swift        # 写回剪贴板 + CGEvent ⌘V（需辅助功能，不假装成功）
-  - Sources/Native/HotKey.swift        # Carbon 全局热键候选表（登记在 ~/Dev/tools/configs/hotkeys.yaml）
-  - Sources/Native/Panel.swift         # nonactivating NSPanel：不激活本 app，粘贴落在用户原 app
-  - Sources/Native/PanelView.swift     # SwiftUI 面板：搜索 / 列表 / 预览 / 底栏状态（如实报未授权、Deck 在跑）
-  - Sources/Native/AppModel.swift      # 界面状态与动作
-  - Sources/Native/SelfTest.swift      # --selftest 判据（build.sh 阻断门）
-  - build.sh                           # 四道 fail-closed 门 + swiftc + 打包 + 签名 + 装机
+  - Sources/ClipbookApp.swift          # @main：--selftest 分流；NSStatusItem（左键开窗/右键菜单）；主窗口/设置窗口；URL scheme；首次启动导 Deck
+  - Sources/Native/Store.swift         # SQLite：去重顶上、编辑覆盖（重识别类型/撞重删另一条）、收藏夹、合并、筛选分页、留存淘汰、blob 管理
+  - Sources/Native/Classifier.swift    # 文本家族类型识别 SSOT（link / color / code / text），Watcher·编辑·导入三处共用
+  - Sources/Native/Watcher.swift       # 轮询 changeCount；extract() 纯函数 = 抓取优先级（文件>文本(带RTF)>图片）+ 忽略名单 + 纯文本模式
+  - Sources/Native/DeckImporter.swift  # 只读 Deck 库一次性导入（拷到临时目录再开）
+  - Sources/Native/LinkTitle.swift     # 抓链接页面标题（唯一网络访问，可关）
+  - Sources/Native/Paster.swift        # 写回剪贴板（含 RTF/文件/图片）+ CGEvent ⌘V（需辅助功能，不假装成功）
+  - Sources/Native/Settings.swift      # UserDefaults 设置（无快捷键项）
+  - Sources/Native/AppModel.swift      # 界面状态与动作（筛选/分页/多选/编辑/转换/收藏夹/导入）
+  - Sources/Native/MainView.swift      # 三栏 NavigationSplitView
+  - Sources/Native/SidebarView.swift   # 左栏筛选 + 收藏夹编辑
+  - Sources/Native/GridView.swift      # 中栏网格卡片 + 批量条 + 搜索/分页
+  - Sources/Native/DetailView.swift    # 右栏编辑器（保存/另存/转换/收藏/复制/粘贴）
+  - Sources/Native/SettingsView.swift  # 设置窗口
+  - Sources/Native/SelfTest.swift      # --selftest 判据（build.sh 阻断门，含 Deck 结构夹具）
+  - build.sh                           # 三道 fail-closed 门 + swiftc + 打包 + 签名 + 装机
   - icon/AppIcon.icns                  # 图标 SSOT（make_icon.py 生成）
 depends_on:
   - Dev/tools/dev/lib/tools/macapp/check_codingkeys.py   # 构建期门①
-  - Dev/tools/dev/lib/tools/macapp/hotkey_registry.py    # 构建期门②
   - Dev/tools/dev/lib/tools/macapp/make_icon.py          # 图标生成（一次性）
 consumers: []
 data_sources:
