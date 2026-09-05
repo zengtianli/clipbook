@@ -5,7 +5,7 @@ import SQLite3
 ///
 /// Deck 表 ClipboardHistory（2026-09-05 实测 1.4.5）：
 ///   item_type ∈ text/image/file/richText/url/code；data = 文本字节 / RTF / 路径按行；
-///   图片 data 为空，PNG 在 Blobs/<blob_path ?? unique_id>；timestamp = epoch 秒；
+///   图片 data 为空，原图在 Blobs/<blob_path ?? unique_id>（只保留最近的），更早的只剩 preview_data 缩略；timestamp = epoch 秒；
 ///   app_path 可推 bundle id；custom_title 是用户标题；is_encrypted/is_temporary 跳过。
 enum DeckImporter {
     struct Report: CustomStringConvertible {
@@ -43,7 +43,7 @@ enum DeckImporter {
         var stmt: OpaquePointer?
         defer { sqlite3_finalize(stmt) }
         let sql = """
-        SELECT unique_id, item_type, data, timestamp, app_path, app_name, custom_title, blob_path, search_text
+        SELECT unique_id, item_type, data, timestamp, app_path, app_name, custom_title, blob_path, preview_data
         FROM ClipboardHistory WHERE is_encrypted = 0 AND is_temporary = 0 ORDER BY timestamp ASC, id ASC
         """
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -59,10 +59,12 @@ enum DeckImporter {
             let data = n > 0 ? Data(bytes: sqlite3_column_blob(stmt, 2), count: n) : Data()
             let ts = Date(timeIntervalSince1970: Double(sqlite3_column_int64(stmt, 3)))
             let appPath = str(4), appName = str(5), title = str(6), blobPath = str(7)
+            let pn = Int(sqlite3_column_bytes(stmt, 8))
+            let preview = pn > 0 ? Data(bytes: sqlite3_column_blob(stmt, 8), count: pn) : Data()
             let bundle = Bundle(path: appPath)?.bundleIdentifier ?? ""
             do {
                 guard let cap = capture(itemType: itemType, data: data, uniqueID: uniqueID, blobPath: blobPath, blobs: blobs,
-                                        appName: appName, appBundle: bundle, title: title) else { report.skipped += 1; continue }
+                                        preview: preview, appName: appName, appBundle: bundle, title: title) else { report.skipped += 1; continue }
                 try store.ingest(cap, at: ts, trim: false)
                 report.imported += 1
                 report.byKind[cap.kind, default: 0] += 1
@@ -76,7 +78,7 @@ enum DeckImporter {
 
     /// 一行 Deck 记录 → Capture（纯函数，SelfTest 直接喂）
     static func capture(itemType: String, data: Data, uniqueID: String, blobPath: String, blobs: URL,
-                        appName: String, appBundle: String, title: String) -> Capture? {
+                        preview: Data = Data(), appName: String, appBundle: String, title: String) -> Capture? {
         switch itemType {
         case "text", "url", "code":
             guard let s = String(data: data, encoding: .utf8), !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
@@ -93,9 +95,10 @@ enum DeckImporter {
             guard let s = String(data: data, encoding: .utf8), !s.isEmpty else { return nil }
             return Capture(kind: .file, text: s, appName: appName, appBundle: appBundle, title: title)
         case "image":
+            // Deck 只给最近的图留了原图（Blobs/），更早的只剩 preview_data 缩略 —— 有原图用原图，没有就用缩略，别丢
             let name = blobPath.isEmpty ? uniqueID : blobPath.lastPathComponent
-            guard let png = try? Data(contentsOf: blobs.appendingPathComponent(name)),
-                  let rep = NSBitmapImageRep(data: png) else { return nil }
+            let png = (try? Data(contentsOf: blobs.appendingPathComponent(name))) ?? (preview.isEmpty ? nil : preview)
+            guard let png, let rep = NSBitmapImageRep(data: png) else { return nil }
             let normalized = png.starts(with: [0x89, 0x50, 0x4E, 0x47]) ? png : rep.representation(using: .png, properties: [:])
             guard let normalized else { return nil }
             return Capture(kind: .image, text: "图片 \(rep.pixelsWide)×\(rep.pixelsHigh)", imagePNG: normalized,

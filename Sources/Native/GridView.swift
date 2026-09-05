@@ -10,7 +10,7 @@ struct GridPane: View {
         VStack(spacing: 0) {
             if model.selection.count > 1 { batchBar; Divider() }
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190, maximum: 280), spacing: 12)], spacing: 12) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 176, maximum: 260), spacing: 12)], spacing: 12) {
                     ForEach(model.items) { item in
                         CardView(item: item, model: model, selected: model.selection.contains(item.id))
                             .onTapGesture(count: 2) { model.copy(item) }
@@ -36,14 +36,16 @@ struct GridPane: View {
     private var batchBar: some View {
         HStack(spacing: 12) {
             Text("已选 \(model.selection.count) 条").font(.callout.weight(.medium))
-            Button("全选本页") { model.selectAll() }
+            Button("全选本页") { model.selectAll() }.accessibilityIdentifier("selectAll")
             Menu("加入收藏夹") {
                 ForEach(model.collections) { c in Button(c.name) { model.add(model.selection, to: c.id) } }
                 if model.collections.isEmpty { Text("还没有收藏夹") }
             }
+            .accessibilityIdentifier("batchAddToCollection")
             Button("合并成一条") { model.merge(model.items.filter { model.selection.contains($0.id) }.map(\.id)) }
                 .disabled(model.items.filter { model.selection.contains($0.id) }.contains { $0.kind == .image || $0.kind == .file })
-            Button("删除", role: .destructive) { model.delete(model.selection) }
+                .accessibilityIdentifier("merge")
+            Button("删除", role: .destructive) { model.delete(model.selection) }.accessibilityIdentifier("batchDelete")
             Spacer()
             Button("取消选择") { model.selection = [] }
         }

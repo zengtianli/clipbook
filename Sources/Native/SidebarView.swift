@@ -45,7 +45,7 @@ struct SidebarView: View {
                     }
                 }
                 Button { newCollection = true } label: { Label("新建收藏夹", systemImage: "plus") }
-                    .buttonStyle(.plain).foregroundStyle(.secondary)
+                    .buttonStyle(.plain).foregroundStyle(.secondary).accessibilityIdentifier("newCollection")
             } header: { Text("收藏夹") }
         }
         .listStyle(.sidebar)
@@ -78,7 +78,7 @@ struct CollectionEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(collection == nil ? "新建收藏夹" : "编辑收藏夹").font(.headline)
-            TextField("名字", text: $name)
+            TextField("名字", text: $name).accessibilityIdentifier("collectionName")
             HStack(spacing: 8) {
                 ForEach(Self.icons, id: \.self) { i in
                     Image(systemName: i).frame(width: 26, height: 26)
@@ -104,6 +104,7 @@ struct CollectionEditor: View {
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("createCollection")
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }

@@ -40,8 +40,8 @@ struct SettingsView: View {
             Section("从 Deck 导入") {
                 if DeckImporter.available() {
                     HStack {
-                        Button(model.importing ? "导入中…" : "导入 Deck 历史") { model.importDeck() }.disabled(model.importing)
-                        if let at = model.deckImportedAt { Text("上次导入 \(at.prefix(16))").font(.caption).foregroundStyle(.secondary) }
+                        Button(model.importing ? "导入中…" : "导入 Deck 历史") { model.importDeck() }.disabled(model.importing).accessibilityIdentifier("importDeck")
+                        if let at = model.deckImportedAt, let d = ISO8601DateFormatter().date(from: at) { Text("上次导入 \(Fmt.full(d))").font(.caption).foregroundStyle(.secondary) }
                     }
                     if let r = model.importReport { Text(r).font(.caption) }
                     Text("只读 Deck 的库，不改不删；重复内容自动合并，可以重复导。").font(.caption).foregroundStyle(.secondary)

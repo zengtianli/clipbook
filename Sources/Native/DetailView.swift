@@ -151,16 +151,16 @@ struct DetailPane: View {
         HStack(spacing: 8) {
             if item.kind.editable {
                 Button("保存") { save(item) }
-                    .keyboardShortcut("s", modifiers: .command)
+                    .accessibilityIdentifier("save")
                     .disabled(!(dirty(item) || titleDraft != item.title || (item.kind == .richText && editingRich)))
-                Button("另存新条") { model.saveAsNew(from: item, text: draft) }.disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button("另存") { model.saveAsNew(from: item, text: draft) }.accessibilityIdentifier("saveAsNew").help("保留原条目，把当前内容另存成一条新的").disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             if item.kind == .image { Button("导出…") { model.exportImage(item) } }
             if item.kind == .file { Button("在 Finder 中显示") { NSWorkspace.shared.activateFileViewerSelecting(item.filePaths.map { URL(fileURLWithPath: $0) }) } }
             if item.kind == .link { Button("打开") { if let u = URL(string: item.text.trimmingCharacters(in: .whitespacesAndNewlines)) { NSWorkspace.shared.open(u) } } }
             Spacer()
-            Button("复制") { model.copy(item) }
-            Button("粘贴") { model.paste(item, hideWindow: hideWindow) }
+            Button("复制") { model.copy(item) }.accessibilityIdentifier("copy")
+            Button("粘贴") { model.paste(item, hideWindow: hideWindow) }.accessibilityIdentifier("paste")
                 .help("粘贴到打开窗口前的 app：\(model.previousApp?.localizedName ?? "无")；需要「辅助功能」授权")
             Menu {
                 Button(item.pinned ? "取消置顶" : "置顶") { model.togglePin(item) }

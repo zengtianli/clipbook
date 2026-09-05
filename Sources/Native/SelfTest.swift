@@ -152,9 +152,15 @@ enum SelfTest {
               ('u3','public.file-url','file',CAST('/tmp/a.txt\n/tmp/b.txt' AS BLOB),1700000002,'/System/Library/CoreServices/Finder.app','Finder',NULL,'',21),
               ('img-uid','public.png','image',X'',1700000003,'/System/Applications/TextEdit.app','TextEdit',NULL,'',0),
               ('u5','public.utf8-plain-text','text',CAST('hello deck' AS BLOB),1700000004,'/System/Applications/TextEdit.app','TextEdit',NULL,'hello deck',10),
+              ('img-old','public.png','image',X'',1700000007,'/System/Applications/Preview.app','Preview',NULL,'',0),
               ('u6','public.utf8-plain-text','text',CAST('secret' AS BLOB),1700000005,'/System/Applications/TextEdit.app','TextEdit',NULL,'secret',6);
             UPDATE ClipboardHistory SET is_encrypted = 1 WHERE unique_id = 'u6';
             """, nil, nil, nil)
+            var pvStmt: OpaquePointer?
+            sqlite3_prepare_v2(ddb, "UPDATE ClipboardHistory SET preview_data = ? WHERE unique_id = 'img-old'", -1, &pvStmt, nil)
+            let pv = png(7, 5)
+            _ = pv.withUnsafeBytes { sqlite3_bind_blob(pvStmt, 1, $0.baseAddress, Int32(pv.count), unsafeBitCast(-1, to: sqlite3_destructor_type.self)) }
+            sqlite3_step(pvStmt); sqlite3_finalize(pvStmt)
             var rtfStmt: OpaquePointer?
             sqlite3_prepare_v2(ddb, "INSERT INTO ClipboardHistory(unique_id,type,item_type,data,timestamp,app_path,app_name,search_text,content_length) VALUES('u7','public.rtf','richText',?,1700000006,'/System/Applications/Notes.app','Notes','',0)", -1, &rtfStmt, nil)
             let rtfData = rtf("富文本来的")
@@ -162,9 +168,10 @@ enum SelfTest {
             sqlite3_step(rtfStmt); sqlite3_finalize(rtfStmt); sqlite3_close(ddb)
 
             let rep = try DeckImporter.run(into: store, deckHome: deck)
-            check(rep.scanned == 6 && rep.imported == 6 && rep.byKind[.image] == 1 && rep.byKind[.richText] == 1, "扫 6（加密的那条不扫）→ 导 6（\(rep)）")
+            check(rep.scanned == 7 && rep.imported == 7 && rep.byKind[.image] == 2 && rep.byKind[.richText] == 1, "扫 7（加密的那条不扫）→ 导 7（\(rep)）")
             let all = try store.list()
-            check(all.count == 5, "同内容两条合成一条 → 库里 5 条（实得 \(all.count)）")
+            check(all.count == 6, "同内容两条合成一条 → 库里 6 条（实得 \(all.count)）")
+            check(all.contains { $0.kind == .image && $0.width == 7 && $0.height == 5 }, "没原图的老图片用 preview_data 缩略导入 7×5")
             check(all.first { $0.text == "hello deck" }?.title == "旧标题", "Deck 的 custom_title 进标题")
             check(all.first { $0.text == "hello deck" }?.appBundle == "com.apple.TextEdit", "app_path 推出 bundle id")
             check(all.contains { $0.kind == .link && $0.text == "https://deck.example/x" }, "url → link")
@@ -174,7 +181,7 @@ enum SelfTest {
             check(try store.meta("deck_imported") != nil, "记录导入时间")
             let rep2 = try DeckImporter.run(into: store, deckHome: deck)
             let nAfter2 = try store.count()
-            check(nAfter2 == 5 && rep2.imported == 6, "重复导入幂等（还是 5 条）")
+            check(nAfter2 == 6 && rep2.imported == 7, "重复导入幂等（还是 6 条）")
         } catch {
             check(false, "Store 抛错：\(error)")
         }
