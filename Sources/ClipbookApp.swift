@@ -63,14 +63,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         super.init()
         AppDelegate.shared = self
         // 数据库开不了就直说并退出 —— 一个默默不记录的剪贴板工具比没有更糟。
-        do {
-            AppModel.shared = try AppModel()
-        } catch {
-            let a = NSAlert()
-            a.messageText = "Clipbook 启动失败"
-            a.informativeText = "\(error)"
-            a.runModal()
-            exit(2)
+        MainActor.assumeIsolated {
+            do {
+                AppModel.shared = try AppModel()
+            } catch {
+                let a = NSAlert()
+                a.messageText = "Clipbook 启动失败"
+                a.informativeText = "\(error)"
+                a.runModal()
+                exit(2)
+            }
         }
     }
 
