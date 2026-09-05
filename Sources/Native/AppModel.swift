@@ -194,9 +194,9 @@ final class AppModel: ObservableObject {
         copy(item)
         hideWindow()
         if let app = previousApp {
-            // macOS 14+ 协作式激活：先让位再激活，否则另一个 app 拉不到前台（2026-09-05 实测）
+            // macOS 14+ 协作式激活：必须用 activate(from:)「把激活权交出去」，裸 activate() 拉不动别的 app（2026-09-05 实测）
             NSApp.yieldActivation(to: app)
-            app.activate()
+            app.activate(from: .current, options: [])
         }
         guard Paster.accessibilityTrusted else {
             // 没授权：内容已在剪贴板、原 app 已拉回前台，用户按一下 ⌘V 即可；系统授权提示只弹一次
