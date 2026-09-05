@@ -79,10 +79,12 @@ struct CollectionEditor: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(collection == nil ? "新建收藏夹" : "编辑收藏夹").font(.headline)
             TextField("名字", text: $name).accessibilityIdentifier("collectionName")
-            HStack(spacing: 8) {
+            // 16 个图标一行放不下 440 宽；HStack 会撑破 frame 再被居中裁掉（2026-09-05 实测左边被切）—— 用自适应网格换行
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 6)], spacing: 6) {
                 ForEach(Self.icons, id: \.self) { i in
-                    Image(systemName: i).frame(width: 26, height: 26)
+                    Image(systemName: i).frame(width: 30, height: 26)
                         .background(i == icon ? Color.accentColor.opacity(0.25) : .clear, in: RoundedRectangle(cornerRadius: 5))
+                        .contentShape(Rectangle())
                         .onTapGesture { icon = i }
                 }
             }
@@ -106,7 +108,7 @@ struct CollectionEditor: View {
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
-        .padding(18).frame(width: 440)
+        .padding(18).frame(width: 460)
         .onAppear { if let c = collection { name = c.name; icon = c.icon; color = c.color } }
     }
 }
