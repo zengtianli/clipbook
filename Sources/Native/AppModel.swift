@@ -76,8 +76,13 @@ final class AppModel: ObservableObject {
     @Published var importing = false
 
     /// 打开窗口前的前台 app —— 「粘贴」要把它拉回来
-    var previousApp: NSRunningApplication?
-    private var promptedAccessibility = false
+    /// 最近一个在前台的**别的** app —— 用 workspace 通知持续跟踪，不依赖打开窗口那一刻的前台是谁
+    /// （用户若先用 AppleScript 激活本 app 再开窗口，那一刻前台已是本 app，会丢）。
+    private(set) var previousApp: NSRunningApplication?
+    private var promptedAccessibility: Bool {
+        get { UserDefaults.standard.bool(forKey: "promptedAccessibility") }
+        set { UserDefaults.standard.set(newValue, forKey: "promptedAccessibility") }
+    }
 
     private let thumbs = NSCache<NSNumber, NSImage>()
     private var iconCache: [String: NSImage] = [:]
@@ -87,6 +92,14 @@ final class AppModel: ObservableObject {
         watcher = PasteboardWatcher { [weak self] cap in self?.ingest(cap) }
         applySettings()
         reload()
+        if let front = NSWorkspace.shared.frontmostApplication, front.bundleIdentifier != Bundle.main.bundleIdentifier {
+            previousApp = front
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] n in
+            guard let app = n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                  app.bundleIdentifier != Bundle.main.bundleIdentifier else { return }
+            MainActor.assumeIsolated { self?.previousApp = app }
+        }
     }
 
     func applySettings() {
@@ -199,7 +212,7 @@ final class AppModel: ObservableObject {
             app.activate(from: .current, options: [])
         }
         guard Paster.accessibilityTrusted else {
-            // 没授权：内容已在剪贴板、原 app 已拉回前台，用户按一下 ⌘V 即可；系统授权提示只弹一次
+            // 没授权：内容已在剪贴板、原 app 已拉回前台，用户按一下 ⌘V 即可；系统授权提示一辈子只弹一次，之后去设置里点
             if !promptedAccessibility { promptedAccessibility = true; Paster.promptAccessibility() }
             notice = "已复制并切回 \(previousApp?.localizedName ?? "原 app")；授权「辅助功能」后才会自动粘贴"
             return false
