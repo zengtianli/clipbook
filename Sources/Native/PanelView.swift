@@ -25,6 +25,11 @@ struct PanelView: View {
         .onAppear { searchFocused = true }
     }
 
+    /// 搜索框的 field editor 里有 marked text = 输入法正在组字
+    private var composing: Bool {
+        (controller.panel.firstResponder as? NSTextView)?.hasMarkedText() == true
+    }
+
     // MARK: 顶部搜索
 
     private var searchBar: some View {
@@ -34,10 +39,12 @@ struct PanelView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 16))
                 .focused($searchFocused)
-                .onKeyPress(.upArrow)   { model.moveSelection(-1); return .handled }
-                .onKeyPress(.downArrow) { model.moveSelection(+1); return .handled }
-                .onKeyPress(.return)    { controller.pasteSelected(); return .handled }
-                .onKeyPress(.escape)    { controller.hide(); return .handled }
+                // 输入法组字期间（搜狗拼音等），↑↓↩esc 属于候选框，不能截 —— 否则回车会把
+                // 「确认拼音」变成「粘贴当前选中项」（2026-09-05 实测踩到）。
+                .onKeyPress(.upArrow)   { composing ? .ignored : { model.moveSelection(-1); return .handled }() }
+                .onKeyPress(.downArrow) { composing ? .ignored : { model.moveSelection(+1); return .handled }() }
+                .onKeyPress(.return)    { composing ? .ignored : { controller.pasteSelected(); return .handled }() }
+                .onKeyPress(.escape)    { composing ? .ignored : { controller.hide(); return .handled }() }
                 .onKeyPress(characters: .init(charactersIn: "p"), phases: .down) { press in
                     guard press.modifiers.contains(.command), let it = model.selected else { return .ignored }
                     model.togglePin(it); return .handled
