@@ -91,13 +91,19 @@ else
   echo "   ⚠ 未找到 Apple Development 证书，adhoc 签名 —— 每次重编后辅助功能授权要重新点"
 fi
 
-pkill -x "${APP_NAME}" || true   # 装前杀旧实例（没在跑返回 1 是预期）
-DEST="/Applications/${DISPLAY_NAME}.app"
-if ! rm -rf "$DEST" || ! cp -R "$APP" "$DEST"; then
-  DEST="$HOME/Applications/${DISPLAY_NAME}.app"
-  mkdir -p "$HOME/Applications"; rm -rf "$DEST"; cp -R "$APP" "$DEST"
+if [ "${1:-}" = "--build-only" ]; then
+  echo "Built: $APP"
+  exit 0
 fi
-
+DEST="/Applications/$DISPLAY_NAME.app"
+if [ -e "$DEST" ]; then
+  ARCHIVE="$HOME/.Trash/app-previous-$(date +%s)"
+  mkdir -p "$ARCHIVE"
+  mv "$DEST" "$ARCHIVE/"
+fi
+ditto "$APP" "$DEST"
+codesign --verify --deep --strict "$DEST"
+echo "Installed: $DEST"
 _GOT_DN="$(plutil -extract CFBundleDisplayName raw "$DEST/Contents/Info.plist")"
 _GOT_ID="$(plutil -extract CFBundleIdentifier  raw "$DEST/Contents/Info.plist")"
 if [ "$_GOT_DN" != "$DISPLAY_NAME" ] || [ "$_GOT_ID" != "$BUNDLE_ID" ]; then

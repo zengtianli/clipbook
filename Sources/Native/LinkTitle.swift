@@ -7,10 +7,21 @@ enum LinkTitle {
         guard let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
         var req = URLRequest(url: url, timeoutInterval: 5)
         req.setValue("bytes=0-262143", forHTTPHeaderField: "Range")
-        req.setValue("Mozilla/5.0 (Macintosh) Clipbook", forHTTPHeaderField: "User-Agent")
-        guard let (data, _) = try? await URLSession.shared.data(for: req) else { return nil }
-        let html = String(decoding: data.prefix(262_144), as: UTF8.self)
-        return parseTitle(html)
+        req.setValue("Mozilla/5.0 (Macintosh) \(ProductIdentity.name)", forHTTPHeaderField: "User-Agent")
+        // Range is advisory: many servers ignore it. Stream and cancel at the actual byte cap.
+        let session = URLSession(configuration: .ephemeral)
+        defer { session.invalidateAndCancel() }
+        do {
+            let (bytes, response) = try await session.bytes(for: req)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { return nil }
+            var data = Data()
+            data.reserveCapacity(262_144)
+            for try await byte in bytes {
+                data.append(byte)
+                if data.count == 262_144 { break }
+            }
+            return parseTitle(String(decoding: data, as: UTF8.self))
+        } catch { return nil }
     }
 
     static func parseTitle(_ html: String) -> String? {

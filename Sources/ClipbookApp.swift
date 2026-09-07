@@ -36,7 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 AppModel.shared = try AppModel()
             } catch {
                 let a = NSAlert()
-                a.messageText = "Clipbook 启动失败"
+                a.messageText = "\(ProductIdentity.name) 启动失败"
                 a.informativeText = "\(error)"
                 a.runModal()
                 exit(2)
@@ -55,10 +55,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let main = NSMenu()
         let appItem = NSMenuItem(); main.addItem(appItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "关于 Clipbook", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: "关于 \(ProductIdentity.name)", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "隐藏 Clipbook", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
-        appMenu.addItem(withTitle: "退出 Clipbook", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "隐藏 \(ProductIdentity.name)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
 
         let editItem = NSMenuItem(); main.addItem(editItem)
@@ -98,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func buildStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let b = statusItem.button {
-            b.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clipbook")
+            b.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: ProductIdentity.name)
             b.target = self
             b.action = #selector(statusClicked)
             b.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -120,14 +120,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func rebuildMenu() {
         menu.removeAllItems()
         let s = AppSettings.shared
-        menu.addItem(withTitle: "打开 Clipbook", action: #selector(menuOpen), keyEquivalent: "")
+        menu.addItem(withTitle: "打开 \(ProductIdentity.name)", action: #selector(menuOpen), keyEquivalent: "")
         let pause = menu.addItem(withTitle: "暂停记录", action: #selector(menuTogglePause), keyEquivalent: "")
         pause.state = s.paused ? .on : .off
         menu.addItem(.separator())
         menu.addItem(withTitle: "\(AppModel.shared.totalAll) 条记录", action: nil, keyEquivalent: "")
         menu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "退出 Clipbook", action: #selector(menuQuit), keyEquivalent: "")
+        menu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(menuQuit), keyEquivalent: "")
         for it in menu.items { it.target = self }
     }
 
@@ -142,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1380, height: 760),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                           backing: .buffered, defer: false)
-        window.title = "Clipbook"
+        window.title = ProductIdentity.name
         window.titlebarAppearsTransparent = false
         window.minSize = NSSize(width: 960, height: 520)
         window.isReleasedWhenClosed = false
@@ -165,7 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if settingsWindow == nil {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 620),
                              styleMask: [.titled, .closable], backing: .buffered, defer: false)
-            w.title = "Clipbook 设置"
+            w.title = "\(ProductIdentity.name) 设置"
             w.isReleasedWhenClosed = false
             w.contentView = NSHostingView(rootView: SettingsView(model: AppModel.shared, settings: AppSettings.shared))
             w.center()

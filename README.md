@@ -1,4 +1,6 @@
-# TL Clipbook
+# Clips
+
+[English](README_EN.md)
 
 自用的 macOS 剪贴板库。菜单栏常驻，点图标开窗口：左边筛、中间挑、右边改。全 Swift，数据只在本机。
 
@@ -12,4 +14,8 @@
 - 忽略指定 app、跳过密码管理器标记的内容、保留上限与时长、纯文本模式
 - **不设任何快捷键**；自己配的话绑 `open 'clipbook://toggle'`
 
-构建：`./build.sh`（装到 /Applications/TL Clipbook.app）。
+构建：`./build.sh`（装到 /Applications/Clips.app）。
+
+链接标题现在流式读取，到 256 KiB 主动取消请求，服务器忽略 Range 也不会下载整个响应。构建支持 `--build-only`，安装不强杀正在运行的应用。针对性网络回归：`bash tests/test-link-title.sh`。
+
+应用 ID、`clipbook://` 自动化和 `~/Library/Application Support/Clipbook/` 保持兼容。构建复用总部 Xcode 选择器、CodingKey 检查与图标工厂；产品中英文统一叫 Clips。

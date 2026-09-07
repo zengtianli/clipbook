@@ -221,7 +221,7 @@ final class ClipStore {
 
     /// 多条合并成一条新文本（按传入顺序，空行分隔）
     @discardableResult
-    func merge(_ ids: [Int64], appName: String = "Clipbook", appBundle: String = "cyou.tianli.clipbook") throws -> ClipItem {
+    func merge(_ ids: [Int64], appName: String = ProductIdentity.name, appBundle: String = "cyou.tianli.clipbook") throws -> ClipItem {
         let parts = try ids.compactMap { try item(id: $0) }.map(\.text)
         let joined = parts.joined(separator: "\n\n")
         return try ingest(Capture(kind: Classifier.kind(of: joined), text: joined, appName: appName, appBundle: appBundle))

@@ -30,3 +30,8 @@ final class AppSettings: ObservableObject {
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 }
+
+/// User-facing name comes from catalog.yaml through the built Info.plist.
+enum ProductIdentity {
+    static var name: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? ProcessInfo.processInfo.processName }
+}

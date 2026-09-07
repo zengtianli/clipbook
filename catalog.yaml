@@ -6,7 +6,7 @@ function: >-
   记录文本/富文本/链接/图片/文件/代码/颜色，同内容去重顶上，置顶与收藏夹永不淘汰；首次启动自动导入 Deck 历史（只读）。
   **全 Swift 原生**（swiftc 直编，无 SPM / 无 xcodeproj / 无后端进程）；唯一网络访问 = 抓链接标题（可关）。
   **不设任何快捷键**（用户 2026-09-05 明确要求）。
-public_api: "TL Clipbook.app（菜单栏常驻，点图标开窗口）· clipbook://show[?q=]|hide|toggle|settings · build/Clipbook --selftest"
+public_api: "Clips.app（菜单栏常驻，点图标开窗口）· clipbook://show[?q=]|hide|toggle|settings · build/Clipbook --selftest"
 key_scripts:
   - Sources/ClipbookApp.swift          # @main：--selftest 分流；NSStatusItem（左键开窗/右键菜单）；主窗口/设置窗口；URL scheme；首次启动导 Deck
   - Sources/Native/Store.swift         # SQLite：去重顶上、编辑覆盖（重识别类型/撞重删另一条）、收藏夹、合并、筛选分页、留存淘汰、blob 管理
@@ -40,9 +40,10 @@ docs: ./README.md
 lifecycle: active
 origin: own
 form: mac
-display_name: TL Clipbook
+display_name: Clips
 bundle_id: cyou.tianli.clipbook
 icon:
+  badge: ""
   glyph: doc.on.clipboard.fill
   color: "#0f766e"
 # 无 backend: 块 —— 全 Swift，无后端进程
