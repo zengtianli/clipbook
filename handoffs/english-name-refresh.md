@@ -5,3 +5,5 @@
 生产selftest通过；本地HTTP忽略Range夹具证明256KiB后返回，旧实现同测试失败。数据路径/URL scheme不变。
 
 构建复用 `/Users/tianli/Dev/tools/dev/lib/tools/macapp/` 的 Xcode 选择器、CodingKey检查、图标工厂。安装脚本不强杀运行实例。
+
+菜单栏修正：CFBundleName 同 display_name 注入；CFBundleExecutable 不变。Folio/Clips 存储子目录在生产源码显式指定，不从 BundleName 派生，DataDesk 读取原 Apple 数据源路径。最终菜单外观由主会话 GUI 验证。

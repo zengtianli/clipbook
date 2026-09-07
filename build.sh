@@ -75,6 +75,7 @@ PLIST
 
 echo "→ post-build：DisplayName / BundleID / Icon / Version…"
 plutil -replace CFBundleDisplayName -string "$DISPLAY_NAME" "$APP/Contents/Info.plist"
+plutil -replace CFBundleName -string "$DISPLAY_NAME" "$APP/Contents/Info.plist"
 plutil -replace CFBundleIdentifier  -string "$BUNDLE_ID"    "$APP/Contents/Info.plist"
 plutil -replace CFBundleIconFile    -string "AppIcon"       "$APP/Contents/Info.plist"
 plutil -replace CFBundleVersion     -string "$(git -C "$DIR" rev-list --count HEAD)" "$APP/Contents/Info.plist"
