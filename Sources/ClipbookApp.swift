@@ -16,6 +16,7 @@ enum Boot {
         }
         MainActor.assumeIsolated {
             let app = NSApplication.shared
+            app.setActivationPolicy(.regular)
             let delegate = AppDelegate()
             app.delegate = delegate
             app.run()
@@ -40,7 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         MainActor.assumeIsolated {
             do {
                 AppModel.shared = try AppModel()
-                shortcuts = ClipShortcuts { [weak self] action in self?.perform(action) }
+                shortcuts = ClipShortcuts { [weak self] action in
+                    self?.perform(action, globally: self?.shortcuts?.binding(action)?.scope == .global)
+                }
             } catch {
                 let a = NSAlert()
                 a.messageText = "\(ProductIdentity.name) 启动失败"
@@ -77,7 +80,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         edit.addItem(withTitle: "重做", action: Selector(("redo:")), keyEquivalent: "Z")
         edit.addItem(.separator())
         edit.addItem(withTitle: "剪切", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        edit.addItem(withTitle: "拷贝", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        let copy = edit.addItem(withTitle: "拷贝", action: #selector(menuCopy), keyEquivalent: "c")
+        copy.target = self
         edit.addItem(withTitle: "粘贴", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
         edit.addItem(withTitle: "全选", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
@@ -104,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             AppModel.shared.startWatching()
             buildStatusItem()
             buildWindow()
-            if ProcessInfo.processInfo.environment["CLIPBOOK_SHOW_ON_LAUNCH"] == "1" { showWindow() }
+            showWindow()
             // 首次启动且本机有 Deck → 自动把它的历史导进来（用户 2026-09-05 拍板；只读 Deck 的库）
             if ProcessInfo.processInfo.environment["CLIPBOOK_HOME"] == nil,
                AppModel.shared.deckImportedAt == nil, DeckImporter.available() { AppModel.shared.importDeck() }
@@ -158,24 +162,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func menuTogglePause() { AppSettings.shared.paused.toggle(); AppModel.shared.applySettings() }
     @objc private func menuSettings() { showSettings() }
     @objc private func menuQuit() { NSApp.terminate(nil) }
+    @objc private func menuCopy() {
+        guard !shortcuts.recording else { return }
+        ClipCopy.perform(firstResponder: NSApp.keyWindow?.firstResponder,
+                         recordAvailable: NSApp.keyWindow === window && !AppModel.shared.selection.isEmpty) {
+            AppModel.shared.copySelection()
+        }
+    }
     @objc private func menuAction(_ sender: NSMenuItem) {
         if let raw = sender.representedObject as? String, let action = ClipAction(rawValue: raw) { perform(action) }
     }
 
-    func perform(_ action: ClipAction) {
+    func perform(_ action: ClipAction, globally: Bool = false) {
         guard window != nil else { pendingActions.append(action); return }
         let model = AppModel.shared!
+        if globally && action == .copy { model.copySelection(); return }
+        if globally && ![ClipAction.toggleWindow, .settings, .pause, .quit].contains(action) { showWindow() }
         switch action {
         case .toggleWindow: toggleWindow()
         case .settings: showSettings()
         case .pause: menuTogglePause()
+        case .copy: menuCopy()
         case .search: showWindow(); NotificationCenter.default.post(name: ClipAction.requested, object: action)
         case .closeWindow: NSApp.keyWindow?.performClose(nil)
         case .quit: NSApp.terminate(nil)
         default:
             guard NSApp.keyWindow === window else { return }
             switch action {
-            case .copy: if let item = model.detail { model.copy(item) }
             case .paste: if let item = model.detail { model.paste(item, hideWindow: { self.window.orderOut(nil) }) }
             case .pin: if let item = model.detail { model.togglePin(item) }
             case .delete: confirmDelete(model.selection)

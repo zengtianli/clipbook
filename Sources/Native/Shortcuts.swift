@@ -21,7 +21,7 @@ enum ClipAction: String, CaseIterable, Identifiable, Codable {
         case .quit: return "退出应用"
         }
     }
-    var allowsGlobal: Bool { [.toggleWindow, .settings, .pause].contains(self) }
+    var allowsGlobal: Bool { true }
     static let requested = Notification.Name("Clip.actionRequested")
 }
 
@@ -48,6 +48,7 @@ struct ClipKey: Codable, Equatable {
             .filter { modifiers & UInt32($0.0) != 0 }.map(\.1).joined() + key
     }
     func matches(_ other: ClipKey) -> Bool { code == other.code && modifiers == other.modifiers }
+    var isStandardCopy: Bool { code == 8 && modifiers == UInt32(cmdKey) }
     var validationError: String? {
         guard code < 128, !key.isEmpty, modifiers & ~Self.allowedModifiers == 0 else { return "无法识别这个组合，请重新录制。" }
         guard modifiers & UInt32(cmdKey | controlKey | optionKey) != 0 else { return "请至少包含 ⌘、⌃ 或 ⌥，避免影响正常输入。" }
@@ -139,11 +140,12 @@ final class ClipShortcuts: ObservableObject {
     func binding(_ action: ClipAction) -> ClipBinding? { bindings[action.rawValue] }
     func status(_ action: ClipAction) -> String {
         if let error = errors[action.rawValue] { return error }
-        guard let b = binding(action) else { return "未设置" }
+        guard let b = binding(action) else { return action == .copy ? "标准拷贝：选中文字优先，否则复制所选记录" : "未设置" }
         return b.scope == .global ? "已启用 · 全局" : "已启用 · 仅 Clip 内"
     }
     private func invalid(_ action: ClipAction, _ binding: ClipBinding) -> String? {
-        if let error = binding.chord.validationError { return error }
+        if !(action == .copy && binding.scope == .application && binding.chord.isStandardCopy),
+           let error = binding.chord.validationError { return error }
         if binding.scope == .global && !action.allowsGlobal { return "此操作只能在 Clip 窗口内使用。" }
         if let duplicate = bindings.first(where: { $0.key != action.rawValue && $0.value.chord.matches(binding.chord) }) {
             return "已用于「\(ClipAction(rawValue: duplicate.key)?.title ?? duplicate.key)」，请先清除原绑定。"
@@ -223,6 +225,7 @@ private struct KeyCapture: NSViewRepresentable {
     let active: Bool
     let captured: (ClipKey?) -> Void
     func makeNSView(context: Context) -> CaptureView { CaptureView() }
+    static func dismantleNSView(_ view: CaptureView, coordinator: ()) { view.active = false }
     func updateNSView(_ view: CaptureView, context: Context) {
         view.captured = captured; view.active = active
         if active, view.window?.firstResponder !== view {
@@ -230,7 +233,22 @@ private struct KeyCapture: NSViewRepresentable {
         }
     }
     final class CaptureView: NSView {
-        var active = false
+        private var monitor: Any?
+        var active = false {
+            didSet {
+                guard active != oldValue else { return }
+                if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil }
+                if active {
+                    monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                        let handled = MainActor.assumeIsolated {
+                            guard let self, self.active, self.window?.isKeyWindow == true else { return false }
+                            self.keyDown(with: event); return true
+                        }
+                        return handled ? nil : event
+                    }
+                }
+            }
+        }
         var captured: ((ClipKey?) -> Void)?
         override var acceptsFirstResponder: Bool { true }
         override func keyDown(with event: NSEvent) {
@@ -253,8 +271,8 @@ struct ShortcutSettingsPane: View {
     var body: some View {
         Form {
             Section {
-                Text("快捷键由你选择，默认全部未设置。").font(.headline)
-                Text("点击录制后按下组合键；Esc 取消。全局键仅在你选择「全局」并录制后注册，清除立即解绑。系统和其他应用也可能使用同一组合，注册成功不代表全机无冲突。")
+                Text("自定义快捷键由你选择，默认不绑定全局键。").font(.headline)
+                Text("⌘C 在 Clip 内复制所选内容，支持多选。每项都可选择「仅 Clip 内」或「全局」；全局操作使用 Clip 中保留的选择。点击录制后按组合键，Esc 取消。")
                     .font(.callout).foregroundStyle(.secondary)
                 if let error = center.errors["load"] { Text(error).foregroundStyle(.red) }
             }
@@ -292,7 +310,7 @@ private struct ShortcutRow: View {
                         }
                     }
                 }
-                Button(capturing ? "按下组合键…" : center.binding(action)?.chord.label ?? "点击录制") {
+                Button(capturing ? "按下组合键…" : center.binding(action)?.chord.label ?? (action == .copy ? "⌘C" : "点击录制")) {
                     if capturing { stop(nil) } else { center.beginRecording(action: action) }
                 }.frame(width: 130).accessibilityIdentifier("shortcut.\(action.rawValue)")
                     .background(KeyCapture(active: capturing, captured: stop).frame(width: 1, height: 1))

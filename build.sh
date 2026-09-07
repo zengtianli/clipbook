@@ -63,7 +63,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<key>LSMinimumSystemVersion</key><string>14.0</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSPrincipalClass</key><string>NSApplication</string>
-	<key>LSUIElement</key><true/>
+	<key>LSUIElement</key><false/>
 	<key>CFBundleURLTypes</key>
 	<array><dict>
 		<key>CFBundleURLName</key><string>${BUNDLE_ID}</string>

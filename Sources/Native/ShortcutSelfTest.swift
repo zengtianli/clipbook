@@ -16,6 +16,12 @@ private final class TestKeyRegistration: ClipKeyRegistration {
 }
 
 @MainActor
+private final class CopyProbeTextView: NSTextView {
+    var copyCalls = 0
+    override func copy(_ sender: Any?) { copyCalls += 1 }
+}
+
+@MainActor
 enum ShortcutSelfTest {
     /// Opt-in native backend test. Sends an application Carbon event, not a physical
     /// keyboard event; never presses a user's macro combination.
@@ -61,6 +67,23 @@ enum ShortcutSelfTest {
         let center = ClipShortcuts(defaults: defaults, backend: backend, monitorsEnabled: false) { performed.append($0) }
         let comma = ClipKey(code: 43, modifiers: UInt32(cmdKey), key: ",")
         check(center.bindings.isEmpty && backend.calls == 0 && !center.handleLocal(comma), "首次启动无绑定、无全局注册，⌘, 不被默认截获")
+        let cmdC = ClipKey(code: 8, modifiers: UInt32(cmdKey), key: "C")
+        check(center.set(.copy, to: .init(chord: cmdC, scope: .application)) && backend.calls == 0,
+              "允许复制动作录制⌘C，仅应用内且零全局注册")
+        check(center.handleLocal(cmdC) && performed == [.copy], "录制⌘C后分发至复制动作")
+        center.set(.copy, to: nil); performed = []
+        check(!center.set(.delete, to: .init(chord: cmdC, scope: .application)), "⌘C不能改成删除等其他动作")
+        let editor = CopyProbeTextView()
+        editor.string = "alpha beta"; editor.setSelectedRange(NSRange(location: 6, length: 4))
+        var recordCopies = 0
+        check(ClipCopy.perform(firstResponder: editor, recordAvailable: true) { recordCopies += 1 }
+              && editor.copyCalls == 1 && recordCopies == 0,
+              "有选中文字时转交原生文本拷贝，不复制整条记录")
+        editor.setSelectedRange(NSRange(location: 0, length: 0))
+        check(ClipCopy.perform(firstResponder: editor, recordAvailable: true) { recordCopies += 1 }
+              && recordCopies == 1, "没有文本选区时复制所选记录，即使搜索框仍有焦点")
+        check(!ClipCopy.perform(firstResponder: editor, recordAvailable: false) { recordCopies += 1 }
+              && recordCopies == 1, "设置窗口或没有记录时不误复制后台记录")
         check(center.set(.settings, to: .init(chord: comma, scope: .application)) && backend.calls == 0, "录制仅应用内的⌘,无需全局注册")
         check(center.handleLocal(comma) && performed == [.settings], "真实动作分发：配置后的⌘,进入设置动作")
         check(!center.handleLocal(comma, isRepeat: true) && performed.count == 1, "按住不重复触发")
@@ -72,6 +95,14 @@ enum ShortcutSelfTest {
         check(restored.binding(.settings)?.chord == comma && restored.handleLocal(comma), "从独立UserDefaults重建后绑定与动作恢复")
         restored.suspend()
         let global = ClipKey(code: 90, modifiers: UInt32(cmdKey | controlKey | optionKey | shiftKey), key: "F20")
+        var allScopes = true
+        for action in ClipAction.allCases {
+            center.clearAll()
+            allScopes = center.set(action, to: .init(chord: global, scope: .global)) && backend.active.count == 1 && allScopes
+            allScopes = center.set(action, to: .init(chord: global, scope: .application)) && backend.active.isEmpty && allScopes
+        }
+        center.clearAll()
+        check(allScopes, "全部12个动作均可在全局与应用内切换，并实际注册/注销")
         check(center.set(.toggleWindow, to: .init(chord: global, scope: .global)) && backend.active.count == 1, "只有显式选择全局才调用注册器")
         let oldID = backend.active.first!
         backend.onPress?(oldID)
@@ -104,6 +135,23 @@ enum ShortcutSelfTest {
         defer { try? FileManager.default.removeItem(at: directory) }
         do {
             let model = try AppModel(home: directory, settings: settings)
+            let board = NSPasteboard(name: .init("Clip-multicopy-\(UUID().uuidString)"))
+            defer { board.releaseGlobally() }
+            let first = try model.store.ingest(Capture(kind: .text, text: "first", appName: "QA", appBundle: "test.app"), at: Date(timeIntervalSinceNow: -2))
+            let second = try model.store.ingest(Capture(kind: .text, text: "second", appName: "QA", appBundle: "test.app"))
+            model.reload(); model.selection = [first.id, second.id]
+            model.copySelection(pasteboard: board)
+            check(board.string(forType: .string) == "second\n\nfirst" && model.selection.count == 2,
+                  "真实多选复制：按显示顺序写入两条正文，保留选择")
+            model.selection = [first.id]; model.copySelection(pasteboard: board)
+            check(board.string(forType: .string) == "first", "单选复制仍只写入所选一条")
+            model.selection = []; let change = board.changeCount; model.copySelection(pasteboard: board)
+            check(board.changeCount == change, "空选择不清空剪贴板")
+            let fileA = try model.store.ingest(Capture(kind: .file, text: "/tmp/clip-qa-a.txt", appName: "QA", appBundle: "test.app"))
+            let fileB = try model.store.ingest(Capture(kind: .file, text: "/tmp/clip-qa-b.txt", appName: "QA", appBundle: "test.app"))
+            Paster.write([fileA, fileB], store: model.store, pasteboard: board)
+            check(board.pasteboardItems?.count == 2 && board.pasteboardItems?.allSatisfy { $0.string(forType: .fileURL) != nil } == true,
+                  "多文件复制保留两个原生文件URL载荷")
             settings.paused = true; settings.plainTextOnly = true
             settings.ignoredBundles = ["test.app"]; settings.maxItems = 700; settings.retentionDays = 30
             check(model.watcher.paused && model.watcher.plainTextOnly && model.watcher.ignoredBundles == ["test.app"]

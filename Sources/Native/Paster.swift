@@ -5,8 +5,7 @@ import ApplicationServices
 enum Paster {
     /// 写剪贴板。返回写完后的 changeCount，Watcher 用它跳过自己这次写入。
     @discardableResult
-    static func write(_ item: ClipItem, store: ClipStore) -> Int {
-        let pb = NSPasteboard.general
+    static func write(_ item: ClipItem, store: ClipStore, pasteboard pb: NSPasteboard = .general) -> Int {
         pb.clearContents()
         switch item.kind {
         case .text, .link, .code, .color:
@@ -24,6 +23,34 @@ enum Paster {
                 pb.setData(data, forType: .png)
             }
         }
+        return pb.changeCount
+    }
+
+    /// Preserve display order. Text selections paste as one block; file/image payloads
+    /// remain native pasteboard objects instead of being reduced to labels.
+    @discardableResult
+    static func write(_ items: [ClipItem], store: ClipStore, pasteboard pb: NSPasteboard = .general) -> Int {
+        guard !items.isEmpty else { return pb.changeCount }
+        if items.count == 1 { return write(items[0], store: store, pasteboard: pb) }
+        let text = items.filter { $0.kind != .file && $0.kind != .image }.map(\.text).joined(separator: "\n\n")
+        var objects: [NSPasteboardWriting] = []
+        var wroteText = false
+        for item in items {
+            switch item.kind {
+            case .file:
+                objects += item.filePaths.map { URL(fileURLWithPath: $0) as NSURL }
+            case .image:
+                if let url = store.blobURL(item), let data = try? Data(contentsOf: url) {
+                    let entry = NSPasteboardItem(); entry.setData(data, forType: .png); objects.append(entry)
+                }
+            default:
+                if !wroteText {
+                    let entry = NSPasteboardItem(); entry.setString(text, forType: .string)
+                    objects.append(entry); wroteText = true
+                }
+            }
+        }
+        pb.clearContents(); pb.writeObjects(objects)
         return pb.changeCount
     }
 

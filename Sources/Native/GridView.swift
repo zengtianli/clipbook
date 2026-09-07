@@ -41,6 +41,7 @@ struct GridPane: View {
     private var batchBar: some View {
         HStack(spacing: 12) {
             Text("已选 \(model.selection.count) 条").font(.callout.weight(.medium))
+            Button("复制") { model.copySelection() }.accessibilityIdentifier("batchCopy")
             Button("全选本页") { model.selectAll() }.accessibilityIdentifier("selectAll")
             Menu("加入收藏夹") {
                 ForEach(model.collections) { c in Button(c.name) { model.add(model.selection, to: c.id) } }

@@ -2,7 +2,7 @@
 
 [中文](README.md)
 
-A native Swift clipboard library for macOS. A menu-bar icon opens the three-column interface: filter, select and edit. All configurable shortcuts are unassigned by default. Record your own under Settings → Shortcuts, choose application-only or explicitly enable a global scope for window/settings/pause actions, and clear a binding to unregister it immediately. Conflicts and registration failures are shown; no fallback combination is chosen automatically.
+A native Swift clipboard library for macOS. A menu-bar icon opens the three-column interface: filter, select and edit. Custom shortcuts are unassigned by default. Standard Command-C copies selected text, or all selected records when there is no text selection. Multiple text records are joined in display order with blank lines; files and images retain native pasteboard payloads. Every action offers application-only or global scope under Settings → Shortcuts. Global actions use the selection retained in Clip. Clear a custom binding to unregister it immediately. Conflicts and registration failures are shown; no fallback combination is chosen automatically.
 
 Capture text, rich text, links, images and files; deduplicate content, pin entries, organize collections, edit and merge text. Local data stays in `~/Library/Application Support/Clipbook/`. The existing bundle ID and `clipbook://show`, `hide`, `toggle`, `settings` URLs remain compatible.
 

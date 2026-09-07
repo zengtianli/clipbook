@@ -207,6 +207,16 @@ final class AppModel: ObservableObject {
 
     // MARK: - 动作
 
+    var selectedItems: [ClipItem] { items.filter { selection.contains($0.id) } }
+
+    func copySelection(pasteboard: NSPasteboard = .general) {
+        let selected = selectedItems
+        guard !selected.isEmpty else { return }
+        let change = Paster.write(selected, store: store, pasteboard: pasteboard)
+        if pasteboard === NSPasteboard.general { watcher.suppressedChangeCount = change }
+        notice = "已复制 \(selected.count) 条记录"
+    }
+
     func copy(_ item: ClipItem) {
         watcher.suppressedChangeCount = Paster.write(item, store: store)
         try? store.touch(item.id)

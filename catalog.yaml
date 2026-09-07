@@ -15,6 +15,7 @@ key_scripts:
   - Sources/Native/DeckImporter.swift  # 只读 Deck 库一次性导入（拷到临时目录再开）
   - Sources/Native/LinkTitle.swift     # 抓链接页面标题（唯一网络访问，可关）
   - Sources/Native/Paster.swift        # 写回剪贴板（含 RTF/文件/图片）+ CGEvent ⌘V（需辅助功能，不假装成功）
+  - Sources/Native/ClipCopy.swift      # 标准⌘C与自定义复制共用：文本选区优先，否则复制全部所选记录
   - Sources/Native/Settings.swift      # UserDefaults 记录偏好 / 开机自启状态与失败反馈
   - Sources/Native/Shortcuts.swift     # 默认空绑定；录制、作用域、持久化、注销与错误；同一动作分发
   - Sources/Native/ShortcutSelfTest.swift # 默认零注册、冲突、持久化、解绑、注册故障与设置生效回归

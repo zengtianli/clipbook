@@ -18,7 +18,7 @@ struct DetailPane: View {
                     .onChange(of: item.id) { _, _ in load(item) }
                     .onChange(of: item.text) { _, new in if !dirty(item) { draft = new } }
             } else if model.selection.count > 1 {
-                ContentUnavailableView("已选 \(model.selection.count) 条", systemImage: "square.stack.3d.up", description: Text("上方批量操作条可以删除、加入收藏夹或合并"))
+                ContentUnavailableView("已选 \(model.selection.count) 条", systemImage: "square.stack.3d.up", description: Text("按 ⌘C 或点击上方「复制」可复制全部所选内容，也可删除、加入收藏夹或合并"))
             } else {
                 ContentUnavailableView("选一条看看", systemImage: "cursorarrow.click", description: Text("单击选中，双击复制，右键更多"))
             }

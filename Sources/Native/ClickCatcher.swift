@@ -17,12 +17,14 @@ struct ClickCatcher: NSViewRepresentable {
     final class CatcherView: NSView {
         var onClick: ((NSEvent.ModifierFlags, Int) -> Void)?
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+        override var acceptsFirstResponder: Bool { true }
         override func hitTest(_ point: NSPoint) -> NSView? {
             // 右键按下时让开，SwiftUI 的 .contextMenu 才收得到
             if NSEvent.pressedMouseButtons & 0b10 != 0 { return nil }
             return super.hitTest(point)
         }
         override func mouseDown(with event: NSEvent) {
+            window?.makeFirstResponder(self)
             onClick?(event.modifierFlags.intersection([.command, .shift, .option, .control]), event.clickCount)
         }
     }
