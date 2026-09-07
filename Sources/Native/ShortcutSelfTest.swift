@@ -131,6 +131,16 @@ enum ShortcutSelfTest {
         check(broken.bindings.isEmpty && brokenBackend.calls == 0 && broken.errors["load"] != nil, "损坏配置不注册且错误显形")
 
         let settings = AppSettings(defaults: defaults)
+        check(settings.copySound, "复制提示音默认开启")
+        settings.copySound = false
+        check(!AppSettings(defaults: defaults).copySound, "关闭复制提示音后重建设置仍保持关闭")
+        var sounds = 0
+        let player = { sounds += 1; return true }
+        check(!CopyFeedback.completed(success: false, enabled: true, play: player)
+              && !CopyFeedback.completed(success: true, enabled: false, play: player) && sounds == 0,
+              "复制失败或关闭提示音时不播放")
+        check(CopyFeedback.completed(success: true, enabled: true, play: player) && sounds == 1,
+              "复制成功且开关开启时播放一次提示音")
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Clip-settings-test-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
         do {

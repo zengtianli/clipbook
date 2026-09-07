@@ -69,6 +69,7 @@ struct SettingsView: View {
                 }
             }
             Section("其他") {
+                Toggle("复制成功提示音", isOn: $settings.copySound).accessibilityIdentifier("copySound")
                 Toggle("开机自启", isOn: Binding(get: { settings.launchAtLogin }, set: { settings.setLaunchAtLogin($0) }))
                 Text(settings.launchStatus).font(.caption).foregroundStyle(.secondary)
                 if let error = settings.launchError { Text(error).font(.caption).foregroundStyle(.red) }

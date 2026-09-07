@@ -7,30 +7,31 @@ enum Paster {
     @discardableResult
     static func write(_ item: ClipItem, store: ClipStore, pasteboard pb: NSPasteboard = .general) -> Int {
         pb.clearContents()
+        var success = false
         switch item.kind {
         case .text, .link, .code, .color:
-            pb.setString(item.text, forType: .string)
+            success = pb.setString(item.text, forType: .string)
         case .richText:
             if let url = store.rtfURL(item), let rtf = try? Data(contentsOf: url) {
                 pb.setData(rtf, forType: .rtf)
             }
-            pb.setString(item.text, forType: .string)
+            success = pb.setString(item.text, forType: .string)
         case .file:
             let urls = item.filePaths.map { URL(fileURLWithPath: $0) as NSURL }
-            pb.writeObjects(urls)
+            success = !urls.isEmpty && pb.writeObjects(urls)
         case .image:
             if let url = store.blobURL(item), let data = try? Data(contentsOf: url) {
-                pb.setData(data, forType: .png)
+                success = pb.setData(data, forType: .png)
             }
         }
-        return pb.changeCount
+        return success ? pb.changeCount : -1
     }
 
     /// Preserve display order. Text selections paste as one block; file/image payloads
     /// remain native pasteboard objects instead of being reduced to labels.
     @discardableResult
     static func write(_ items: [ClipItem], store: ClipStore, pasteboard pb: NSPasteboard = .general) -> Int {
-        guard !items.isEmpty else { return pb.changeCount }
+        guard !items.isEmpty else { return -1 }
         if items.count == 1 { return write(items[0], store: store, pasteboard: pb) }
         let text = items.filter { $0.kind != .file && $0.kind != .image }.map(\.text).joined(separator: "\n\n")
         var objects: [NSPasteboardWriting] = []
@@ -42,7 +43,7 @@ enum Paster {
             case .image:
                 if let url = store.blobURL(item), let data = try? Data(contentsOf: url) {
                     let entry = NSPasteboardItem(); entry.setData(data, forType: .png); objects.append(entry)
-                }
+                } else { return -1 }
             default:
                 if !wroteText {
                     let entry = NSPasteboardItem(); entry.setString(text, forType: .string)
@@ -50,8 +51,9 @@ enum Paster {
                 }
             }
         }
-        pb.clearContents(); pb.writeObjects(objects)
-        return pb.changeCount
+        guard !objects.isEmpty else { return -1 }
+        pb.clearContents()
+        return pb.writeObjects(objects) ? pb.changeCount : -1
     }
 
     static var accessibilityTrusted: Bool { AXIsProcessTrusted() }

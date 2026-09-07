@@ -213,21 +213,28 @@ final class AppModel: ObservableObject {
         let selected = selectedItems
         guard !selected.isEmpty else { return }
         let change = Paster.write(selected, store: store, pasteboard: pasteboard)
+        guard change >= 0 else { notice = "复制失败：无法写入剪贴板或原文件不可读"; return }
         if pasteboard === NSPasteboard.general { watcher.suppressedChangeCount = change }
+        CopyFeedback.completed(success: pasteboard === NSPasteboard.general, enabled: settings.copySound)
         notice = "已复制 \(selected.count) 条记录"
     }
 
-    func copy(_ item: ClipItem) {
-        watcher.suppressedChangeCount = Paster.write(item, store: store)
+    @discardableResult
+    func copy(_ item: ClipItem) -> Bool {
+        let change = Paster.write(item, store: store)
+        guard change >= 0 else { notice = "复制失败：无法写入剪贴板或原文件不可读"; return false }
+        watcher.suppressedChangeCount = change
+        CopyFeedback.completed(success: true, enabled: settings.copySound)
         try? store.touch(item.id)
         reload()
         notice = "已复制到剪贴板"
+        return true
     }
 
     /// 粘贴到打开窗口前的那个 app。返回 false = 只复制了（没辅助功能授权）
     @discardableResult
     func paste(_ item: ClipItem, hideWindow: () -> Void) -> Bool {
-        copy(item)
+        guard copy(item) else { return false }
         hideWindow()
         if let app = previousApp {
             // macOS 14+ 协作式激活：必须用 activate(from:)「把激活权交出去」，裸 activate() 拉不动别的 app（2026-09-05 实测）
@@ -281,7 +288,10 @@ final class AppModel: ObservableObject {
         let out = t.apply(item.text)
         do {
             let it = try store.updateText(item.id, text: out)
-            watcher.suppressedChangeCount = Paster.write(it, store: store)
+            let change = Paster.write(it, store: store)
+            guard change >= 0 else { reload(); notice = "已保存，但复制失败"; return }
+            watcher.suppressedChangeCount = change
+            CopyFeedback.completed(success: true, enabled: settings.copySound)
             reload()
             notice = "\(t.label)：已保存并进剪贴板"
         } catch { notice = "转换失败：\(error)" }

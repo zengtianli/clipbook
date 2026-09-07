@@ -8,6 +8,14 @@ import SwiftUI
 @main
 enum Boot {
     static func main() {
+        if CommandLine.arguments.contains("--copy-sound-test") {
+            exit(MainActor.assumeIsolated {
+                let played = CopyFeedback.completed(success: true, enabled: true)
+                RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
+                print(played ? "PASS copy feedback: native Tink playback started" : "FAIL copy feedback sound")
+                return played ? 0 : 1
+            })
+        }
         if CommandLine.arguments.contains("--shortcut-runtime-test") {
             exit(MainActor.assumeIsolated { ShortcutSelfTest.runtime() })
         }

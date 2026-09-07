@@ -20,6 +20,7 @@ final class AppSettings: ObservableObject {
     @Published var retentionDays: Int { didSet { d.set(retentionDays, forKey: "retentionDays") } }
     @Published var plainTextOnly: Bool { didSet { d.set(plainTextOnly, forKey: "plainTextOnly") } }
     @Published var fetchLinkTitles: Bool { didSet { d.set(fetchLinkTitles, forKey: "fetchLinkTitles") } }
+    @Published var copySound: Bool { didSet { d.set(copySound, forKey: "copySound") } }
     @Published private(set) var launchAtLogin = false
     @Published private(set) var launchStatus = ""
     @Published private(set) var launchError: String?
@@ -51,6 +52,7 @@ final class AppSettings: ObservableObject {
         retentionDays = max(0, d.object(forKey: "retentionDays") as? Int ?? 0)
         plainTextOnly = d.bool(forKey: "plainTextOnly")
         fetchLinkTitles = d.object(forKey: "fetchLinkTitles") as? Bool ?? true
+        copySound = d.object(forKey: "copySound") as? Bool ?? true
         refreshLoginStatus()
     }
 }
