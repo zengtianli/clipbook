@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var window: NSWindow!
     private var settingsWindow: NSWindow?
     private let menu = NSMenu()
+    private var pendingURLs: [URL] = []
 
     override init() {
         super.init()
@@ -89,8 +90,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // 首次启动且本机有 Deck → 自动把它的历史导进来（用户 2026-09-05 拍板；只读 Deck 的库）
             if AppModel.shared.deckImportedAt == nil, DeckImporter.available() { AppModel.shared.importDeck() }
         }
-        NSAppleEventManager.shared().setEventHandler(self, andSelector: #selector(handleURL(_:_:)),
-                                                     forEventClass: AEEventClass(kInternetEventClass), andEventID: AEEventID(kAEGetURL))
+        let urls = pendingURLs
+        pendingURLs.removeAll()
+        urls.forEach { handleURL($0) }
     }
 
     // MARK: 菜单栏：左键开窗口，右键出菜单
@@ -182,9 +184,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     /// clipbook://show[?q=关键词] · clipbook://hide · clipbook://toggle · clipbook://settings
-    @objc func handleURL(_ event: NSAppleEventDescriptor, _ reply: NSAppleEventDescriptor) {
-        guard let s = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
-              let url = URL(string: s) else { return }
+    // AppKit delivers cold-launch URLs before didFinishLaunching. Queue them
+    // until the window exists instead of registering an Apple-event handler late.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        if window == nil { pendingURLs.append(contentsOf: urls) }
+        else { urls.forEach { handleURL($0) } }
+    }
+
+    private func handleURL(_ url: URL) {
+        guard url.scheme == "clipbook" else { return }
         MainActor.assumeIsolated {
             let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "q" }?.value
             switch url.host {
