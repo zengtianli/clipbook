@@ -42,8 +42,5 @@ origin: own
 form: mac
 display_name: Clip
 bundle_id: cyou.tianli.clipbook
-icon:
-  badge: ""
-  glyph: doc.on.clipboard.fill
-  color: "#0f766e"
+icon_png: icon/AppIcon.png
 # 无 backend: 块 —— 全 Swift，无后端进程
