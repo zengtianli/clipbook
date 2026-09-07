@@ -10,9 +10,16 @@ enum Boot {
     static func main() {
         if CommandLine.arguments.contains("--copy-sound-test") {
             exit(MainActor.assumeIsolated {
-                let played = CopyFeedback.completed(success: true, enabled: true)
+                let board = NSPasteboard(name: .init("Clip-external-audio-runtime-\(UUID().uuidString)"))
+                defer { board.releaseGlobally() }
+                var played = false
+                let watcher = PasteboardWatcher(pasteboard: board, onCopy: { _ in
+                    played = CopyFeedback.completed(success: true, enabled: true)
+                }) { _ in }
+                board.clearContents(); board.setString("external audio runtime", forType: .string)
+                watcher.poll()
                 RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.5))
-                print(played ? "PASS copy feedback: native Tink playback started" : "FAIL copy feedback sound")
+                print(played ? "PASS external clipboard change → production watcher → selected native sound playback" : "FAIL copy feedback sound")
                 return played ? 0 : 1
             })
         }

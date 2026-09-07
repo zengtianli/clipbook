@@ -141,6 +141,31 @@ enum ShortcutSelfTest {
               "复制失败或关闭提示音时不播放")
         check(CopyFeedback.completed(success: true, enabled: true, play: player) && sounds == 1,
               "复制成功且开关开启时播放一次提示音")
+        settings.copySoundName = "Pop"; settings.copySoundVolume = 0.6
+        let restoredAudio = AppSettings(defaults: defaults)
+        check(restoredAudio.copySoundName == "Pop" && restoredAudio.copySoundVolume == 0.6,
+              "音效选择和音量重建后保持")
+        let externalBoard = NSPasteboard(name: .init("Clip-external-copy-\(UUID().uuidString)"))
+        defer { externalBoard.releaseGlobally() }
+        var externalSounds = 0, captures = 0
+        let externalWatcher = PasteboardWatcher(pasteboard: externalBoard, onCopy: { _ in externalSounds += 1 }) { _ in captures += 1 }
+        externalWatcher.paused = true
+        externalBoard.clearContents(); externalBoard.setString("external copy", forType: .string)
+        externalWatcher.poll(); externalWatcher.poll()
+        check(externalSounds == 1 && captures == 0, "外部复制触发一次声音回调，暂停历史记录不影响声音，重复轮询不重响")
+        externalBoard.clearContents(); externalBoard.setString("external copy", forType: .string)
+        externalWatcher.poll()
+        check(externalSounds == 2, "重复复制相同文字仍响")
+        externalBoard.clearContents(); externalWatcher.poll()
+        check(externalSounds == 2, "只清空剪贴板不响")
+        externalBoard.setString("internal copy", forType: .string)
+        externalWatcher.suppressedChangeCount = externalBoard.changeCount; externalWatcher.poll()
+        check(externalSounds == 2, "Clip已反馈的复制不由监听器重响")
+        var dedupSounds = 0
+        let dedupPlayer = { dedupSounds += 1; return true }
+        _ = CopyFeedback.completed(success: true, enabled: true, changeCount: 987654, play: dedupPlayer)
+        _ = CopyFeedback.completed(success: true, enabled: true, changeCount: 987654, play: dedupPlayer)
+        check(dedupSounds == 1, "文本框即时反馈与后续剪贴板监听共用去重，一次复制只响一次")
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Clip-settings-test-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }
         do {

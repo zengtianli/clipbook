@@ -15,6 +15,7 @@ final class PasteboardWatcher {
     private var lastCount: Int
     private var timer: Timer?
     private let onCapture: (Capture) -> Void
+    private let onCopy: (Int) -> Void
     var suppressedChangeCount: Int = -1
     var paused = false
     /// 忽略的来源 app bundle id
@@ -22,24 +23,27 @@ final class PasteboardWatcher {
     /// 纯文本模式：不存 RTF
     var plainTextOnly = false
 
-    init(pasteboard: NSPasteboard = .general, onCapture: @escaping (Capture) -> Void) {
+    init(pasteboard: NSPasteboard = .general, onCopy: @escaping (Int) -> Void = { _ in }, onCapture: @escaping (Capture) -> Void) {
         self.pb = pasteboard
         self.lastCount = pasteboard.changeCount
         self.onCapture = onCapture
+        self.onCopy = onCopy
     }
 
     func start(interval: TimeInterval = 0.25) {
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in self?.tick() }
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in self?.poll() }
         timer?.tolerance = 0.1
     }
 
     func stop() { timer?.invalidate(); timer = nil }
 
-    private func tick() {
+    func poll() {
         let c = pb.changeCount
         guard c != lastCount else { return }
         lastCount = c
+        // Feedback observes copying, independently of history capture preferences.
+        if c != suppressedChangeCount, !(pb.types ?? []).isEmpty { onCopy(c) }
         guard !paused, c != suppressedChangeCount else { return }
         let front = NSWorkspace.shared.frontmostApplication
         let bundle = front?.bundleIdentifier ?? ""

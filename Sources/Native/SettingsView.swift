@@ -68,8 +68,22 @@ struct SettingsView: View {
                     Text("没找到 Deck 的数据目录。").foregroundStyle(.secondary)
                 }
             }
+            Section("复制声音") {
+                Toggle("复制时播放声音（所有应用）", isOn: $settings.copySound).accessibilityIdentifier("copySound")
+                HStack {
+                    Picker("音效", selection: $settings.copySoundName) {
+                        ForEach(CopyFeedback.soundNames, id: \.self) { Text($0).tag($0) }
+                    }.accessibilityIdentifier("copySoundName")
+                    Button("试听") { _ = CopyFeedback.playSystemSound() }.accessibilityIdentifier("previewCopySound")
+                }
+                HStack {
+                    Text("音量")
+                    Slider(value: $settings.copySoundVolume, in: 0...1).accessibilityIdentifier("copySoundVolume")
+                    Text("\(Int(settings.copySoundVolume * 100))%").monospacedDigit().frame(width: 42)
+                }
+                Text("Clip 运行期间，在其他应用复制也会响；暂停记录不影响声音。一次复制只响一次。").font(.caption).foregroundStyle(.secondary)
+            }
             Section("其他") {
-                Toggle("复制成功提示音", isOn: $settings.copySound).accessibilityIdentifier("copySound")
                 Toggle("开机自启", isOn: Binding(get: { settings.launchAtLogin }, set: { settings.setLaunchAtLogin($0) }))
                 Text(settings.launchStatus).font(.caption).foregroundStyle(.secondary)
                 if let error = settings.launchError { Text(error).font(.caption).foregroundStyle(.red) }

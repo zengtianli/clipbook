@@ -93,7 +93,10 @@ final class AppModel: ObservableObject {
         let settings = suppliedSettings ?? AppSettings.shared
         self.settings = settings
         store = try ClipStore(home: home)
-        watcher = PasteboardWatcher { [weak self] cap in self?.ingest(cap) }
+        watcher = PasteboardWatcher(onCopy: { [weak self] count in
+            guard let self else { return }
+            CopyFeedback.completed(success: true, enabled: self.settings.copySound, changeCount: count)
+        }) { [weak self] cap in self?.ingest(cap) }
         applySettings()
         Publishers.CombineLatest4(settings.$paused, settings.$ignoredBundles, settings.$plainTextOnly, settings.$maxItems)
             .sink { [weak self] paused, ignored, plain, maximum in
@@ -215,7 +218,7 @@ final class AppModel: ObservableObject {
         let change = Paster.write(selected, store: store, pasteboard: pasteboard)
         guard change >= 0 else { notice = "复制失败：无法写入剪贴板或原文件不可读"; return }
         if pasteboard === NSPasteboard.general { watcher.suppressedChangeCount = change }
-        CopyFeedback.completed(success: pasteboard === NSPasteboard.general, enabled: settings.copySound)
+        CopyFeedback.completed(success: pasteboard === NSPasteboard.general, enabled: settings.copySound, changeCount: change)
         notice = "已复制 \(selected.count) 条记录"
     }
 
@@ -224,7 +227,7 @@ final class AppModel: ObservableObject {
         let change = Paster.write(item, store: store)
         guard change >= 0 else { notice = "复制失败：无法写入剪贴板或原文件不可读"; return false }
         watcher.suppressedChangeCount = change
-        CopyFeedback.completed(success: true, enabled: settings.copySound)
+        CopyFeedback.completed(success: true, enabled: settings.copySound, changeCount: change)
         try? store.touch(item.id)
         reload()
         notice = "已复制到剪贴板"
@@ -291,7 +294,7 @@ final class AppModel: ObservableObject {
             let change = Paster.write(it, store: store)
             guard change >= 0 else { reload(); notice = "已保存，但复制失败"; return }
             watcher.suppressedChangeCount = change
-            CopyFeedback.completed(success: true, enabled: settings.copySound)
+            CopyFeedback.completed(success: true, enabled: settings.copySound, changeCount: change)
             reload()
             notice = "\(t.label)：已保存并进剪贴板"
         } catch { notice = "转换失败：\(error)" }

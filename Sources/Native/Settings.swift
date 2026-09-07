@@ -21,6 +21,8 @@ final class AppSettings: ObservableObject {
     @Published var plainTextOnly: Bool { didSet { d.set(plainTextOnly, forKey: "plainTextOnly") } }
     @Published var fetchLinkTitles: Bool { didSet { d.set(fetchLinkTitles, forKey: "fetchLinkTitles") } }
     @Published var copySound: Bool { didSet { d.set(copySound, forKey: "copySound") } }
+    @Published var copySoundName: String { didSet { d.set(copySoundName, forKey: "copySoundName") } }
+    @Published var copySoundVolume: Double { didSet { d.set(copySoundVolume, forKey: "copySoundVolume") } }
     @Published private(set) var launchAtLogin = false
     @Published private(set) var launchStatus = ""
     @Published private(set) var launchError: String?
@@ -53,6 +55,9 @@ final class AppSettings: ObservableObject {
         plainTextOnly = d.bool(forKey: "plainTextOnly")
         fetchLinkTitles = d.object(forKey: "fetchLinkTitles") as? Bool ?? true
         copySound = d.object(forKey: "copySound") as? Bool ?? true
+        let savedSound = d.string(forKey: "copySoundName") ?? "Tink"
+        copySoundName = CopyFeedback.soundNames.contains(savedSound) ? savedSound : "Tink"
+        copySoundVolume = min(1, max(0, d.object(forKey: "copySoundVolume") as? Double ?? 0.35))
         refreshLoginStatus()
     }
 }
