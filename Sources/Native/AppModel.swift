@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import os
+import Combine
 
 let clipLog = Logger(subsystem: "cyou.tianli.clipbook", category: "model")
 
@@ -48,7 +49,8 @@ final class AppModel: ObservableObject {
     static var shared: AppModel!
 
     let store: ClipStore
-    let settings = AppSettings.shared
+    let settings: AppSettings
+    private var settingsSubscriptions: Set<AnyCancellable> = []
     private(set) var watcher: PasteboardWatcher!
 
     @Published var sidebar: SidebarSelection = .all { didSet { if sidebar != oldValue { page = 0; selection = []; reload() } } }
@@ -87,10 +89,21 @@ final class AppModel: ObservableObject {
     private let thumbs = NSCache<NSNumber, NSImage>()
     private var iconCache: [String: NSImage] = [:]
 
-    init(home: URL = ClipStore.defaultHome()) throws {
+    init(home: URL = ClipStore.defaultHome(), settings suppliedSettings: AppSettings? = nil) throws {
+        let settings = suppliedSettings ?? AppSettings.shared
+        self.settings = settings
         store = try ClipStore(home: home)
         watcher = PasteboardWatcher { [weak self] cap in self?.ingest(cap) }
         applySettings()
+        Publishers.CombineLatest4(settings.$paused, settings.$ignoredBundles, settings.$plainTextOnly, settings.$maxItems)
+            .sink { [weak self] paused, ignored, plain, maximum in
+                self?.watcher.paused = paused
+                self?.watcher.ignoredBundles = Set(ignored)
+                self?.watcher.plainTextOnly = plain
+                self?.store.maxItems = min(100000, max(100, maximum))
+            }.store(in: &settingsSubscriptions)
+        settings.$retentionDays.sink { [weak self] days in self?.store.retentionDays = max(0, days) }
+            .store(in: &settingsSubscriptions)
         reload()
         if let front = NSWorkspace.shared.frontmostApplication, front.bundleIdentifier != Bundle.main.bundleIdentifier {
             previousApp = front
@@ -229,8 +242,7 @@ final class AppModel: ObservableObject {
     }
 
     func togglePin(_ item: ClipItem) {
-        try? store.setPinned(item.id, !item.pinned)
-        reload()
+        mutate { try store.setPinned(item.id, !item.pinned) }
     }
 
     func saveText(_ item: ClipItem, text: String) {
@@ -252,8 +264,7 @@ final class AppModel: ObservableObject {
     }
 
     func setTitle(_ item: ClipItem, _ title: String) {
-        try? store.setTitle(item.id, title)
-        reload()
+        mutate { try store.setTitle(item.id, title) }
     }
 
     func apply(_ t: Transform, to item: ClipItem) {
@@ -276,26 +287,26 @@ final class AppModel: ObservableObject {
     }
 
     func clearHistory() {
-        try? store.clear(keepPinned: true)
-        thumbs.removeAllObjects()
-        selection = []
-        reload()
+        mutate {
+            try store.clear(keepPinned: true)
+            thumbs.removeAllObjects(); selection = []
+        }
     }
 
     // MARK: - 收藏夹
 
     func createCollection(name: String, color: String, icon: String) -> Collection? {
-        let c = try? store.createCollection(name: name, color: color, icon: icon)
-        reload()
-        return c
+        do { let c = try store.createCollection(name: name, color: color, icon: icon); reload(); return c }
+        catch { notice = "创建收藏夹失败：\(error)"; return nil }
     }
 
-    func updateCollection(_ c: Collection) { try? store.updateCollection(c); reload() }
+    func updateCollection(_ c: Collection) { mutate { try store.updateCollection(c) } }
 
     func deleteCollection(_ id: Int64) {
-        try? store.deleteCollection(id)
-        if case .collection(let cur) = sidebar, cur == id { sidebar = .all }
-        reload()
+        mutate {
+            try store.deleteCollection(id)
+            if case .collection(let cur) = sidebar, cur == id { sidebar = .all }
+        }
     }
 
     func moveCollection(_ id: Int64, by delta: Int) {
@@ -304,12 +315,16 @@ final class AppModel: ObservableObject {
         let j = i + delta
         guard ids.indices.contains(j) else { return }
         ids.swapAt(i, j)
-        try? store.reorderCollections(ids)
-        reload()
+        mutate { try store.reorderCollections(ids) }
     }
 
-    func add(_ ids: Set<Int64>, to collection: Int64) { try? store.add(Array(ids), to: collection); reload() }
-    func remove(_ id: Int64, from collection: Int64) { try? store.remove(id, from: collection); reload() }
+    func add(_ ids: Set<Int64>, to collection: Int64) { mutate { try store.add(Array(ids), to: collection) } }
+    func remove(_ id: Int64, from collection: Int64) { mutate { try store.remove(id, from: collection) } }
+
+    private func mutate(_ operation: () throws -> Void) {
+        do { try operation(); reload() }
+        catch { notice = "操作失败：\(error)" }
+    }
 
     // MARK: - 导入
 
@@ -318,14 +333,13 @@ final class AppModel: ObservableObject {
         importing = true
         importReport = nil
         let store = self.store
-        Task.detached { [weak self] in
-            let text: String
-            do { text = try DeckImporter.run(into: store).description } catch { text = "导入失败：\(error)" }
-            await MainActor.run {
+        Task { [weak self] in
+            let text = await Task.detached {
+                do { return try DeckImporter.run(into: store).description } catch { return "导入失败：\(error)" }
+            }.value
                 self?.importing = false
                 self?.importReport = text
                 self?.reload()
-            }
         }
     }
 

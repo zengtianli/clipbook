@@ -24,6 +24,9 @@ struct DetailPane: View {
             }
         }
         .frame(minWidth: 320)
+        .onReceive(NotificationCenter.default.publisher(for: ClipAction.requested)) { note in
+            if note.object as? ClipAction == .save, let item = model.detail, item.kind.editable { save(item) }
+        }
     }
 
     private func load(_ item: ClipItem) {
@@ -173,7 +176,7 @@ struct DetailPane: View {
                     if model.collections.isEmpty { Text("还没有收藏夹，去左栏新建") }
                 }
                 Divider()
-                Button("删除", role: .destructive) { model.delete([item.id]) }
+                Button("删除", role: .destructive) { AppDelegate.shared.confirmDelete([item.id]) }
             } label: { Image(systemName: "ellipsis.circle") }
             .menuStyle(.borderlessButton).fixedSize()
         }

@@ -5,6 +5,7 @@ import AppKit
 struct GridPane: View {
     @ObservedObject var model: AppModel
     let hideWindow: () -> Void
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,6 +33,9 @@ struct GridPane: View {
             bottomBar
         }
         .frame(minWidth: 440)
+        .onReceive(NotificationCenter.default.publisher(for: ClipAction.requested)) { note in
+            if note.object as? ClipAction == .search { searchFocused = true }
+        }
     }
 
     private var batchBar: some View {
@@ -46,7 +50,7 @@ struct GridPane: View {
             Button("合并成一条") { model.merge(model.items.filter { model.selection.contains($0.id) }.map(\.id)) }
                 .disabled(model.items.filter { model.selection.contains($0.id) }.contains { $0.kind == .image || $0.kind == .file })
                 .accessibilityIdentifier("merge")
-            Button("删除", role: .destructive) { model.delete(model.selection) }.accessibilityIdentifier("batchDelete")
+            Button("删除", role: .destructive) { AppDelegate.shared.confirmDelete(model.selection) }.accessibilityIdentifier("batchDelete")
             Spacer()
             Button("取消选择") { model.selection = [] }
         }
@@ -60,6 +64,7 @@ struct GridPane: View {
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("搜索正文、标题、来源", text: $model.search).textFieldStyle(.plain)
+                    .focused($searchFocused).accessibilityIdentifier("search")
                 if !model.search.isEmpty {
                     Button { model.search = "" } label: { Image(systemName: "xmark.circle.fill") }.buttonStyle(.plain).foregroundStyle(.secondary)
                 }
@@ -103,7 +108,7 @@ struct ItemMenu: View {
             Button("在浏览器打开") { if let u = URL(string: item.text.trimmingCharacters(in: .whitespacesAndNewlines)) { NSWorkspace.shared.open(u) } }
         }
         Divider()
-        Button("删除", role: .destructive) { model.delete([item.id]) }
+        Button("删除", role: .destructive) { AppDelegate.shared.confirmDelete([item.id]) }
     }
 }
 

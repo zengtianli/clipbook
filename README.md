@@ -1,4 +1,4 @@
-# Clips
+# Clip
 
 [English](README_EN.md)
 
@@ -12,10 +12,14 @@
 - 「粘贴」按钮切回你原来的 app 并自动补 ⌘V（需辅助功能授权；没授权就只放进剪贴板）
 - 首次启动自动导入 Deck 的历史（只读 Deck 的库）
 - 忽略指定 app、跳过密码管理器标记的内容、保留上限与时长、纯文本模式
-- **不设任何快捷键**；自己配的话绑 `open 'clipbook://toggle'`
+- 快捷键可在「设置 → 快捷键」录制，默认全部未绑定；可选仅应用内作用域，显示窗口/设置/暂停也可由你明确设为全局。清除立即解绑，冲突或注册失败有提示，不自动退到其他按键。`clipbook://toggle` 继续供外部自动化使用。
 
-构建：`./build.sh`（装到 /Applications/Clips.app）。
+构建：`./build.sh`（安装名由 catalog.yaml 的 display_name 派生）。
 
 链接标题现在流式读取，到 256 KiB 主动取消请求，服务器忽略 Range 也不会下载整个响应。构建支持 `--build-only`，安装不强杀正在运行的应用。针对性网络回归：`bash tests/test-link-title.sh`。
 
-应用 ID、`clipbook://` 自动化和 `~/Library/Application Support/Clipbook/` 保持兼容。构建复用总部 Xcode 选择器、CodingKey 检查与图标工厂；产品中英文统一叫 Clips。
+应用 ID、`clipbook://` 自动化和 `~/Library/Application Support/Clipbook/` 保持兼容。构建复用总部 Xcode 选择器、CodingKey 检查与图标转换器。
+
+设置窗口分为通用与快捷键，可从左栏底部或应用菜单打开。记录偏好自动保存、无需保持设置窗口打开；保留规则在下次记录时执行。删除记录先确认；开机自启失败和等待系统批准的状态会显示。
+
+隔离 UI 验收可传入 `CLIPBOOK_HOME` 与 `CLIPBOOK_PREFERENCES_SUITE`，分别隔离历史库和偏好；自定义数据目录不会自动导入 Deck。生产自检覆盖默认零绑定、录制配置持久化、作用域切换、解绑、注册失败与真实动作分发。

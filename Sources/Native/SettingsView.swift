@@ -4,8 +4,26 @@ import AppKit
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var settings: AppSettings
+    @ObservedObject var shortcuts: ClipShortcuts
+    @State private var accessibilityTrusted = Paster.accessibilityTrusted
 
     var body: some View {
+        TabView {
+            general.tabItem { Label("通用", systemImage: "gearshape") }
+            ShortcutSettingsPane(center: shortcuts).tabItem { Label("快捷键", systemImage: "keyboard") }
+        }
+        .padding(10)
+        .frame(minWidth: 560, minHeight: 420)
+        .onAppear { refreshSystemStatus() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in refreshSystemStatus() }
+    }
+
+    private func refreshSystemStatus() {
+        accessibilityTrusted = Paster.accessibilityTrusted
+        settings.refreshLoginStatus()
+    }
+
+    private var general: some View {
         Form {
             Section("记录") {
                 Toggle("暂停记录", isOn: $settings.paused).accessibilityIdentifier("pauseRecording")
@@ -16,7 +34,7 @@ struct SettingsView: View {
                 Picker("保留时长", selection: $settings.retentionDays) {
                     Text("不限").tag(0); Text("7 天").tag(7); Text("30 天").tag(30); Text("90 天").tag(90); Text("365 天").tag(365)
                 }
-                Text("置顶的和收藏夹里的永不淘汰。").font(.caption).foregroundStyle(.secondary)
+                Text("置顶与收藏夹内容不淘汰。保留规则会在下一次记录新内容时执行。").font(.caption).foregroundStyle(.secondary)
             }
             Section("忽略这些 app 的复制") {
                 ForEach(settings.ignoredBundles, id: \.self) { b in
@@ -51,25 +69,21 @@ struct SettingsView: View {
                 }
             }
             Section("其他") {
-                Toggle("开机自启", isOn: $settings.launchAtLogin)
+                Toggle("开机自启", isOn: Binding(get: { settings.launchAtLogin }, set: { settings.setLaunchAtLogin($0) }))
+                Text(settings.launchStatus).font(.caption).foregroundStyle(.secondary)
+                if let error = settings.launchError { Text(error).font(.caption).foregroundStyle(.red) }
                 HStack {
                     Text("自动粘贴（辅助功能）")
                     Spacer()
-                    if Paster.accessibilityTrusted { Label("已授权", systemImage: "checkmark.circle").foregroundStyle(.green) }
+                    if accessibilityTrusted { Label("已授权", systemImage: "checkmark.circle").foregroundStyle(.green) }
                     else { Button("去授权…") { Paster.promptAccessibility() } }
                 }
                 Button("打开数据目录") { NSWorkspace.shared.open(model.store.home) }
                 Button("清空历史（保留置顶与收藏夹）…", role: .destructive) { AppDelegate.shared.confirmClear() }
-                Text("设置自动保存，即时生效。").font(.caption).foregroundStyle(.secondary)
+                Text("设置自动保存；关闭设置窗口后仍然生效。").font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 620)
-        .onChange(of: settings.paused) { _, _ in model.applySettings() }
-        .onChange(of: settings.ignoredBundles) { _, _ in model.applySettings() }
-        .onChange(of: settings.plainTextOnly) { _, _ in model.applySettings() }
-        .onChange(of: settings.maxItems) { _, _ in model.applySettings() }
-        .onChange(of: settings.retentionDays) { _, _ in model.applySettings() }
     }
 
     private func appName(_ bundle: String) -> String {

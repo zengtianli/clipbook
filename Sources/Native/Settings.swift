@@ -1,11 +1,18 @@
 import Foundation
 import ServiceManagement
 
-/// 设置（UserDefaults）。没有快捷键项 —— 用户明确说先不设。
+enum AppPreferences {
+    static var defaults: UserDefaults {
+        if let suite = ProcessInfo.processInfo.environment["CLIPBOOK_PREFERENCES_SUITE"], let defaults = UserDefaults(suiteName: suite) { return defaults }
+        return .standard
+    }
+}
+
+/// 记录偏好自动保存。快捷键由 ClipShortcuts 管理，默认空。
 @MainActor
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
-    private let d = UserDefaults.standard
+    private let d: UserDefaults
 
     @Published var paused: Bool { didSet { d.set(paused, forKey: "paused") } }
     @Published var ignoredBundles: [String] { didSet { d.set(ignoredBundles, forKey: "ignoredBundles") } }
@@ -13,21 +20,38 @@ final class AppSettings: ObservableObject {
     @Published var retentionDays: Int { didSet { d.set(retentionDays, forKey: "retentionDays") } }
     @Published var plainTextOnly: Bool { didSet { d.set(plainTextOnly, forKey: "plainTextOnly") } }
     @Published var fetchLinkTitles: Bool { didSet { d.set(fetchLinkTitles, forKey: "fetchLinkTitles") } }
-    @Published var launchAtLogin: Bool {
-        didSet {
-            do { if launchAtLogin { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } }
-            catch { launchAtLogin = SMAppService.mainApp.status == .enabled }
+    @Published private(set) var launchAtLogin = false
+    @Published private(set) var launchStatus = ""
+    @Published private(set) var launchError: String?
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+            launchError = nil
+        } catch { launchError = "无法更新开机自启：\(error.localizedDescription)" }
+        refreshLoginStatus()
+    }
+
+    func refreshLoginStatus() {
+        let status = SMAppService.mainApp.status
+        launchAtLogin = status == .enabled || status == .requiresApproval
+        switch status {
+        case .enabled: launchStatus = "已开启"
+        case .requiresApproval: launchStatus = "等待系统批准：请在系统设置 → 通用 → 登录项中允许。"
+        case .notRegistered: launchStatus = "已关闭"
+        default: launchStatus = "系统尚未找到登录项，请从已安装的应用重试。"
         }
     }
 
-    private init() {
+    init(defaults: UserDefaults = AppPreferences.defaults) {
+        d = defaults
         paused = d.bool(forKey: "paused")
         ignoredBundles = d.stringArray(forKey: "ignoredBundles") ?? []
-        maxItems = d.object(forKey: "maxItems") as? Int ?? 5000
-        retentionDays = d.object(forKey: "retentionDays") as? Int ?? 0
+        maxItems = min(100000, max(100, d.object(forKey: "maxItems") as? Int ?? 5000))
+        retentionDays = max(0, d.object(forKey: "retentionDays") as? Int ?? 0)
         plainTextOnly = d.bool(forKey: "plainTextOnly")
         fetchLinkTitles = d.object(forKey: "fetchLinkTitles") as? Bool ?? true
-        launchAtLogin = SMAppService.mainApp.status == .enabled
+        refreshLoginStatus()
     }
 }
 
