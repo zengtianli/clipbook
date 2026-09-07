@@ -8,9 +8,10 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("记录") {
-                Toggle("暂停记录", isOn: $settings.paused)
+                Toggle("暂停记录", isOn: $settings.paused).accessibilityIdentifier("pauseRecording")
                 Toggle("纯文本模式（不保存富文本格式）", isOn: $settings.plainTextOnly)
-                Toggle("抓取链接的页面标题（本 app 唯一的网络访问）", isOn: $settings.fetchLinkTitles)
+                Toggle("自动获取链接标题", isOn: $settings.fetchLinkTitles)
+                Text("开启后会访问所复制链接的网页。").font(.caption).foregroundStyle(.secondary)
                 Stepper("最多保留 \(settings.maxItems) 条", value: $settings.maxItems, in: 100...100000, step: 100)
                 Picker("保留时长", selection: $settings.retentionDays) {
                     Text("不限").tag(0); Text("7 天").tag(7); Text("30 天").tag(30); Text("90 天").tag(90); Text("365 天").tag(365)
@@ -59,7 +60,7 @@ struct SettingsView: View {
                 }
                 Button("打开数据目录") { NSWorkspace.shared.open(model.store.home) }
                 Button("清空历史（保留置顶与收藏夹）…", role: .destructive) { AppDelegate.shared.confirmClear() }
-                Text("快捷键：暂未设置。").font(.caption).foregroundStyle(.secondary)
+                Text("设置自动保存，即时生效。").font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

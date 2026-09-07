@@ -49,6 +49,20 @@ struct SidebarView: View {
             } header: { Text("收藏夹") }
         }
         .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                Divider()
+                Button { AppDelegate.shared.showSettings() } label: {
+                    Label("设置…", systemImage: "gearshape")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("sidebarSettings")
+            }
+            .background(.bar)
+        }
         .sheet(isPresented: $newCollection) { CollectionEditor(model: model, collection: nil) }
         .sheet(item: $editing) { c in CollectionEditor(model: model, collection: c) }
     }

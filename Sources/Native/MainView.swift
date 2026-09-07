@@ -3,6 +3,7 @@ import SwiftUI
 /// 三栏：左筛 / 中挑 / 右改
 struct MainView: View {
     @ObservedObject var model: AppModel
+    @ObservedObject private var settings = AppSettings.shared
     let hideWindow: () -> Void
     @State private var columns = NavigationSplitViewVisibility.all
 
@@ -26,7 +27,8 @@ struct MainView: View {
                 if let n = model.notice { Text(n).font(.callout).foregroundStyle(.secondary).lineLimit(1) }
             }
             ToolbarItem(placement: .automatic) {
-                Button { AppDelegate.shared.showSettings() } label: { Image(systemName: "gearshape") }.help("设置")
+                Button { AppDelegate.shared.showSettings() } label: { Label("设置", systemImage: "gearshape") }
+                    .help("设置").accessibilityIdentifier("toolbarSettings")
             }
         }
         .onChange(of: model.notice) { _, n in
@@ -35,5 +37,5 @@ struct MainView: View {
         }
     }
 
-    private var settingsPaused: Bool { AppSettings.shared.paused }
+    private var settingsPaused: Bool { settings.paused }
 }
