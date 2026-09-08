@@ -1,0 +1,351 @@
+[
+  {
+    "pid": 39452,
+    "stage": "Maccy-fresh-empty-panel",
+    "wall_seconds": 30.004189792001853,
+    "start": {
+      "footprint_MiB": 30.391586303710938,
+      "rss_MiB": 65.375,
+      "cpu_seconds": 0.8481527916666667
+    },
+    "end": {
+      "footprint_MiB": 30.454086303710938,
+      "rss_MiB": 48.09375,
+      "cpu_seconds": 0.8588734166666666
+    },
+    "cpu_percent_one_core": 0.0357304265648182,
+    "cpu_timebase_factor": 41.666666666666664,
+    "cpu_corrected_from_raw_mach_ticks": true
+  },
+  {
+    "pid": 42032,
+    "stage": "PastePal-user-activated-initial-state",
+    "wall_seconds": 30.00560779198713,
+    "start": {
+      "footprint_MiB": 49.04779052734375,
+      "rss_MiB": 90.9375,
+      "cpu_seconds": 1.7838733333333332
+    },
+    "end": {
+      "footprint_MiB": 77.73540496826172,
+      "rss_MiB": 115.65625,
+      "cpu_seconds": 3.4175839166666666
+    },
+    "cpu_percent_one_core": 5.44468418923215,
+    "cpu_timebase_factor": 41.666666666666664,
+    "cpu_corrected_from_raw_mach_ticks": true
+  },
+  {
+    "pid": 42032,
+    "stage": "PastePal-101-text-main-window",
+    "wall_seconds": 30.002521082991734,
+    "start": {
+      "footprint_MiB": 94.96977996826172,
+      "rss_MiB": 88.140625,
+      "cpu_seconds": 14.365636124999998
+    },
+    "end": {
+      "footprint_MiB": 94.89165496826172,
+      "rss_MiB": 51.40625,
+      "cpu_seconds": 14.38188133333333
+    },
+    "cpu_percent_one_core": 0.05414614421366665,
+    "cpu_timebase_factor": 41.666666666666664,
+    "cpu_corrected_from_raw_mach_ticks": true
+  },
+  {
+    "pid": 42032,
+    "stage": "PastePal-101-text-main-closed",
+    "wall_seconds": 30.005489250004757,
+    "start": {
+      "footprint_MiB": 95.36040496826172,
+      "rss_MiB": 83.015625,
+      "cpu_seconds": 14.747622749999998
+    },
+    "end": {
+      "footprint_MiB": 96.46977996826172,
+      "rss_MiB": 93.546875,
+      "cpu_seconds": 15.351987166666666
+    },
+    "cpu_percent_one_core": 2.0141795110592016,
+    "cpu_timebase_factor": 41.666666666666664,
+    "cpu_corrected_from_raw_mach_ticks": true
+  },
+  {
+    "pid": 42032,
+    "stage": "PastePal-101-text-all-panels-hidden",
+    "wall_seconds": 30.006323334004264,
+    "start": {
+      "footprint_MiB": 96.51665496826172,
+      "rss_MiB": 93.609375,
+      "cpu_seconds": 15.350000374999999
+    },
+    "end": {
+      "footprint_MiB": 96.51665496826172,
+      "rss_MiB": 34.125,
+      "cpu_seconds": 15.378724916666666
+    },
+    "cpu_percent_one_core": 0.0957282948228337,
+    "cpu_timebase_factor": 41.666666666666664,
+    "cpu_corrected_from_raw_mach_ticks": true
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 44103,
+    "stage": "Clip-100-text-main-window",
+    "wall_seconds": 30.007173374993727,
+    "start": {
+      "footprint_MiB": 48.54785919189453,
+      "rss_MiB": 57.125,
+      "cpu_seconds": 2.30309975
+    },
+    "end": {
+      "footprint_MiB": 48.51660919189453,
+      "rss_MiB": 24.59375,
+      "cpu_seconds": 2.332635208333333
+    },
+    "cpu_percent_one_core": 0.09842799241446155
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 44103,
+    "stage": "Clip-100-text-all-panels-hidden",
+    "wall_seconds": 30.00698733299214,
+    "start": {
+      "footprint_MiB": 47.672882080078125,
+      "rss_MiB": 46.3125,
+      "cpu_seconds": 2.5766906666666665
+    },
+    "end": {
+      "footprint_MiB": 47.454132080078125,
+      "rss_MiB": 21.5625,
+      "cpu_seconds": 2.600340166666667
+    },
+    "cpu_percent_one_core": 0.07881331017192161
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 15789,
+    "stage": "PastePal-restart-102-text-main-window",
+    "wall_seconds": 30.0061276670001,
+    "start": {
+      "footprint_MiB": 77.75105285644531,
+      "rss_MiB": 131.046875,
+      "cpu_seconds": 4.541225416666666
+    },
+    "end": {
+      "footprint_MiB": 77.84480285644531,
+      "rss_MiB": 97.390625,
+      "cpu_seconds": 4.681421666666666
+    },
+    "cpu_percent_one_core": 0.46722539994450435
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 15789,
+    "stage": "PastePal-restart-102-text-all-panels-hidden",
+    "wall_seconds": 30.005509709000307,
+    "start": {
+      "footprint_MiB": 78.39167785644531,
+      "rss_MiB": 92.703125,
+      "cpu_seconds": 5.357856
+    },
+    "end": {
+      "footprint_MiB": 78.36042785644531,
+      "rss_MiB": 87.359375,
+      "cpu_seconds": 5.366550874999999
+    },
+    "cpu_percent_one_core": 0.02897759472951332
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 18000,
+    "stage": "Maccy-restart-102-text-panel",
+    "wall_seconds": 30.001641667000058,
+    "start": {
+      "footprint_MiB": 53.79783630371094,
+      "rss_MiB": 110.53125,
+      "cpu_seconds": 1.7391197916666667
+    },
+    "end": {
+      "footprint_MiB": 50.39158630371094,
+      "rss_MiB": 83.640625,
+      "cpu_seconds": 1.7460822083333332
+    },
+    "cpu_percent_one_core": 0.023206785628416597
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 18000,
+    "stage": "Maccy-restart-102-text-panel-hidden",
+    "wall_seconds": 30.003796791999775,
+    "start": {
+      "footprint_MiB": 56.92283630371094,
+      "rss_MiB": 91.703125,
+      "cpu_seconds": 1.8425994583333334
+    },
+    "end": {
+      "footprint_MiB": 55.07908630371094,
+      "rss_MiB": 91.359375,
+      "cpu_seconds": 1.8481468749999999
+    },
+    "cpu_percent_one_core": 0.0184890489197875
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 20740,
+    "stage": "PastePal-20-images-grid",
+    "wall_seconds": 30.00585345799982,
+    "start": {
+      "footprint_MiB": 285.65753173828125,
+      "rss_MiB": 295.0625,
+      "cpu_seconds": 17.355111249999997
+    },
+    "end": {
+      "footprint_MiB": 271.90750885009766,
+      "rss_MiB": 157.015625,
+      "cpu_seconds": 17.418499291666667
+    },
+    "cpu_percent_one_core": 0.21125225368242306
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 20740,
+    "stage": "PastePal-20-images-after-browse-hidden",
+    "wall_seconds": 30.004441207999662,
+    "start": {
+      "footprint_MiB": 269.28250885009766,
+      "rss_MiB": 112.265625,
+      "cpu_seconds": 19.708976041666666
+    },
+    "end": {
+      "footprint_MiB": 260.06375885009766,
+      "rss_MiB": 70.4375,
+      "cpu_seconds": 19.746165041666664
+    },
+    "cpu_percent_one_core": 0.12394498448477267
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 22593,
+    "stage": "Clip-20-images-grid",
+    "wall_seconds": 30.004059166999923,
+    "start": {
+      "footprint_MiB": 95.6104507446289,
+      "rss_MiB": 131.53125,
+      "cpu_seconds": 6.102366125
+    },
+    "end": {
+      "footprint_MiB": 95.4854507446289,
+      "rss_MiB": 93.375,
+      "cpu_seconds": 6.121336166666667
+    },
+    "cpu_percent_one_core": 0.06322491753892823
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 22593,
+    "stage": "Clip-20-images-after-browse-hidden",
+    "wall_seconds": 30.005884958000024,
+    "start": {
+      "footprint_MiB": 94.7510757446289,
+      "rss_MiB": 77.765625,
+      "cpu_seconds": 7.4323425
+    },
+    "end": {
+      "footprint_MiB": 94.7042007446289,
+      "rss_MiB": 55.75,
+      "cpu_seconds": 7.454100583333333
+    },
+    "cpu_percent_one_core": 0.07251271996739511
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 22595,
+    "stage": "Maccy-20-images-preview-panel",
+    "wall_seconds": 30.005336667000392,
+    "start": {
+      "footprint_MiB": 411.14195251464844,
+      "rss_MiB": 111.25,
+      "cpu_seconds": 8.972580416666666
+    },
+    "end": {
+      "footprint_MiB": 409.78257751464844,
+      "rss_MiB": 83.65625,
+      "cpu_seconds": 9.024166916666665
+    },
+    "cpu_percent_one_core": 0.17192441655465068
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 22595,
+    "stage": "Maccy-20-images-after-preview-hidden",
+    "wall_seconds": 30.007815832999768,
+    "start": {
+      "footprint_MiB": 446.87635040283203,
+      "rss_MiB": 88.109375,
+      "cpu_seconds": 9.69144375
+    },
+    "end": {
+      "footprint_MiB": 444.12635040283203,
+      "rss_MiB": 75.953125,
+      "cpu_seconds": 9.714826875
+    },
+    "cpu_percent_one_core": 0.0779234487779212
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 25550,
+    "stage": "Deck-62-text-16-images-background-no-panel",
+    "wall_seconds": 30.004361750000044,
+    "start": {
+      "footprint_MiB": 60.329429626464844,
+      "rss_MiB": 53.09375,
+      "cpu_seconds": 29.441263791666664
+    },
+    "end": {
+      "footprint_MiB": 60.345054626464844,
+      "rss_MiB": 49.453125,
+      "cpu_seconds": 29.51095045833333
+    },
+    "cpu_percent_one_core": 0.23225512092976178,
+    "original_stage_label": "Deck-fresh-100-text-20-images-background-no-panel",
+    "correction": "Actual SQLite count was 62 text + 16 PNG, not the sent 100 + 20."
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 25550,
+    "stage": "Deck-66-text-18-images-background-no-panel",
+    "wall_seconds": 30.000742833000004,
+    "start": {
+      "footprint_MiB": 54.391929626464844,
+      "rss_MiB": 50.015625,
+      "cpu_seconds": 32.56577383333333
+    },
+    "end": {
+      "footprint_MiB": 54.391929626464844,
+      "rss_MiB": 52.515625,
+      "cpu_seconds": 32.57085725
+    },
+    "cpu_percent_one_core": 0.016944302662666607,
+    "original_stage_label": "Deck-100-text-20-images-background-no-panel",
+    "correction": "SQLite still had only 66 text + 18 PNG after replay; exclude from matched-data comparison."
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 30379,
+    "stage": "Deck-preloaded-100-text-20-images-background-no-panel",
+    "wall_seconds": 30.004432707999968,
+    "start": {
+      "footprint_MiB": 23.5010986328125,
+      "rss_MiB": 62.40625,
+      "cpu_seconds": 2.589195833333333
+    },
+    "end": {
+      "footprint_MiB": 23.5010986328125,
+      "rss_MiB": 60.765625,
+      "cpu_seconds": 2.59332775
+    },
+    "cpu_percent_one_core": 0.013771020791754554
+  }
+]

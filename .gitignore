@@ -21,3 +21,4 @@ icon/*.iconset/
 promotion/video/*
 !promotion/video/clip-demo.mp4
 !promotion/video/clip-editor.png
+!promotion/video/clip-competitors.mp4

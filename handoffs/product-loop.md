@@ -1,5 +1,21 @@
 # Clip 产品流程与推广 · 2026-09-08
 
+## 后续实测与公开推广（本轮仍有未完成项）
+
+公开展示仓已建并推送：`https://github.com/zengtianli/clip-macos`，最新公开提交 `c30e660`。只包含产品介绍、限定范围的三款对比、采样 JSON 和 36 秒真实窗口比较视频；原 `clipbook` 源码仓仍私有，没有公开安装包。交付总入口 `promotion/README.md`。
+
+Clip / PastePal / Maccy 完成文本、20 张同源 2048×2048 图片、关窗后的 30 秒单轮观察。图片界面结束值分别 95.5 / 271.9 / 409.8 MiB，收起后 94.7 / 260.1 / 444.1 MiB。窗口大小、UI 形态不同；文本 Clip 100 条、其余 102 条。绝不泛化为全面性能胜出或速度倍数。数据在 `promotion/performance/competitors-20260908/`，表在 `promotion/COMPETITOR-RESULTS.md`。
+
+早期采样的 proc rusage CPU 时间在本机为 mach ticks；以 125/3 校正并与 ps TIME 对照。正式 samples.json/CSV 已校正且有元数据，build 下原 JSONL 部分早期 CPU 未校正，不能直接拿来展示。
+
+Deck 原历史曾移入 gitignored build 中完整保存，用临时库测接收。600ms 文本流 + 20 图片首次仅收 62+16，补发后66+18；最后停应用按现有表结构补齐临时库为100+20（图片200px预览），重启后台23.5MiB、0.014%单核，但未打开图片面板，不能与其他应用浏览后排名。**已执行 restore-deck.py 恢复原目录并重启正常 Deck，Clip 也恢复正常库，lsof 核验通过。剪贴板已恢复图片测试前的值。** 临时库在 build/competitor-benchmark/deck-test-*，恢复标记 DECK-RESTORED.txt。不要再次执行旧的原库搬走步骤覆盖保留物。
+
+Paste 6.6.10、CleanClip 2.4.7 为 MacKed 包，下载摘要/签名已记；首次启动返回取消，随后应用出现在 ~/.Trash。CleanClip 系统评估拒绝。尚无有效运行数据，已问用户是否手动点了移到废纸篓，未收到答案。PastePal 由用户完成激活，当前可运行。
+
+Deck 菜单栏窗口无法由当前 CUA 读取；已请求用户展开面板。读到的用户 app_launch 是 Ctrl+Cmd+Shift+V（区别于禁止的 Cmd+Shift+V），尝试仍未展开。不要反复猜快捷键。
+
+网站现有产品页/51秒演示仍200。新增公开GitHub链接已写 products.yaml，但全量 gen_site/deploy 在资产枚举处失败：~/Dev/jobs/archive、updates 无catalog。日志 build/competitor-benchmark/site-deploy.log，没有部署变更；该SSOT改动尚未提交。还需解决该发布阻断并核验新内容。目标仍包括全部测试与推广，不能因已发三款视频就标完成；仍缺两款运行、Deck界面、对等速度/重复轮次。
+
 用户要求所有自研 app：功能完成后极致降低 RAM / CPU、提升响应速度，保持键盘友好；形成“竞品对比 → 实测优化 → 产品卖点 → 实机视频 → GitHub / 个人网站推广”的可复用流程。
 
 已写入共享 HARNESS，app skill 引用 `references/product-loop.md`；已同步并检查无漂移，cc-home commit d78824e。

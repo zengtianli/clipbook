@@ -1,0 +1,102 @@
+[
+  {
+    "file": "fixture-01.png",
+    "sha256": "b7f59e8d6a6c4b5e87409b2356fe4a3412b89e83e25ace6e687badecd62199a1",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-02.png",
+    "sha256": "15112beeedee8a2ce59348b5f9c9a8856918e2a1a40183b94003fb28c1f3072f",
+    "bytes": 252010
+  },
+  {
+    "file": "fixture-03.png",
+    "sha256": "3d5b3dd1e122bbc54ff913fa886a12e2d071fc293a70f32af0c013bf3ed1ba0b",
+    "bytes": 252010
+  },
+  {
+    "file": "fixture-04.png",
+    "sha256": "934c0788ebb85213c58af6136a384383c422b20c8bb429c28ba3ec49306c6fb5",
+    "bytes": 252010
+  },
+  {
+    "file": "fixture-05.png",
+    "sha256": "821e234d0a03e94de02eae75a5fbad9547b56bef9539ad5ac8e34d3a124e02e7",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-06.png",
+    "sha256": "c9889cbf4c47e8cc5ae6dc8a378c825ce6cece5ab4170a9b5c5db8c2ff6f0f6e",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-07.png",
+    "sha256": "e329d05e4848c78657a979463f97b66b5d20f5e0a48af2a53e3c6f89410fbecd",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-08.png",
+    "sha256": "23539fe1e96114f3cf508251869145aa9fb654f8014f13f6b8ee8bfde1ef6af5",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-09.png",
+    "sha256": "44bdde047cf1f86a0109aec700e281d46a2846a9f06a36b756a39e9110caba57",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-10.png",
+    "sha256": "befcaa50e4e203f2fc369c3793278d60695066abd8d76d538dd561f59cd0dc45",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-11.png",
+    "sha256": "427815b3d6fe40757e0f27836899082682e6d085e6f2191d5d99fe24755aaf09",
+    "bytes": 252008
+  },
+  {
+    "file": "fixture-12.png",
+    "sha256": "4918f731d9d1c62ceb1ebf26bd4afda7fa92e71763328c045415ec5905745a07",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-13.png",
+    "sha256": "02aaf3f60c0d9a3eb0826c3ac4c800bdaa2df75aecdb591c951e1349e63d05f0",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-14.png",
+    "sha256": "80afa1c1502754df9cb228e75781dad6632e2a059fce200e7e634dce5da2a5e9",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-15.png",
+    "sha256": "5c8c20f9602ed529d30924a4879268eea34ca686457f7ad7753ae24d75ec780a",
+    "bytes": 252007
+  },
+  {
+    "file": "fixture-16.png",
+    "sha256": "e1eb47afa6d59526fd60de9a6acd31aa22ad53ae2efc7adbb85aa6ec240d469e",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-17.png",
+    "sha256": "03083f777484d65ae3ddf45ecfea1828d4a1b026180091b9fe519066f0d3ccef",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-18.png",
+    "sha256": "cbb1a639befe0d1c6a2732c606762b6ca540b661ad0bd7eed5dee84a441ce7ff",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-19.png",
+    "sha256": "00a0c941569b043935a2fc3ab39e169fca0d6b65badf94ff47d167dc842fa4d7",
+    "bytes": 252009
+  },
+  {
+    "file": "fixture-20.png",
+    "sha256": "b0ef04cb101af5f0c5ad1e1a2c6314ca230f162bdf359117949be85c61278427",
+    "bytes": 252009
+  }
+]

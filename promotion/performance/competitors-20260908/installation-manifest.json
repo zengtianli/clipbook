@@ -1,0 +1,62 @@
+{
+  "apps": [
+    {
+      "name": "Maccy",
+      "version": "2.7.1",
+      "bundle_id": "org.p0deje.Maccy",
+      "signature": "Executable=/Applications/Maccy.app/Contents/MacOS/Maccy\nIdentifier=org.p0deje.Maccy\nFormat=app bundle with Mach-O universal (x86_64 arm64)\nCodeDirectory v=20500 size=3964 flags=0x10000(runtime) hashes=113+7 location=embedded\nSignature size=8929\nAuthority=Developer ID Application: Alexey Rodionov (MN3X4648SC)\nAuthority=Developer ID Certification Authority\nAuthority=Apple Root CA\nTimestamp=Aug 10, 2026 at 22:30:32\nNotarization Ticket=stapled\nInfo.plist entries=28\nTeamIdentifier=MN3X4648SC\nRuntime Version=26.5.0\nSealed Resources version=2 rules=13 files=332\nInternal requirements count=1 size=208\nTotal signatures=1\nChosen signature=1\n",
+      "signature_integrity_exit": 0,
+      "signature_integrity_message": "",
+      "installed_size_KiB": 10336
+    },
+    {
+      "name": "PastePal",
+      "version": "2.21.1",
+      "bundle_id": "com.onmyway133.PastePal",
+      "signature": "Executable=/Applications/PastePal.app/Contents/MacOS/PastePal\nIdentifier=com.onmyway133.PastePal\nFormat=app bundle with Mach-O universal (x86_64 arm64)\nCodeDirectory v=20500 size=35587 flags=0x10000(runtime) hashes=1101+7 location=embedded\nSignature size=9038\nAuthority=Developer ID Application: Khoa Pham (T78DK947F2)\nAuthority=Developer ID Certification Authority\nAuthority=Apple Root CA\nTimestamp=Aug 28, 2026 at 19:45:58\nNotarization Ticket=stapled\nInfo.plist entries=36\nTeamIdentifier=T78DK947F2\nRuntime Version=26.5.0\nSealed Resources version=2 rules=13 files=112\nInternal requirements count=1 size=216\nTotal signatures=1\nChosen signature=1\n",
+      "signature_integrity_exit": 0,
+      "signature_integrity_message": "",
+      "installed_size_KiB": 61836
+    },
+    {
+      "name": "Paste",
+      "version": "6.6.10",
+      "bundle_id": "com.wiheads.paste",
+      "signature": "Executable=/Applications/Paste.app/Contents/MacOS/Paste\nIdentifier=com.wiheads.paste\nFormat=app bundle with Mach-O universal (x86_64 arm64)\nCodeDirectory v=20400 size=148266 flags=0x0(none) hashes=4623+7 location=embedded\nSignature size=1889\nAuthority=https://macked.app\nSigned Time=Sep 4, 2026 at 16:32:29\nInfo.plist entries=35\nTeamIdentifier=not set\nSealed Resources version=2 rules=13 files=108\nInternal requirements count=1 size=96\nTotal signatures=1\nChosen signature=1\n",
+      "signature_integrity_exit": 0,
+      "signature_integrity_message": "",
+      "installed_size_KiB": 64280
+    },
+    {
+      "name": "CleanClip",
+      "version": "2.4.7",
+      "bundle_id": "com.antiless.cleanclip.mac",
+      "signature": "Executable=/Applications/CleanClip.app/Contents/MacOS/CleanClip\nIdentifier=com.antiless.cleanclip.mac\nFormat=app bundle with Mach-O universal (x86_64 arm64)\nCodeDirectory v=20400 size=78387 flags=0x0(none) hashes=2439+7 location=embedded\nSignature size=1889\nAuthority=https://macked.app\nSigned Time=May 28, 2026 at 09:50:47\nNotarization Ticket=stapled\nInfo.plist entries=36\nTeamIdentifier=not set\nSealed Resources version=2 rules=13 files=121\nInternal requirements count=1 size=104\nTotal signatures=1\nChosen signature=1\n",
+      "signature_integrity_exit": 0,
+      "signature_integrity_message": "",
+      "installed_size_KiB": 43892
+    }
+  ],
+  "packages": [
+    {
+      "name": "Paste-6.6.10-MacKed.dmg",
+      "bytes": 36463823,
+      "sha256": "ce3f3ef91747219c1e747ff6c441df5d08ee782c54ac3935f666723f0befcd54"
+    },
+    {
+      "name": "CleanClip-2.4.7-MacKed.dmg",
+      "bytes": 24467964,
+      "sha256": "d6206467c54b7cc99f93673c8f73de516be42c6b1612a7b27d7d1570e779ff4f"
+    },
+    {
+      "name": "PastePal-2.21.1.zip",
+      "bytes": 29875730,
+      "sha256": "65c9ca7c8a1feb74cdf8c43fc014dbc35c22280ab74e22c89e7202d222082832"
+    },
+    {
+      "name": "Maccy-2.7.1.zip",
+      "bytes": 4709233,
+      "sha256": "f388aee34de09a0c7531631303785d9938bef9a92130e21ce1049c8f56aad077"
+    }
+  ]
+}
