@@ -4,7 +4,7 @@ function: >-
   自用剪贴板库（PastePal 形态，替代 Deck）。菜单栏常驻，点图标开主窗口：左栏按类型/来源 app/收藏夹筛，
   中栏自适应网格多选，右栏直接改正文（保存覆盖 / 另存新条）、改标题、一键转换、加收藏夹、复制/粘贴。
   记录文本/富文本/链接/图片/文件/代码/颜色，同内容去重顶上，置顶与收藏夹永不淘汰；首次启动自动导入 Deck 历史（只读）。
-  **全 Swift 原生**（swiftc 直编，无 SPM / 无 xcodeproj / 无后端进程）；唯一网络访问 = 抓链接标题（可关）。
+  **全 Swift 原生**（XcodeGen 构建，无 SPM / 无后端进程）；可选抓链接标题及 iCloud 历史归档，默认不启用同步。
   快捷键可配置，默认全部未绑定；只有用户明确保存的全局键才注册，不自动选择或退让。
 public_api: "菜单栏常驻（安装名由 display_name 派生，点图标开窗口）· clipbook://show[?q=]|hide|toggle|settings · build/Clipbook --selftest"
 key_scripts:
@@ -13,7 +13,8 @@ key_scripts:
   - Sources/Native/Classifier.swift    # 文本家族类型识别 SSOT（link / color / code / text），Watcher·编辑·导入三处共用
   - Sources/Native/Watcher.swift       # 轮询 changeCount；extract() 纯函数 = 抓取优先级（文件>文本(带RTF)>图片）+ 忽略名单 + 纯文本模式
   - Sources/Native/DeckImporter.swift  # 只读 Deck 库一次性导入（拷到临时目录再开）
-  - Sources/Native/LinkTitle.swift     # 抓链接页面标题（唯一网络访问，可关）
+  - Sources/Native/LinkTitle.swift     # 抓链接页面标题（可关）
+  - Sources/Native/MacClipSync.swift   # 可选 iCloud 独立归档，与 iOS Clip 共用私有容器
   - Sources/Native/Paster.swift        # 写回剪贴板（含 RTF/文件/图片）+ CGEvent ⌘V（需辅助功能，不假装成功）
   - Sources/Native/ClipCopy.swift      # 标准⌘C与自定义复制共用：文本选区优先，否则复制全部所选记录
   - Sources/Native/Settings.swift      # UserDefaults 记录偏好 / 开机自启状态与失败反馈
@@ -26,7 +27,7 @@ key_scripts:
   - Sources/Native/DetailView.swift    # 右栏编辑器（保存/另存/转换/收藏/复制/粘贴）
   - Sources/Native/SettingsView.swift  # 设置窗口
   - Sources/Native/SelfTest.swift      # --selftest 判据（build.sh 阻断门，含 Deck 结构夹具）
-  - build.sh                           # 三道 fail-closed 门 + swiftc + 打包 + 签名 + 装机
+  - build.sh                           # 转交 build-cloud.sh，XcodeGen + selftest + 描述文件签名 + 装机
   - icon/AppIcon.icns                  # 图标 SSOT（make_icon.py 生成）
 depends_on:
   - Dev/tools/dev/lib/tools/macapp/check_codingkeys.py   # 构建期门①

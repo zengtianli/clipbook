@@ -12,7 +12,7 @@ A native Swift clipboard library for macOS. A menu-bar icon opens the three-colu
 
 Capture text, rich text, links, images and files; deduplicate content, pin entries, organize collections, edit and merge text. Local data stays in `~/Library/Application Support/Clipbook/`. The existing bundle ID and `clipbook://show`, `hide`, `toggle`, `settings` URLs remain compatible.
 
-Link-title fetching is optional and is the only network operation. Responses are streamed and cancelled at 256 KiB, even when a server ignores the Range header. Automatic paste needs macOS Accessibility permission.
+Link-title fetching and iCloud archiving are optional network features. Link responses are streamed and cancelled at 256 KiB, even when a server ignores the Range header. Automatic paste needs macOS Accessibility permission.
 
 ## Build and verify
 

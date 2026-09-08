@@ -18,7 +18,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.clipbook
         CODE_SIGN_ENTITLEMENTS: Cloud.entitlements
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_CFBundleDisplayName: Clip
         INFOPLIST_KEY_CFBundleName: Clip
         INFOPLIST_KEY_CFBundleIconFile: AppIcon
@@ -29,7 +29,10 @@ targets:
       path: build/CloudInfo.plist
       properties:
         CFBundleName: Clip
+        CFBundleDisplayName: Clip
         CFBundleIconFile: AppIcon
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: false
         NSPrincipalClass: NSApplication
         CFBundleURLTypes:

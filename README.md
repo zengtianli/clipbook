@@ -4,6 +4,8 @@
 
 原生 macOS 剪贴板库：快速取用，轻装常驻。左边筛、中间挑、右边改，全 Swift，本地存储。
 
+iOS 配套版已进入开发安装阶段。设置 → iCloud 可开启独立历史归档，首次整理最近 500 条及之后的新记录，手机可取用；Mac 本地清理不删除云端归档。默认关闭，不开启时不初始化云端数据库。此前 build 26 的性能数据不代表开启同步后的占用。
+
 [产品主页与实机视频](https://app-mac-clips.tianli.cyou/) · [与 Deck 的区别及实测口径](promotion/COMPARISON.md)
 
 ![Clip：搜索、选择与编辑](promotion/video/clip-editor.png)

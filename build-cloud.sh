@@ -17,16 +17,7 @@ APP=.dd-cloud/Build/Products/Release/Clipbook.app
 "$APP/Contents/MacOS/Clipbook" --selftest
 codesign --verify --deep --strict "$APP"
 [ -f "$APP/Contents/embedded.provisionprofile" ] || { echo 'Missing CloudKit provisioning profile'; exit 1; }
-if [ "${1:-}" = --build-only ]; then echo "Built: $APP"; exit 0; fi
-DEST=/Applications/Clip.app
-if [ -e "$DEST" ]; then
-  ARCHIVE="$HOME/.Trash/clip-pre-icloud-$(date +%Y%m%d-%H%M%S)"
-  mkdir -p "$ARCHIVE"
-  mv "$DEST" "$ARCHIVE/"
-fi
-ditto "$APP" "$DEST"
-codesign --verify --deep --strict "$DEST"
-python3 - "$DEST/Contents/Info.plist" <<'PY'
+python3 - "$APP/Contents/Info.plist" <<'PY'
 import pathlib, plistlib, re, sys
 catalog = pathlib.Path('catalog.yaml').read_text()
 info = plistlib.loads(pathlib.Path(sys.argv[1]).read_bytes())
@@ -36,4 +27,13 @@ for field, key in [('display_name', 'CFBundleDisplayName'), ('bundle_id', 'CFBun
 assert info['CFBundleName'] == info['CFBundleDisplayName']
 assert info['CFBundleIconFile'] == 'AppIcon'
 PY
+if [ "${1:-}" = --build-only ]; then echo "Built: $APP"; exit 0; fi
+DEST=/Applications/Clip.app
+if [ -e "$DEST" ]; then
+  ARCHIVE="$HOME/.Trash/clip-pre-icloud-$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$ARCHIVE"
+  mv "$DEST" "$ARCHIVE/"
+fi
+ditto "$APP" "$DEST"
+codesign --verify --deep --strict "$DEST"
 echo "Installed: $DEST"
