@@ -1,0 +1,8 @@
+[xcode_env] Xcode-27.0.0-Beta.6.app (Xcode 27.0, macosx SDK 27.0)
+main-window: 51.3 MiB
+main-and-settings: 70.3 MiB
+both-closed: 71.0 MiB
+image-grid: 106.3 MiB
+image-pages: 117.3 MiB
+closed-after-images: 106.7 MiB
+reopen: 125.3 MiB
