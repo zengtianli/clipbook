@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import ImageIO
 
 /// Optional cloud archive. The existing fast SQLite clipboard stays the primary local store.
 /// Local retention/deletion never deletes a user's cross-device archive.
@@ -40,6 +41,7 @@ final class MacClipSync: ObservableObject {
         do { try send(item) } catch { status = error.localizedDescription }
     }
     private func send(_ item: ClipItem) throws {
+        defer { library.releaseCaches() }
         guard item.kind != .file else { return }
         guard item.text.utf8.count <= ClipLibrary.maxTextBytes, item.bytes <= ClipLibrary.maxImageBytes else { return }
         let marker = "cloudArchive.v1.\(item.id)"
@@ -74,8 +76,15 @@ final class MacClipSync: ObservableObject {
                 let marker = "cloudReceived.v1.\(item.id)"
                 if try model.store.meta(marker) != nil { continue }
                 let image = item.kind == "image" ? try library.imageData(item) : nil
+                var width = 0, height = 0
+                if let image, let source = CGImageSourceCreateWithData(image as CFData, [kCGImageSourceShouldCache: false] as CFDictionary),
+                   let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any] {
+                    width = properties[kCGImagePropertyPixelWidth] as? Int ?? 0
+                    height = properties[kCGImagePropertyPixelHeight] as? Int ?? 0
+                }
                 let capture = Capture(kind: image == nil ? Classifier.kind(of: item.text) : .image,
-                    text: item.text, imagePNG: image, appName: "Clip iCloud", appBundle: "cyou.tianli.clipmobile", title: item.title)
+                    text: image == nil ? item.text : "图片 \(width)×\(height)", imagePNG: image, width: width, height: height,
+                    appName: "Clip iCloud", appBundle: "cyou.tianli.clipmobile", title: item.title)
                 let imported = try model.store.ingest(capture, at: item.date)
                 if item.favorite { try model.store.setPinned(imported.id, true) }
                 try model.store.setMeta(marker, String(imported.id))
