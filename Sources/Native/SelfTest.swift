@@ -36,6 +36,7 @@ enum SelfTest {
         print("Clipbook --selftest")
         print("· 快捷键 / 设置生产路径")
         MainActor.assumeIsolated { ShortcutSelfTest.run().forEach { check($0.0, $0.1) } }
+        MainActor.assumeIsolated { KeyboardMemorySelfTest.run().forEach { check($0.0, $0.1) } }
         let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("clipbook-selftest-\(ProcessInfo.processInfo.processIdentifier)")
         defer { try? FileManager.default.removeItem(at: tmp) }
 

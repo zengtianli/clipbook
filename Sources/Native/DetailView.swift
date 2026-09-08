@@ -24,12 +24,23 @@ struct DetailPane: View {
             }
         }
         .frame(minWidth: 320)
+        .onDisappear {
+            if let id = loadedID { model.savedDraft = .init(id: id, text: draft, title: titleDraft, rich: editingRich) }
+        }
+        .onChange(of: draft) { _, _ in rememberDraft() }
+        .onChange(of: titleDraft) { _, _ in rememberDraft() }
+        .onChange(of: editingRich) { _, _ in rememberDraft() }
         .onReceive(NotificationCenter.default.publisher(for: ClipAction.requested)) { note in
             if note.object as? ClipAction == .save, let item = model.detail, item.kind.editable { save(item) }
         }
     }
 
     private func load(_ item: ClipItem) {
+        if let saved = model.savedDraft, saved.id == item.id {
+            draft = saved.text; titleDraft = saved.title; editingRich = saved.rich; loadedID = item.id
+            model.savedDraft = nil
+            return
+        }
         draft = item.text
         titleDraft = item.title
         editingRich = false
@@ -37,6 +48,10 @@ struct DetailPane: View {
     }
 
     private func dirty(_ item: ClipItem) -> Bool { draft != item.text }
+
+    private func rememberDraft() {
+        if let id = loadedID { model.savedDraft = .init(id: id, text: draft, title: titleDraft, rich: editingRich) }
+    }
 
     @ViewBuilder
     private func content(_ item: ClipItem) -> some View {
@@ -81,7 +96,7 @@ struct DetailPane: View {
     private func body(_ item: ClipItem) -> some View {
         switch item.kind {
         case .image:
-            if let img = model.thumbnail(item) {
+            if let img = model.thumbnail(item, maxPixels: 1600) {
                 Image(nsImage: img).resizable().aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 6))

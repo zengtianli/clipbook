@@ -96,17 +96,17 @@ struct CollectionEditor: View {
             // 16 个图标一行放不下 440 宽；HStack 会撑破 frame 再被居中裁掉（2026-09-05 实测左边被切）—— 用自适应网格换行
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 6)], spacing: 6) {
                 ForEach(Self.icons, id: \.self) { i in
-                    Image(systemName: i).frame(width: 30, height: 26)
+                    Button { icon = i } label: { Image(systemName: i).frame(width: 30, height: 26) }
+                        .buttonStyle(.plain).accessibilityLabel("图标 \(i)")
                         .background(i == icon ? Color.accentColor.opacity(0.25) : .clear, in: RoundedRectangle(cornerRadius: 5))
                         .contentShape(Rectangle())
-                        .onTapGesture { icon = i }
                 }
             }
             HStack(spacing: 8) {
                 ForEach(Self.colors, id: \.self) { c in
-                    Circle().fill(Color(hex: c)).frame(width: 18, height: 18)
+                    Button { color = c } label: { Circle().fill(Color(hex: c)).frame(width: 18, height: 18) }
+                        .buttonStyle(.plain).accessibilityLabel("颜色 \(c)")
                         .overlay(Circle().stroke(Color.primary, lineWidth: c == color ? 2 : 0))
-                        .onTapGesture { color = c }
                 }
             }
             HStack {

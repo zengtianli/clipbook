@@ -8,6 +8,9 @@ import SwiftUI
 @main
 enum Boot {
     static func main() {
+        if CommandLine.arguments.contains("--keyboard-window-test") {
+            exit(MainActor.assumeIsolated { KeyboardMemorySelfTest.windowRuntime() })
+        }
         if CommandLine.arguments.contains("--copy-sound-test") {
             exit(MainActor.assumeIsolated {
                 let board = NSPasteboard(name: .init("Clip-external-audio-runtime-\(UUID().uuidString)"))
@@ -166,7 +169,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let pause = menu.addItem(withTitle: "暂停记录", action: #selector(menuTogglePause), keyEquivalent: "")
         pause.state = s.paused ? .on : .off
         menu.addItem(.separator())
-        menu.addItem(withTitle: "\(AppModel.shared.totalAll) 条记录", action: nil, keyEquivalent: "")
+        let count = (try? AppModel.shared.store.count()) ?? AppModel.shared.totalAll
+        menu.addItem(withTitle: "\(count) 条记录", action: nil, keyEquivalent: "")
         menu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(menuQuit), keyEquivalent: "")
@@ -204,7 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         default:
             guard NSApp.keyWindow === window else { return }
             switch action {
-            case .paste: if let item = model.detail { model.paste(item, hideWindow: { self.window.orderOut(nil) }) }
+            case .paste: if let item = model.detail { model.paste(item, hideWindow: { self.hideWindow() }) }
             case .pin: if let item = model.detail { model.togglePin(item) }
             case .delete: confirmDelete(model.selection)
             case .selectAll: model.selectAll()
@@ -233,17 +237,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.setFrameAutosaveName("ClipbookMain")
-        window.contentView = NSHostingView(rootView: MainView(model: AppModel.shared, hideWindow: { [weak self] in self?.window.orderOut(nil) }))
+        window.contentView = nil
         window.center()
     }
 
     func showWindow() {
+        if window.contentView == nil {
+            AppModel.shared.resumeInterface()
+            window.contentView = NSHostingView(rootView: MainView(model: AppModel.shared, hideWindow: { [weak self] in self?.hideWindow() }))
+        }
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
+        DispatchQueue.main.async { [weak self] in
+            guard let window = self?.window, window.isKeyWindow,
+                  !(window.firstResponder is NSTextView),
+                  let grid = GridKeyboard.Responder.find(in: window.contentView) else { return }
+            window.makeFirstResponder(grid)
+        }
+    }
+
+    func hideWindow() {
+        guard window.attachedSheet == nil else { return }
+        window.orderOut(nil)
+        window.contentView = nil
+        AppModel.shared.suspendInterface()
     }
 
     func toggleWindow() {
-        if window.isVisible && window.isKeyWindow { window.orderOut(nil) } else { showWindow() }
+        if window.isVisible && window.isKeyWindow { hideWindow() } else { showWindow() }
     }
 
     func showSettings() {
@@ -264,8 +285,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// 关窗口 = 隐藏，不退出（菜单栏常驻）
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        if sender === settingsWindow { shortcuts.endRecording() }
-        sender.orderOut(nil)
+        if sender === settingsWindow {
+            shortcuts.endRecording()
+            sender.orderOut(nil)
+            sender.contentView = nil
+            settingsWindow = nil
+        } else if sender === window { hideWindow() }
         return false
     }
 
@@ -289,7 +314,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             case "show":
                 showWindow()
                 if let q { AppModel.shared.search = q }
-            case "hide":     window.orderOut(nil)
+            case "hide":     hideWindow()
             case "toggle":   toggleWindow()
             case "settings": showSettings()
             default: break

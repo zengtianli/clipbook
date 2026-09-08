@@ -34,6 +34,9 @@ open -a "TL Clipbook"
 
 ## 硬约束 / 踩过的坑
 
+- 键盘友好是应用基本要求：网格方向键与 Shift 扩选由稳定的 `GridKeyboard.Responder` 接收，不能让会被 LazyVGrid 回收的单张卡片持有导航焦点。编辑器、侧栏沿用自身按键行为，不用全局监视器抢方向键。
+- 隐藏主窗口走 `hideWindow()`：卸载 HostingView，保留当前草稿与全局复制所需选择，暂停界面查询，恢复时重载。图片使用 ImageIO 按预览尺寸解码及有界缓存，禁止把原图当无限缓存的缩略图。
+
 - **卡片点选走 AppKit `ClickCatcher`**（mouseDown 拿修饰键 + acceptsFirstMouse）：SwiftUI TapGesture 在窗口不在前台时第一下只激活不选中，`NSApp.currentEvent` 拿不到修饰键。
 - **macOS 14 协作式激活**：切回别的 app 必须 `NSApp.yieldActivation(to:)` + `app.activate(from: .current)`；`open clipbook://` 能否把本 app 拉到前台**不稳定**，用户配热键建议 `osascript -e 'tell application "TL Clipbook" to activate' -e 'open location "clipbook://toggle"'`。
 - 手搓 NSApplication **必须装主菜单**，否则文本框 ⌘V 不工作。

@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import os
 import Combine
+import ImageIO
 
 let clipLog = Logger(subsystem: "cyou.tianli.clipbook", category: "model")
 
@@ -63,6 +64,11 @@ final class AppModel: ObservableObject {
     @Published private(set) var totalAll = 0
     @Published var selection: Set<Int64> = [] { didSet { refreshDetail() } }
     private var anchorID: Int64?
+    @Published var keyboardID: Int64?
+    var gridColumns = 3
+    private(set) var interfaceActive = true
+    struct Draft { var id: Int64; var text: String; var title: String; var rich: Bool }
+    var savedDraft: Draft?
     /// 单选时的详情条目（独立查一次，编辑保存后立即刷新）
     @Published private(set) var detail: ClipItem?
     @Published private(set) var detailCollections: Set<Int64> = []
@@ -86,12 +92,14 @@ final class AppModel: ObservableObject {
         set { UserDefaults.standard.set(newValue, forKey: "promptedAccessibility") }
     }
 
-    private let thumbs = NSCache<NSNumber, NSImage>()
+    private let thumbs = NSCache<NSString, NSImage>()
     private var iconCache: [String: NSImage] = [:]
 
     init(home: URL = ClipStore.defaultHome(), settings suppliedSettings: AppSettings? = nil) throws {
         let settings = suppliedSettings ?? AppSettings.shared
         self.settings = settings
+        thumbs.totalCostLimit = 12 * 1024 * 1024
+        thumbs.countLimit = 48
         store = try ClipStore(home: home)
         watcher = PasteboardWatcher(onCopy: { [weak self] count in
             guard let self else { return }
@@ -161,6 +169,7 @@ final class AppModel: ObservableObject {
     }
 
     func reload() {
+        guard interfaceActive else { return }
         do {
             let f = filter
             items = try store.list(f, page: page, pageSize: pageSize)
@@ -194,6 +203,7 @@ final class AppModel: ObservableObject {
     // MARK: - 选择
 
     func click(_ id: Int64, modifiers: NSEvent.ModifierFlags) {
+        keyboardID = id
         if modifiers.contains(.command) {
             if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }
             anchorID = id
@@ -207,6 +217,42 @@ final class AppModel: ObservableObject {
     }
 
     func selectAll() { selection = Set(items.map(\.id)) }
+
+    /// Only called by the grid's native responder, never by text editors or the sidebar.
+    @discardableResult
+    func navigate(code: UInt16, modifiers: NSEvent.ModifierFlags) -> Bool {
+        guard modifiers.intersection([.command, .control, .option]).isEmpty else { return false }
+        guard [123, 124, 125, 126, 115, 119, 116, 121, 36, 76, 53].contains(code) else { return false }
+        if code == 53 { selection = []; keyboardID = nil; return true }
+        if code == 36 || code == 76 { copySelection(); return true }
+        guard !items.isEmpty else { return true }
+        let current = items.firstIndex { $0.id == keyboardID } ?? items.firstIndex { selection.contains($0.id) }
+        let cols = max(1, gridColumns)
+        let delta: Int
+        switch code {
+        case 123: delta = -1
+        case 124: delta = 1
+        case 125: delta = cols
+        case 126: delta = -cols
+        case 116: delta = -cols * 3
+        case 121: delta = cols * 3
+        default: delta = 0
+        }
+        let index = code == 115 ? 0 : code == 119 ? items.count - 1 : min(items.count - 1, max(0, (current ?? -delta) + delta))
+        if modifiers.contains(.shift), anchorID == nil { anchorID = current.map { items[$0].id } ?? items[index].id }
+        click(items[index].id, modifiers: modifiers.contains(.shift) ? [.shift] : [])
+        return true
+    }
+
+    func suspendInterface() {
+        interfaceActive = false
+        // Keep selected records for explicitly configured global copy, and keep draft state.
+        items = selectedItems
+        thumbs.removeAllObjects()
+        iconCache.removeAll()
+    }
+
+    func resumeInterface() { interfaceActive = true; reload() }
 
     // MARK: - 动作
 
@@ -256,7 +302,7 @@ final class AppModel: ObservableObject {
 
     func delete(_ ids: Set<Int64>) {
         do { try store.delete(Array(ids)) } catch { notice = "删除失败：\(error)" }
-        ids.forEach { thumbs.removeObject(forKey: NSNumber(value: $0)) }
+        thumbs.removeAllObjects()
         selection = []
         reload()
     }
@@ -370,13 +416,24 @@ final class AppModel: ObservableObject {
 
     // MARK: - 图
 
-    func thumbnail(_ item: ClipItem) -> NSImage? {
+    func thumbnail(_ item: ClipItem, maxPixels: Int = 512) -> NSImage? {
         guard item.kind == .image else { return nil }
-        let key = NSNumber(value: item.id)
+        let key = "\(item.id)-\(maxPixels)" as NSString
         if let hit = thumbs.object(forKey: key) { return hit }
-        guard let url = store.blobURL(item), let img = NSImage(contentsOf: url) else { return nil }
-        thumbs.setObject(img, forKey: key)
+        guard let url = store.blobURL(item), let img = Self.downsample(url, maxPixels: maxPixels) else { return nil }
+        thumbs.setObject(img, forKey: key, cost: Int(img.size.width * img.size.height) * 4)
         return img
+    }
+
+    static func downsample(_ url: URL, maxPixels: Int) -> NSImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
+              let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxPixels,
+                kCGImageSourceShouldCacheImmediately: true
+              ] as CFDictionary) else { return nil }
+        return NSImage(cgImage: cg, size: NSSize(width: cg.width, height: cg.height))
     }
 
     func richText(_ item: ClipItem) -> NSAttributedString? {

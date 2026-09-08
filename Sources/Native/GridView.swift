@@ -10,17 +10,27 @@ struct GridPane: View {
     var body: some View {
         VStack(spacing: 0) {
             if model.selection.count > 1 { batchBar; Divider() }
+            ScrollViewReader { proxy in
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 176, maximum: 260), spacing: 12)], spacing: 12) {
                     ForEach(model.items) { item in
                         CardView(item: item, model: model, selected: model.selection.contains(item.id))
-                            .overlay(ClickCatcher { flags, count in
+                            .overlay(ClickCatcher(onClick: { flags, count in
                                 if count == 2 { model.copy(item) } else { model.click(item.id, modifiers: flags) }
-                            })
+                            }, onKey: { model.navigate(code: $0.keyCode, modifiers: $0.modifierFlags) }))
+                            .id(item.id)
                             .contextMenu { ItemMenu(item: item, model: model, hideWindow: hideWindow) }
                     }
                 }
                 .padding(14)
+            }
+            .background(GridKeyboard { model.navigate(code: $0.keyCode, modifiers: $0.modifierFlags) })
+            .background(GeometryReader { geo in
+                Color.clear.onAppear { updateColumns(geo.size.width) }
+                    .onChange(of: geo.size.width) { _, width in updateColumns(width) }
+            })
+            .onChange(of: model.keyboardID) { _, id in
+                if let id { proxy.scrollTo(id) }
             }
             .overlay {
                 if model.items.isEmpty {
@@ -29,6 +39,7 @@ struct GridPane: View {
                                            description: Text(model.search.isEmpty ? "复制点什么，它就会出现在这里" : "换个词，或换个筛选"))
                 }
             }
+            }
             Divider()
             bottomBar
         }
@@ -36,6 +47,10 @@ struct GridPane: View {
         .onReceive(NotificationCenter.default.publisher(for: ClipAction.requested)) { note in
             if note.object as? ClipAction == .search { searchFocused = true }
         }
+    }
+
+    private func updateColumns(_ width: CGFloat) {
+        model.gridColumns = max(1, Int((width - 16.0) / 188.0))
     }
 
     private var batchBar: some View {
