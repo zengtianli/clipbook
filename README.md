@@ -2,7 +2,13 @@
 
 [English](README_EN.md)
 
-自用的 macOS 剪贴板库。菜单栏常驻，点图标开窗口：左边筛、中间挑、右边改。全 Swift，数据只在本机。
+原生 macOS 剪贴板库：快速取用，轻装常驻。左边筛、中间挑、右边改，全 Swift，本地存储。
+
+[产品主页与实机视频](https://app-mac-clips.tianli.cyou/) · [与 Deck 的区别及实测口径](promotion/COMPARISON.md)
+
+![Clip：搜索、选择与编辑](promotion/video/clip-editor.png)
+
+build 26 本机安装占用约 **3.3 MB**。同数据图片浏览测试，内存从 **275.5 降至 117.3 MiB（约 57%）**，这是 Clip 自身优化前后的结果。键盘优先、少占资源和快速响应是持续优化方向；尚无同负载计时支持“比 Deck 更快”的结论。当前暂无公开安装包。
 
 键盘操作：网格获得焦点后，方向键按当前列数移动，Shift + 方向键扩选，Home / End 到本页首尾，Page Up / Down 移动三行，Return 复制所选记录，Esc 清除选择。选中项自动滚入视野；Tab 在控件间移动。搜索和正文编辑中的方向键继续移动文字光标。自定义全局快捷键仍默认不绑定。
 

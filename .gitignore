@@ -16,3 +16,8 @@ xcuserdata/
 
 # 图标中间产物
 icon/*.iconset/
+
+# Keep raw demo captures locally; publish only reviewed final media.
+promotion/video/*
+!promotion/video/clip-demo.mp4
+!promotion/video/clip-editor.png

@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-09-08T20:50:42.327841+08:00",
+  "device": "Apple M4",
+  "os": "27.0",
+  "elapsed_seconds": 30.005228708,
+  "condition": "existing user databases and process histories; Clip main window shown, Deck background; no assistant UI actions during interval; not a matched-workload benchmark",
+  "apps": {
+    "Clip": {
+      "start": {
+        "cpu_seconds": 20.85,
+        "footprint": "68 MB"
+      },
+      "end": {
+        "cpu_seconds": 20.95,
+        "footprint": "71 MB"
+      },
+      "cpu_percent_one_core": 0.333
+    },
+    "Deck": {
+      "start": {
+        "cpu_seconds": 36.18,
+        "footprint": "85 MB"
+      },
+      "end": {
+        "cpu_seconds": 36.2,
+        "footprint": "85 MB"
+      },
+      "cpu_percent_one_core": 0.067
+    }
+  }
+}
