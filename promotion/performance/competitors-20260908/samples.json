@@ -347,5 +347,39 @@
       "cpu_seconds": 2.59332775
     },
     "cpu_percent_one_core": 0.013771020791754554
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 36485,
+    "stage": "Paste-MacKed-101-text-panel",
+    "wall_seconds": 30.0019916250003,
+    "start": {
+      "footprint_MiB": 56.001190185546875,
+      "rss_MiB": 81.765625,
+      "cpu_seconds": 24.51771033333333
+    },
+    "end": {
+      "footprint_MiB": 56.048065185546875,
+      "rss_MiB": 79.78125,
+      "cpu_seconds": 24.696624375
+    },
+    "cpu_percent_one_core": 0.596340549330672
+  },
+  {
+    "cpu_timebase_factor": 41.666666666666664,
+    "pid": 36485,
+    "stage": "Paste-MacKed-101-text-hidden",
+    "wall_seconds": 30.026630917000148,
+    "start": {
+      "footprint_MiB": 55.548065185546875,
+      "rss_MiB": 84.609375,
+      "cpu_seconds": 24.81845141666666
+    },
+    "end": {
+      "footprint_MiB": 55.454315185546875,
+      "rss_MiB": 62.515625,
+      "cpu_seconds": 24.89005483333333
+    },
+    "cpu_percent_one_core": 0.2384663696190077
   }
 ]

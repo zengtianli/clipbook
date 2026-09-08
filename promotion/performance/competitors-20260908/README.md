@@ -1,5 +1,7 @@
 # 竞品实测 · 进行中
 
+用户已要求停止追加测试，本轮收尾。最新状态以 promotion/COMPETITOR-RESULTS.md 为准；下表保留过程范围。
+
 本目录保存 Clip 竞品对比的原始计量、安装来源与方法。安装包和私有运行数据位于本仓 gitignored `build/competitor-benchmark/`，不上传剪贴板数据库或许可证。
 
 ## 范围与状态
