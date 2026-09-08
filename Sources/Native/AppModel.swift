@@ -51,6 +51,7 @@ final class AppModel: ObservableObject {
 
     let store: ClipStore
     let settings: AppSettings
+    lazy var cloud = MacClipSync(model: self)
     private var settingsSubscriptions: Set<AnyCancellable> = []
     private(set) var watcher: PasteboardWatcher!
 
@@ -155,6 +156,7 @@ final class AppModel: ObservableObject {
     private func ingest(_ cap: Capture) {
         do {
             let it = try store.ingest(cap)
+            if UserDefaults.standard.bool(forKey: "cloudEnabled") { cloud.captured(it) }
             reload()
             if it.kind == .link, it.extra.isEmpty, settings.fetchLinkTitles {
                 Task { [weak self] in

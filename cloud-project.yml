@@ -1,0 +1,36 @@
+name: Clipbook
+options:
+  deploymentTarget: {macOS: '14.0'}
+settings:
+  base:
+    DEVELOPMENT_TEAM: B9LJH93LA4
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: '5.0'
+targets:
+  Clipbook:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+      - path: icon/AppIcon.icns
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.clipbook
+        CODE_SIGN_ENTITLEMENTS: Cloud.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Clip
+        INFOPLIST_KEY_CFBundleName: Clip
+        INFOPLIST_KEY_CFBundleIconFile: AppIcon
+        MARKETING_VERSION: '1.1'
+        CURRENT_PROJECT_VERSION: '1'
+        ENABLE_HARDENED_RUNTIME: YES
+    info:
+      path: build/CloudInfo.plist
+      properties:
+        CFBundleName: Clip
+        CFBundleIconFile: AppIcon
+        LSUIElement: false
+        NSPrincipalClass: NSApplication
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [clipbook]

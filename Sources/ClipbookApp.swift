@@ -124,6 +124,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
             AppModel.shared.startWatching()
+            if UserDefaults.standard.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             buildStatusItem()
             buildWindow()
             showWindow()

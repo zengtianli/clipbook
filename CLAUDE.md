@@ -2,7 +2,7 @@
 
 替代 Deck 的自用剪贴板库，**PastePal 形态**（2026-09-05 用户否掉了第一版的 Maccy 式小面板，改成这样）：
 菜单栏常驻，点图标开主窗口 —— 左栏筛（类型 / 来源 app / 收藏夹）、中栏自适应网格多选、右栏直接改。
-**全 Swift 原生，swiftc 直编，无 xcodeproj / 无 SPM / 无后端进程。** 唯一网络访问 = 抓链接页面标题（设置里可关）。
+**全 Swift 原生，无 SPM / 无后端进程。** 默认仅抓链接页面标题（可关）；2026-09-09 加可选 iCloud 历史归档，为 CloudKit 描述文件签名改用 XcodeGen 构建。
 
 ## 快捷键必须可配置，默认不绑定（用户本轮纠正）
 
@@ -18,11 +18,19 @@ Clip 必须是正常独立应用：`LSUIElement=false` + `.regular` activation p
 ```bash
 cd ~/Apps/mac/clipbook
 git commit …      # 先提交（CFBundleVersion = commit 数）
-./build.sh        # 三道 fail-closed 门 → swiftc → --selftest → 打包 → Apple Development 签名 → 装 /Applications/TL Clipbook.app
-open -a "TL Clipbook"
+./build.sh        # → build-cloud.sh → XcodeGen/Release → --selftest → 签名/描述文件检查 → 装 /Applications/Clip.app
+open -a "Clip"
 ```
 
 签名用 Apple Development 证书不是为了分发，是让「辅助功能」授权跨重编存活（adhoc 每次换 cdhash 授权就掉）。
+
+## iOS / iCloud（2026-09-09）
+
+iOS 客户端在 `/Users/tianli/Apps/ios/clip-ios`。容器 `iCloud.cyou.tianli.clip`。
+`MacClipSync` 按需初始化，未开启不创建 Core Data store、不做云请求。原有 ClipStore 保持主库；同步归档在 Clipbook/CloudLibrary。
+首次开启整理最近 500 条，随后 watcher 新记录加入；云端新内容回流至本地。文件路径不上传、富文本降纯文本；Mac 清理与云端归档独立，不声称编辑/删除/收藏完整双向镜像。
+`Sources/Native/PocketLibrary.swift` 是 iOS `Shared/ClipLibrary.swift` 的逐字节副本；改源后同步副本并核对 SHA256，禁止运行时跨 app 依赖。
+构建 `build-cloud.sh --build-only` 可只出包。保持 bundle ID、可执行名、数据路径与用户快捷键不变。
 
 ## 一条数据的路
 

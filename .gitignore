@@ -4,6 +4,8 @@
 # Xcode / Swift build artifacts
 build/
 DerivedData/
+*.xcodeproj/
+.dd-cloud/
 *.xcuserstate
 *.xcscmblueprint
 *.xccheckout
