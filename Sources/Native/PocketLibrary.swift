@@ -257,10 +257,17 @@ final class ClipLibrary: ObservableObject {
         for obj in try objects(key: id) {
             if let favorite { obj.setValue(favorite, forKey: "favorite") }
             if let title { obj.setValue(title, forKey: "title") }
-            if remove { obj.setValue(true, forKey: "removed"); obj.setValue(nil, forKey: "image"); obj.setValue(nil, forKey: "thumbnail"); obj.setValue("", forKey: "text") }
+            if remove {
+                obj.setValue(true, forKey: "removed")
+                obj.setValue(nil, forKey: "image"); obj.setValue(nil, forKey: "thumbnail")
+                obj.setValue("", forKey: "text"); obj.setValue("", forKey: "title")
+                obj.setValue("", forKey: "source"); obj.setValue(false, forKey: "favorite")
+            }
             obj.setValue(Date(), forKey: "updatedAt")
         }
-        try context.save(); revision += 1
+        try context.save()
+        if remove { thumbs.removeObject(forKey: id as NSString) }
+        revision += 1
     }
     func imageData(_ item: PocketClip, thumbnail: Bool = false) throws -> Data? {
         let key = item.id as NSString
