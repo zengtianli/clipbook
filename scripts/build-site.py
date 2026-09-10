@@ -62,6 +62,7 @@ def main():
               "HERO": '<img src="media/overview.png" alt="Clip 的真实三栏窗口：来源与类型筛选、剪贴板记录、正文编辑">' if (media / "overview.png").is_file() else '<div class="preview-placeholder">等待真实窗口截图</div>',
               "VIDEOS": "".join(videos)}
     page = (ROOT / "site/index.html").read_text()
+    page = page.replace('href="style.css"', f'href="style.css?v={sha(ROOT / "site/style.css")[:12]}"')
     for key, value in values.items():
         page = page.replace("{{" + key + "}}", value if key in ("HERO", "VIDEOS") else html.escape(value, quote=True))
     assert not re.search(r"\{\{[^}]+\}\}", page), "Unresolved website placeholder"
