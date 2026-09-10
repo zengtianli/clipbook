@@ -21,6 +21,9 @@ struct MainView: View {
         .navigationSplitViewStyle(.balanced)
         .toolbar {
             ToolbarItem(placement: .automatic) {
+                if ProductIdentity.backgroundPreview { Text("演示数据").font(.caption).foregroundStyle(.secondary) }
+            }
+            ToolbarItem(placement: .automatic) {
                 if settingsPaused { Label("已暂停记录", systemImage: "pause.circle").foregroundStyle(.orange) }
             }
             ToolbarItem(placement: .automatic) {

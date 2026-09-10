@@ -17,7 +17,8 @@ struct GridPane: View {
                         CardView(item: item, model: model, selected: model.selection.contains(item.id))
                             .overlay(ClickCatcher(onClick: { flags, count in
                                 if count == 2 { model.copy(item) } else { model.click(item.id, modifiers: flags) }
-                            }, onKey: { model.navigate(code: $0.keyCode, modifiers: $0.modifierFlags) }))
+                            }, onKey: { model.navigate(code: $0.keyCode, modifiers: $0.modifierFlags) },
+                               accessibilityLabel: "选择\(item.kind.label)：\(item.title.isEmpty ? String(item.text.prefix(60)) : item.title)"))
                             .id(item.id)
                             .contextMenu { ItemMenu(item: item, model: model, hideWindow: hideWindow) }
                     }

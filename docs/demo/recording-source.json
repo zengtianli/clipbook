@@ -1,0 +1,9 @@
+{
+  "product": "Clip",
+  "version": "1.1",
+  "build": "34",
+  "edition": "local",
+  "recorded_at": "2026-09-10",
+  "release_sha256_observed_before_editing": "184734b9346502132f9e588c970777a2d831f4c96687f0cbf031e61029a90735",
+  "provenance": "录制主线程确认同一可执行文件的隔离演示副本；剪辑开始前读取本地发行清单核对版本、构建号与安装包哈希。"
+}

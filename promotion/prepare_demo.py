@@ -4,9 +4,12 @@ import hashlib
 import shutil
 import sqlite3
 import time
+import argparse
 
 repo = Path(__file__).resolve().parents[1]
-home = repo / "build/promotion-demo"
+parser = argparse.ArgumentParser()
+parser.add_argument("--out", type=Path, default=repo / "build/promotion-demo")
+home = parser.parse_args().out
 home.mkdir(parents=True, exist_ok=True)
 (home / "blobs").mkdir(exist_ok=True)
 db = home / "clipbook.sqlite3"

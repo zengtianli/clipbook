@@ -1,6 +1,12 @@
 import AppKit
 import SwiftUI
 
+/// Uses the production view without taking focus during an isolated capture.
+private final class ClipPreviewPanel: NSPanel {
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+}
+
 /// Clipbook —— 自用剪贴板库（PastePal 形态）。菜单栏常驻，点图标开主窗口；左筛、中挑、右改。
 ///
 /// 全 Swift 原生。除「抓链接标题」外无网络。数据落 ~/Library/Application Support/Clipbook/。
@@ -124,7 +130,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
             AppModel.shared.startWatching()
-            if UserDefaults.standard.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
+            if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             buildStatusItem()
             buildWindow()
             showWindow()
@@ -229,7 +235,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     // MARK: 主窗口
 
     private func buildWindow() {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1380, height: 760),
+        window = ProductIdentity.backgroundPreview
+            ? ClipPreviewPanel(contentRect: NSRect(x: 0, y: 0, width: 1380, height: 760),
+                               styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
+                               backing: .buffered, defer: false)
+            : NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1380, height: 760),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                           backing: .buffered, defer: false)
         window.title = ProductIdentity.name
@@ -247,8 +257,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             AppModel.shared.resumeInterface()
             window.contentView = NSHostingView(rootView: MainView(model: AppModel.shared, hideWindow: { [weak self] in self?.hideWindow() }))
         }
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        if ProductIdentity.backgroundPreview {
+            window.orderBack(nil)
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+        }
         DispatchQueue.main.async { [weak self] in
             guard let window = self?.window, window.isKeyWindow,
                   !(window.firstResponder is NSTextView),
@@ -280,8 +294,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             w.center()
             settingsWindow = w
         }
-        NSApp.activate(ignoringOtherApps: true)
-        settingsWindow?.makeKeyAndOrderFront(nil)
+        if ProductIdentity.backgroundPreview {
+            settingsWindow?.orderBack(nil)
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+            settingsWindow?.makeKeyAndOrderFront(nil)
+        }
     }
 
     /// 关窗口 = 隐藏，不退出（菜单栏常驻）

@@ -6,15 +6,22 @@ import SwiftUI
 struct ClickCatcher: NSViewRepresentable {
     let onClick: (NSEvent.ModifierFlags, Int) -> Void
     var onKey: ((NSEvent) -> Bool)? = nil
+    var accessibilityLabel: String = "选择记录"
 
     func makeNSView(context: Context) -> CatcherView {
         let v = CatcherView()
         v.onClick = onClick
         v.onKey = onKey
+        v.setAccessibilityElement(true)
+        v.setAccessibilityRole(.button)
+        v.setAccessibilityLabel(accessibilityLabel)
         return v
     }
 
-    func updateNSView(_ v: CatcherView, context: Context) { v.onClick = onClick; v.onKey = onKey }
+    func updateNSView(_ v: CatcherView, context: Context) {
+        v.onClick = onClick; v.onKey = onKey
+        v.setAccessibilityLabel(accessibilityLabel)
+    }
 
     final class CatcherView: NSView {
         var onClick: ((NSEvent.ModifierFlags, Int) -> Void)?
@@ -24,6 +31,10 @@ struct ClickCatcher: NSViewRepresentable {
         }
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
         override var acceptsFirstResponder: Bool { true }
+        override func accessibilityPerformPress() -> Bool {
+            onClick?([], 1)
+            return onClick != nil
+        }
         override func hitTest(_ point: NSPoint) -> NSView? {
             // 右键按下时让开，SwiftUI 的 .contextMenu 才收得到
             if NSEvent.pressedMouseButtons & 0b10 != 0 { return nil }

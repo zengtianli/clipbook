@@ -1,0 +1,379 @@
+{
+  "product": "Clip",
+  "version": "1.1",
+  "build": "34",
+  "edition": "local",
+  "recorded_at": "2026-09-10",
+  "environment": {
+    "macos": "27.0",
+    "chip": "Apple M4"
+  },
+  "release_sha256_observed_before_editing": "184734b9346502132f9e588c970777a2d831f4c96687f0cbf031e61029a90735",
+  "source": "real-app-window",
+  "synthetic_input": true,
+  "synthetic_records": 13,
+  "isolation": {
+    "same_executable_as_release_candidate": true,
+    "separate_bundle_and_preferences": true,
+    "background_non_key_panel": true,
+    "capture_paused": true,
+    "copy_sound": false,
+    "cloud_enabled": false,
+    "named_pasteboard": true,
+    "system_clipboard_unchanged": true
+  },
+  "editing": {
+    "caption_bands_outside_product_image": true,
+    "local_zoom_labelled": true,
+    "retained_footage_speed": 1,
+    "removed_waits_labelled": true,
+    "tutorial_is_three_separate_chapters": true,
+    "audio": "原片无音轨，成片静音"
+  },
+  "scenes": {
+    "search": {
+      "raw_file": "search.mov",
+      "raw_sha256": "69aeaa951a959785710100e18208137616a8e27a1a875b93d713c08e4d291a0c",
+      "raw_duration": 15.095,
+      "raw_geometry": [
+        1426,
+        890
+      ],
+      "cuts": [
+        {
+          "source_start": 0.8,
+          "source_end": 2.8,
+          "output_start": 0.0,
+          "output_end": 2.0,
+          "crop_xywh": [
+            23,
+            16,
+            1380,
+            844
+          ],
+          "view": "真实窗口",
+          "speed": 1,
+          "title": "先找到需要的记录",
+          "subtitle": "13 条虚构记录 · 搜索正文、标题和来源"
+        },
+        {
+          "source_start": 3.5,
+          "source_end": 6.0,
+          "output_start": 2.0,
+          "output_end": 4.5,
+          "crop_xywh": [
+            225,
+            510,
+            630,
+            350
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "搜索框输入“会议”",
+          "subtitle": "结果缩小为 2 条 · 搜索区局部放大"
+        },
+        {
+          "source_start": 8.7,
+          "source_end": 11.0,
+          "output_start": 4.5,
+          "output_end": 6.8,
+          "crop_xywh": [
+            232,
+            68,
+            610,
+            376
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "点选“会议安排”",
+          "subtitle": "选中后，右侧显示这条记录的内容"
+        },
+        {
+          "source_start": 11.0,
+          "source_end": 14.0,
+          "output_start": 6.8,
+          "output_end": 9.8,
+          "crop_xywh": [
+            855,
+            65,
+            546,
+            338
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "会议安排，直接看清楚",
+          "subtitle": "正文区域局部放大 · 保留实际渲染与操作原速"
+        }
+      ],
+      "removed_seconds": 5.295,
+      "output_duration": 9.8,
+      "output_sha256": "211292eebbde4b20ed1b34bdd846b4813c49aec8ae3fb0b02384413731b264c7",
+      "poster_time": 8.0,
+      "independent_result": "录制主线程确认关键词“会议”返回2条，会议安排被选中。",
+      "visual_review": "原片首中尾及操作前后关键帧已逐片核对；最终由主线程验收。"
+    },
+    "edit": {
+      "raw_file": "edit.mov",
+      "raw_sha256": "36e57e41d327353f6e4a31b68ae8f5aa82b0701d120bc8a4b1f021127009d889",
+      "raw_duration": 18.075,
+      "raw_geometry": [
+        1426,
+        890
+      ],
+      "cuts": [
+        {
+          "source_start": 0.8,
+          "source_end": 2.3,
+          "output_start": 0.0,
+          "output_end": 1.5,
+          "crop_xywh": [
+            23,
+            16,
+            1380,
+            844
+          ],
+          "view": "真实窗口",
+          "speed": 1,
+          "title": "选中“会议纪要模板”",
+          "subtitle": "右侧正文可以直接修改，不用先导出"
+        },
+        {
+          "source_start": 4.4,
+          "source_end": 7.6,
+          "output_start": 1.5,
+          "output_end": 4.7,
+          "crop_xywh": [
+            855,
+            65,
+            546,
+            338
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "添加“4. 周五复盘”",
+          "subtitle": "正文编辑区局部放大 · 修改尚未保存"
+        },
+        {
+          "source_start": 11.5,
+          "source_end": 14.5,
+          "output_start": 4.7,
+          "output_end": 7.7,
+          "crop_xywh": [
+            805,
+            487,
+            596,
+            372
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "点底部“保存”",
+          "subtitle": "操作区局部放大 · 保存后“有未保存的修改”消失"
+        },
+        {
+          "source_start": 14.5,
+          "source_end": 16.0,
+          "output_start": 7.7,
+          "output_end": 9.2,
+          "crop_xywh": [
+            23,
+            16,
+            1380,
+            844
+          ],
+          "view": "真实窗口",
+          "speed": 1,
+          "title": "列表卡片与正文同步更新",
+          "subtitle": "已独立读取本地数据库，确认修改持久化"
+        },
+        {
+          "source_start": 16.0,
+          "source_end": 18.0,
+          "output_start": 9.2,
+          "output_end": 11.2,
+          "crop_xywh": [
+            855,
+            65,
+            546,
+            338
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "下次复用，已经是新版本",
+          "subtitle": "保存结果局部放大 · 没有新增重复条目"
+        }
+      ],
+      "removed_seconds": 6.875,
+      "output_duration": 11.2,
+      "output_sha256": "9a861870ce3e1a388c30709da3341935d6489fd8a9f86932527965b7116caad1",
+      "poster_time": 10.5,
+      "independent_result": "录制主线程通过SQL读取生产保存结果，确认正文已持久化且原条目已更新。",
+      "visual_review": "原片首中尾及操作前后关键帧已逐片核对；最终由主线程验收。"
+    },
+    "organize": {
+      "raw_file": "organize.mov",
+      "raw_sha256": "89fea28e73fc1a358f3fec92b02609c1d44f532213a331f27df9438fc793bebf",
+      "raw_duration": 20.02,
+      "raw_geometry": [
+        1426,
+        890
+      ],
+      "cuts": [
+        {
+          "source_start": 0.8,
+          "source_end": 2.8,
+          "output_start": 0.0,
+          "output_end": 2.0,
+          "crop_xywh": [
+            23,
+            16,
+            1380,
+            844
+          ],
+          "view": "真实窗口",
+          "speed": 1,
+          "title": "常用片段，放进固定的位置",
+          "subtitle": "本片使用已经建立的“常用片段”收藏夹"
+        },
+        {
+          "source_start": 4.2,
+          "source_end": 7.0,
+          "output_start": 2.0,
+          "output_end": 4.8,
+          "crop_xywh": [
+            23,
+            337,
+            600,
+            372
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "点击左侧“常用片段”",
+          "subtitle": "收藏夹筛选后只剩 1 条 · 侧栏局部放大"
+        },
+        {
+          "source_start": 9.4,
+          "source_end": 12.4,
+          "output_start": 4.8,
+          "output_end": 7.8,
+          "crop_xywh": [
+            232,
+            68,
+            610,
+            376
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "选中“常用开场白”",
+          "subtitle": "片段内容与收藏标记都保留在本机"
+        },
+        {
+          "source_start": 14.2,
+          "source_end": 16.5,
+          "output_start": 7.8,
+          "output_end": 10.1,
+          "crop_xywh": [
+            805,
+            487,
+            596,
+            372
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "点右下角“复制”",
+          "subtitle": "操作区局部放大 · 不需要重选或重写正文"
+        },
+        {
+          "source_start": 16.5,
+          "source_end": 17.7,
+          "output_start": 10.1,
+          "output_end": 11.3,
+          "crop_xywh": [
+            275,
+            16,
+            620,
+            384
+          ],
+          "view": "局部放大",
+          "speed": 1,
+          "title": "出现“已复制到剪贴板”提示",
+          "subtitle": "结果已在隔离剪贴板中独立核对"
+        },
+        {
+          "source_start": 17.7,
+          "source_end": 19.2,
+          "output_start": 11.3,
+          "output_end": 12.8,
+          "crop_xywh": [
+            23,
+            16,
+            1380,
+            844
+          ],
+          "view": "真实窗口",
+          "speed": 1,
+          "title": "常用内容，准备好再次使用",
+          "subtitle": "本片未演示向其他 App 自动粘贴"
+        }
+      ],
+      "removed_seconds": 7.22,
+      "output_duration": 12.8,
+      "output_sha256": "f5b2a48f7a5058887734c05be7021ce9bfe282d106a1c0dd573e0cede9edc74b",
+      "poster_time": 7.5,
+      "independent_result": "录制主线程读取named pasteboard，确认内容一致；系统剪贴板changeCount始终为503。",
+      "visual_review": "原片首中尾及操作前后关键帧已逐片核对；最终由主线程验收。"
+    }
+  },
+  "checks": {
+    "search": {
+      "decode": "passed",
+      "black_frames": "none in product-image area >= 0.2s at 98% black",
+      "duration": 9.8,
+      "sha256": "211292eebbde4b20ed1b34bdd846b4813c49aec8ae3fb0b02384413731b264c7",
+      "bytes": 230600
+    },
+    "edit": {
+      "decode": "passed",
+      "black_frames": "none in product-image area >= 0.2s at 98% black",
+      "duration": 11.2,
+      "sha256": "9a861870ce3e1a388c30709da3341935d6489fd8a9f86932527965b7116caad1",
+      "bytes": 207308
+    },
+    "organize": {
+      "decode": "passed",
+      "black_frames": "none in product-image area >= 0.2s at 98% black",
+      "duration": 12.8,
+      "sha256": "f5b2a48f7a5058887734c05be7021ce9bfe282d106a1c0dd573e0cede9edc74b",
+      "bytes": 301269
+    },
+    "tutorial": {
+      "decode": "passed",
+      "black_frames": "none in product-image area >= 0.2s at 98% black",
+      "duration": 33.8,
+      "sha256": "b40cbbc2f4f149158522faa678210ea858dbef1370d7fef836c237a7d8348a04",
+      "bytes": 737455
+    }
+  },
+  "not_covered": [
+    "向其他应用自动粘贴",
+    "系统剪贴板写入",
+    "云同步",
+    "新用户安装与权限授予"
+  ],
+  "private_data_review": "已核源片均为13条虚构样例；未见用户聊天、账户、目录或其他应用。系统剪贴板未进入录像。",
+  "final_visual_review": "passed",
+  "reviewed_media_sha256": {
+    "edit.mp4": "9a861870ce3e1a388c30709da3341935d6489fd8a9f86932527965b7116caad1",
+    "tutorial.vtt": "6729a1ac0b6f8773418072aad6b7008e4a6a57ca6cb77bb1c945636788bcbf15",
+    "search.vtt": "4e00933e80901dff43feb62e627f82dad876a62baf1f01b652b9c69a2dfb3bb0",
+    "organize.mp4": "f5b2a48f7a5058887734c05be7021ce9bfe282d106a1c0dd573e0cede9edc74b",
+    "overview.png": "f0e4fda337f1c7c8bdf5c7f1139267ada043345d82d5a103400f86691c1774b1",
+    "search.png": "ee01ac4f909731d5c951c794645f14e79adddfdb9fb9c773a80de7678c18168e",
+    "edit.vtt": "03d12b1512a2879cabf1ff51306a653da50f2ab84f519af4d145f4df1975ccb6",
+    "organize.png": "46e58068d6fca9615962092407239f7087374c929e5e80ac1bb2c9d83bccfe5f",
+    "search.mp4": "211292eebbde4b20ed1b34bdd846b4813c49aec8ae3fb0b02384413731b264c7",
+    "tutorial.mp4": "b40cbbc2f4f149158522faa678210ea858dbef1370d7fef836c237a7d8348a04",
+    "organize.vtt": "29d95633ac86e43901634b15ff2cf500376c42c7b36d4c927016db43d6b48e04",
+    "edit.png": "96fbd53ec2c470c9d223d901a9f6e833f336fd3b761c9b9f6b67083f0f32744e"
+  },
+  "review_notes": "主线程核对真实页面截图、保存完成与复制提示关键帧；保留原速与局部放大标识。发行构建号变动只涉及提交与打包元数据，录制仍如实标为 build34。"
+}

@@ -10,7 +10,9 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             general.tabItem { Label("通用", systemImage: "gearshape") }
-            ClipCloudSettings(sync: model.cloud).tabItem { Label("iCloud", systemImage: "icloud") }
+            if ProductIdentity.cloudSupported {
+                ClipCloudSettings(sync: model.cloud).tabItem { Label("iCloud", systemImage: "icloud") }
+            }
             ShortcutSettingsPane(center: shortcuts).tabItem { Label("快捷键", systemImage: "keyboard") }
         }
         .padding(10)

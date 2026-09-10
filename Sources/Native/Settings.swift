@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import ServiceManagement
 
 enum AppPreferences {
@@ -65,4 +66,25 @@ final class AppSettings: ObservableObject {
 /// User-facing name comes from catalog.yaml through the built Info.plist.
 enum ProductIdentity {
     static var name: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? ProcessInfo.processInfo.processName }
+    static var cloudSupported: Bool {
+        #if CLIP_LOCAL_DISTRIBUTION
+        false
+        #else
+        true
+        #endif
+    }
+    /// Explicit isolated previews must never activate over the user's current app.
+    static var backgroundPreview: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["CLIPBOOK_BACKGROUND"] == "1"
+            && !(env["CLIPBOOK_HOME"] ?? "").isEmpty
+            && !(env["CLIPBOOK_PREFERENCES_SUITE"] ?? "").isEmpty
+    }
+    static var pasteboard: NSPasteboard {
+        if backgroundPreview {
+            let suite = ProcessInfo.processInfo.environment["CLIPBOOK_PREFERENCES_SUITE"]!
+            return NSPasteboard(name: .init(suite + ".pasteboard"))
+        }
+        return .general
+    }
 }

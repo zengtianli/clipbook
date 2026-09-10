@@ -15,7 +15,7 @@ final class MacClipSync: ObservableObject {
     private var importing = false
     init(model: AppModel) {
         self.model = model
-        library = ClipLibrary(home: model.store.home.appendingPathComponent("CloudLibrary"), preferences: .standard)
+        library = ClipLibrary(home: model.store.home.appendingPathComponent("CloudLibrary"), preferences: AppPreferences.defaults)
     }
     func start() {
         Task {

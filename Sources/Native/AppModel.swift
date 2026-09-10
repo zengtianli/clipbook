@@ -102,7 +102,7 @@ final class AppModel: ObservableObject {
         thumbs.totalCostLimit = 12 * 1024 * 1024
         thumbs.countLimit = 48
         store = try ClipStore(home: home)
-        watcher = PasteboardWatcher(onCopy: { [weak self] count in
+        watcher = PasteboardWatcher(pasteboard: ProductIdentity.pasteboard, onCopy: { [weak self] count in
             guard let self else { return }
             CopyFeedback.completed(success: true, enabled: self.settings.copySound, changeCount: count)
         }) { [weak self] cap in self?.ingest(cap) }
@@ -156,7 +156,7 @@ final class AppModel: ObservableObject {
     private func ingest(_ cap: Capture) {
         do {
             let it = try store.ingest(cap)
-            if UserDefaults.standard.bool(forKey: "cloudEnabled") { cloud.captured(it) }
+            if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { cloud.captured(it) }
             reload()
             if it.kind == .link, it.extra.isEmpty, settings.fetchLinkTitles {
                 Task { [weak self] in
@@ -260,7 +260,7 @@ final class AppModel: ObservableObject {
 
     var selectedItems: [ClipItem] { items.filter { selection.contains($0.id) } }
 
-    func copySelection(pasteboard: NSPasteboard = .general) {
+    func copySelection(pasteboard: NSPasteboard = ProductIdentity.pasteboard) {
         let selected = selectedItems
         guard !selected.isEmpty else { return }
         let change = Paster.write(selected, store: store, pasteboard: pasteboard)
@@ -272,10 +272,11 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func copy(_ item: ClipItem) -> Bool {
-        let change = Paster.write(item, store: store)
+        let pasteboard = ProductIdentity.pasteboard
+        let change = Paster.write(item, store: store, pasteboard: pasteboard)
         guard change >= 0 else { notice = "复制失败：无法写入剪贴板或原文件不可读"; return false }
         watcher.suppressedChangeCount = change
-        CopyFeedback.completed(success: true, enabled: settings.copySound, changeCount: change)
+        CopyFeedback.completed(success: pasteboard === NSPasteboard.general, enabled: settings.copySound, changeCount: change)
         try? store.touch(item.id)
         reload()
         notice = "已复制到剪贴板"
@@ -286,6 +287,10 @@ final class AppModel: ObservableObject {
     @discardableResult
     func paste(_ item: ClipItem, hideWindow: () -> Void) -> Bool {
         guard copy(item) else { return false }
+        if ProductIdentity.backgroundPreview {
+            notice = "隔离演示：仅写入演示剪贴板"
+            return false
+        }
         hideWindow()
         if let app = previousApp {
             // macOS 14+ 协作式激活：必须用 activate(from:)「把激活权交出去」，裸 activate() 拉不动别的 app（2026-09-05 实测）
