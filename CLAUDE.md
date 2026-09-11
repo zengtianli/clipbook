@@ -16,7 +16,7 @@ Clip 必须是正常独立应用：`LSUIElement=false` + `.regular` activation p
 ## 构建 / 装机
 
 ```bash
-cd ~/Apps/mac/clipbook
+cd ~/Apps/clip/mac
 git commit …      # 先提交（CFBundleVersion = commit 数）
 ./build.sh        # → build-cloud.sh → XcodeGen/Release → --selftest → 签名/描述文件检查 → 装 /Applications/Clip.app
 open -a "Clip"
@@ -26,10 +26,10 @@ open -a "Clip"
 
 ## iOS / iCloud（2026-09-09）
 
-iOS 客户端在 `/Users/tianli/Apps/ios/clip-ios`。容器 `iCloud.cyou.tianli.clip`。
+iOS 客户端在 `/Users/tianli/Apps/clip/ios`。容器 `iCloud.cyou.tianli.clip`。
 `MacClipSync` 按需初始化，未开启不创建 Core Data store、不做云请求。原有 ClipStore 保持主库；同步归档在 Clipbook/CloudLibrary。
 首次开启整理最近 500 条，随后 watcher 新记录加入；云端新内容回流至本地。文件路径不上传、富文本降纯文本；Mac 清理与云端归档独立，不声称编辑/删除/收藏完整双向镜像。
-`Sources/Native/PocketLibrary.swift` 是 iOS `Shared/ClipLibrary.swift` 的逐字节副本；改源后同步副本并核对 SHA256，禁止运行时跨 app 依赖。
+`Sources/Native/PocketLibrary.swift` 是指向本家族 iOS `Shared/ClipLibrary.swift` 的相对软链；两端编译消费同一原版，构建 Mac 须同时检出家族 iOS 源树，安装包无运行时跨 App 依赖。
 构建 `build-cloud.sh --build-only` 可只出包。保持 bundle ID、可执行名、数据路径与用户快捷键不变。
 
 ## 一条数据的路
@@ -59,3 +59,5 @@ iOS 客户端在 `/Users/tianli/Apps/ios/clip-ios`。容器 `iCloud.cyou.tianli.
 `clipbook://show[?q=关键词]` · `clipbook://hide` · `clipbook://toggle` · `clipbook://settings`。
 外部 URL 通过 `application(_:open:)` 接收；窗口就绪前排队，不能等到 `didFinishLaunching` 才注册事件处理器（旧版会丢失第一次冷启动链接）。修改此入口后用已打包 .app 验证冷启动 show?q、运行中 show/settings、hide→toggle，并通过 CUA 核对目标搜索词/窗口；selftest 不覆盖 LaunchServices。证据见 `handoffs/url-open-fix.md`。
 UI 自动化验收：按钮有 `accessibilityIdentifier`（save / saveAsNew / copy / paste / merge / batchDelete / batchAddToCollection / newCollection / collectionName / createCollection / importDeck）。
+
+产品家族入口：/Users/tianli/Apps/clip/README.md。
