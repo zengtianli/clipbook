@@ -2,7 +2,7 @@
 
 [中文](README.md) | **English**
 
-[中文](README.md)
+
 
 **Quick access. A lighter footprint.** A keyboard-friendly, local clipboard library.
 

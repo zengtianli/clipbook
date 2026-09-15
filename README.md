@@ -2,7 +2,7 @@
 
 **中文** | [English](README_EN.md)
 
-[English](README_EN.md)
+
 
 原生 macOS 剪贴板库：快速取用，轻装常驻。左边筛、中间挑、右边改，全 Swift，本地存储。
 
