@@ -28,7 +28,7 @@ build 26 本机安装占用约 **3.3 MB**。同数据图片浏览测试，内存
 - 忽略指定 app、跳过密码管理器标记的内容、保留上限与时长、纯文本模式
 - 自定义快捷键可在「设置 → 快捷键」录制，默认未绑定；每项均可选择「仅 Clip 内」或「全局」。全局操作使用 Clip 中保留的选择，清除立即解绑，冲突或注册失败有提示，不自动退到其他按键。`clipbook://toggle` 继续供外部自动化使用。
 
-构建：`./build.sh`（安装名由 catalog.yaml 的 display_name 派生）。
+构建：`./build.sh`（安装名由 project.yaml 的 display_name 派生）。
 
 链接标题现在流式读取，到 256 KiB 主动取消请求，服务器忽略 Range 也不会下载整个响应。构建支持 `--build-only`，安装不强杀正在运行的应用。针对性网络回归：`bash tests/test-link-title.sh`。
 
