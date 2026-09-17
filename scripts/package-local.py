@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--archive", action="store_true")
     args = parser.parse_args()
-    catalog = (ROOT / "catalog.yaml").read_text()
+    catalog = (ROOT / "project.yaml").read_text()
     def field(key):
         return re.search(r"^" + key + r":\s*([^#\n]+)", catalog, re.M).group(1).strip()
     if not args.archive:

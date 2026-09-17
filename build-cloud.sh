@@ -19,7 +19,7 @@ codesign --verify --deep --strict "$APP"
 [ -f "$APP/Contents/embedded.provisionprofile" ] || { echo 'Missing CloudKit provisioning profile'; exit 1; }
 python3 - "$APP/Contents/Info.plist" <<'PY'
 import pathlib, plistlib, re, sys
-catalog = pathlib.Path('catalog.yaml').read_text()
+catalog = pathlib.Path('project.yaml').read_text()
 info = plistlib.loads(pathlib.Path(sys.argv[1]).read_bytes())
 for field, key in [('display_name', 'CFBundleDisplayName'), ('bundle_id', 'CFBundleIdentifier')]:
     expected = re.search(r'^' + field + r':\s*([^#\n]+)', catalog, re.M).group(1).strip()
