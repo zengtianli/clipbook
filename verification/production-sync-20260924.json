@@ -1,0 +1,83 @@
+{
+  "checkedAt": "2026-09-24T12:04:20.936501",
+  "codeCommit": "fe52825",
+  "sharedLibraryCommit": "174aadc",
+  "installation": {
+    "installed": "/Applications/Clip.app",
+    "version": "1.1",
+    "build": "44",
+    "environment": "Production",
+    "backup": "/Users/tianli/.Trash/clip-before-production-20260924-120243/Clip.app",
+    "at": "2026-09-24T12:02:43.766048"
+  },
+  "simulator": {
+    "model": "iPhone 17 Pro",
+    "runtime": "iOS 27.0",
+    "ui": "history screen viewed with synthetic data",
+    "screenshot": "../../ios/01-源程序/shots/guide/review/history-20260924.png",
+    "shutdown": true
+  },
+  "productionSync": {
+    "token": "clip-prod-20260924-87971b88",
+    "initialIndependentReceiver": true,
+    "liveCopyCapturedAt": "2026-09-24T11:54:46.687817",
+    "liveCopyExportSucceededAt": "2026-09-24T11:54:48",
+    "iosIdentityReceiver": {
+      "bundleID": "cyou.tianli.clipmobile",
+      "platform": "macOS signed verification receiver using shared iOS library",
+      "originalMarkerSeen": true,
+      "liveMarkerSeenBeforeCleanup": true,
+      "importSucceededAt": "2026-09-24T11:58:09"
+    },
+    "installedMacArchiveActiveCount": 441,
+    "installedMacRecentEvents": [
+      [
+        2,
+        1,
+        null,
+        0
+      ],
+      [
+        1,
+        1,
+        null,
+        0
+      ],
+      [
+        2,
+        1,
+        null,
+        0
+      ],
+      [
+        0,
+        1,
+        null,
+        0
+      ]
+    ],
+    "syntheticCleanupReadback": {
+      "Clip cloud probe clip-prod-20260924-87971b88": [
+        [
+          1,
+          0,
+          0,
+          0
+        ]
+      ],
+      "Clip live copy clip-prod-20260924-87971b88": [
+        [
+          1,
+          0,
+          0,
+          0
+        ]
+      ]
+    }
+  },
+  "limits": [
+    "No iPhone device UI test; paired phone unavailable",
+    "Same-bundle parallel Mac instances did not demonstrate automatic push to every instance",
+    "No App Store upload or remote Git push"
+  ]
+}
