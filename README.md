@@ -6,7 +6,9 @@
 
 原生 macOS 剪贴板库：快速取用，轻装常驻。左边筛、中间挑、右边改，全 Swift，本地存储。
 
-iOS 配套版已进入开发安装阶段。设置 → iCloud 可开启独立历史归档，首次整理最近 500 条及之后的新记录，手机可取用；Mac 本地清理不删除云端归档。默认关闭，不开启时不初始化云端数据库。此前 build 26 的性能数据不代表开启同步后的占用。
+设置 → iCloud 可开启独立历史归档，首次整理最近 500 条及之后的新记录，在 iPhone/iPad 的 Clip 中取用；Mac 本地清理不删除云端归档。默认关闭，不开启时不初始化云端数据库。此前 build 26 的性能数据不代表开启同步后的占用。
+
+要让 Mac 复制的内容出现在 iPhone：两端使用同一 Apple 账户并启用 iCloud Drive；Mac 打开 **设置 → iCloud → iCloud 历史归档**，iPhone Clip 打开 **设置 → iCloud 同步 → 同步 Clip 历史**。保持 Mac Clip 运行，新复制的文本、链接和图片会加入同步归档；在手机的「全部历史」查看、点开并复制，再到其他 App 粘贴。首次验证让两端都保持打开，等待同步状态更新。手机接收历史不会自动覆盖系统剪贴板；文件路径不上传，富文本按纯文本归档。App Store／TestFlight 的手机端使用 Production，Mac 构建也需要匹配的 CloudKit 环境。
 
 [产品主页与实机视频](https://app-mac-clips.tianli.cyou/) · [与 Deck 的区别及实测口径](promotion/COMPARISON.md)
 
@@ -29,6 +31,8 @@ build 26 本机安装占用约 **3.3 MB**。同数据图片浏览测试，内存
 - 自定义快捷键可在「设置 → 快捷键」录制，默认未绑定；每项均可选择「仅 Clip 内」或「全局」。全局操作使用 Clip 中保留的选择，清除立即解绑，冲突或注册失败有提示，不自动退到其他按键。`clipbook://toggle` 继续供外部自动化使用。
 
 构建：`./build.sh`（安装名由 project.yaml 的 display_name 派生）。
+
+需要只启动记录和同步、不打开主窗口时，可用 `open -g -a Clip --args --background`；菜单栏或 Dock 仍可打开主窗口。正式构建使用 CloudKit Production，与 App Store／TestFlight 的手机端对接；旧开发云归档保留在原目录，正式云缓存单独保存，并从本地主历史补充最近 500 条。
 
 链接标题现在流式读取，到 256 KiB 主动取消请求，服务器忽略 Range 也不会下载整个响应。构建支持 `--build-only`，安装不强杀正在运行的应用。针对性网络回归：`bash tests/test-link-title.sh`。
 

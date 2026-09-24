@@ -6,6 +6,11 @@ settings:
     DEVELOPMENT_TEAM: B9LJH93LA4
     CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: '5.0'
+  configs:
+    Debug:
+      CLIP_CLOUD_ENVIRONMENT: Development
+    Release:
+      CLIP_CLOUD_ENVIRONMENT: Production
 targets:
   Clipbook:
     type: application
@@ -33,6 +38,7 @@ targets:
         CFBundleIconFile: AppIcon
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ClipCloudEnvironment: $(CLIP_CLOUD_ENVIRONMENT)
         LSUIElement: false
         NSPrincipalClass: NSApplication
         CFBundleURLTypes:

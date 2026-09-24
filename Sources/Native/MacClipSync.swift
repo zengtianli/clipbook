@@ -13,18 +13,32 @@ final class MacClipSync: ObservableObject {
     @Published var status = "尚未启用"
     private var subscription: AnyCancellable?
     private var importing = false
+    private let markerScope: String
     init(model: AppModel) {
         self.model = model
-        library = ClipLibrary(home: model.store.home.appendingPathComponent("CloudLibrary"), preferences: AppPreferences.defaults)
+        let production = Bundle.main.object(forInfoDictionaryKey: "ClipCloudEnvironment") as? String == "Production"
+        // Development and Production have independent CloudKit metadata and account identities.
+        // Keep the original archive intact; seed the production archive from the main history.
+        markerScope = production ? "v2.Production" : "v1"
+        library = ClipLibrary(home: model.store.home.appendingPathComponent(production ? "CloudLibrary-Production" : "CloudLibrary"),
+            preferences: AppPreferences.defaults, cloudAccountKey: production ? "cloudAccount.Production" : "cloudAccount")
     }
     func start() {
         Task {
             await library.start()
-            if library.cloudEnabled { NSApplication.shared.registerForRemoteNotifications() }
-            subscription = library.$revision.dropFirst().debounce(for: .milliseconds(600), scheduler: RunLoop.main).sink { [weak self] _ in
-                Task { @MainActor in self?.receive() }
+            observeChanges()
+            if library.cloudEnabled {
+                NSApplication.shared.registerForRemoteNotifications()
+                // Also catch up copies made while the archive was opening or on a previous failed start.
+                await sendRecent()
             }
             receive()
+        }
+    }
+    private func observeChanges() {
+        guard subscription == nil else { return }
+        subscription = library.$revision.dropFirst().debounce(for: .milliseconds(600), scheduler: RunLoop.main).sink { [weak self] _ in
+            Task { @MainActor in self?.receive() }
         }
     }
     func enable(_ value: Bool) async {
@@ -32,7 +46,7 @@ final class MacClipSync: ObservableObject {
         await library.setCloudEnabled(value)
         if value && library.cloudEnabled {
             NSApplication.shared.registerForRemoteNotifications()
-            if subscription == nil { start() }
+            observeChanges()
             await sendRecent()
         }
     }
@@ -44,7 +58,7 @@ final class MacClipSync: ObservableObject {
         defer { library.releaseCaches() }
         guard item.kind != .file else { return }
         guard item.text.utf8.count <= ClipLibrary.maxTextBytes, item.bytes <= ClipLibrary.maxImageBytes else { return }
-        let marker = "cloudArchive.v1.\(item.id)"
+        let marker = "cloudArchive.\(markerScope).\(item.id)"
         // A capture is exported once. Edits with a new content hash form a new archive item.
         let fingerprint = "\(item.kind.rawValue):\(item.text):\(item.blob ?? "")"
         let digest = ClipLibrary.key(text: fingerprint, image: nil)
@@ -54,7 +68,7 @@ final class MacClipSync: ObservableObject {
             at: item.createdAt, revive: false)
         if item.pinned { try library.mutate(key, favorite: true) }
         try model.store.setMeta(marker, digest)
-        try model.store.setMeta("cloudReceived.v1.\(key)", String(item.id))
+        try model.store.setMeta("cloudReceived.\(markerScope).\(key)", String(item.id))
     }
     func sendRecent() async {
         guard library.ready, !busy else { return }
@@ -73,7 +87,7 @@ final class MacClipSync: ObservableObject {
         importing = true; defer { importing = false }
         do {
             for item in try library.list(limit: 500) {
-                let marker = "cloudReceived.v1.\(item.id)"
+                let marker = "cloudReceived.\(markerScope).\(item.id)"
                 if try model.store.meta(marker) != nil { continue }
                 let image = item.kind == "image" ? try library.imageData(item) : nil
                 var width = 0, height = 0

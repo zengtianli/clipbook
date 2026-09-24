@@ -133,7 +133,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             buildStatusItem()
             buildWindow()
-            showWindow()
+            if CommandLine.arguments.contains("--background") {
+                AppModel.shared.suspendInterface()
+            } else {
+                showWindow()
+            }
             // 首次启动且本机有 Deck → 自动把它的历史导进来（用户 2026-09-05 拍板；只读 Deck 的库）
             if ProcessInfo.processInfo.environment["CLIPBOOK_HOME"] == nil,
                AppModel.shared.deckImportedAt == nil, DeckImporter.available() { AppModel.shared.importDeck() }

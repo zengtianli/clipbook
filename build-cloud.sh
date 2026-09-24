@@ -16,6 +16,15 @@ scrub_env_run xcodebuild -project Clipbook.xcodeproj -scheme Clipbook \
 APP=.dd-cloud/Build/Products/Release/Clipbook.app
 "$APP/Contents/MacOS/Clipbook" --selftest
 codesign --verify --deep --strict "$APP"
+python3 - "$APP" <<'PY'
+import pathlib, plistlib, subprocess, sys
+app = pathlib.Path(sys.argv[1])
+info = plistlib.loads((app / 'Contents/Info.plist').read_bytes())
+signed = subprocess.run(['codesign', '-d', '--entitlements', ':-', str(app)], check=True, capture_output=True)
+entitlements = plistlib.loads(signed.stdout)
+assert info.get('ClipCloudEnvironment') == 'Production', 'Release must use the App Store CloudKit environment'
+assert entitlements.get('com.apple.developer.icloud-container-environment') == 'Production', 'Signed CloudKit environment must match iPhone App Store/TestFlight'
+PY
 [ -f "$APP/Contents/embedded.provisionprofile" ] || { echo 'Missing CloudKit provisioning profile'; exit 1; }
 python3 - "$APP/Contents/Info.plist" <<'PY'
 import pathlib, plistlib, re, sys

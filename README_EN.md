@@ -16,7 +16,11 @@ Capture text, rich text, links, images and files; deduplicate content, pin entri
 
 Link-title fetching and iCloud archiving are optional network features. Link responses are streamed and cancelled at 256 KiB, even when a server ignores the Range header. Automatic paste needs macOS Accessibility permission.
 
+To receive Mac clipboard history on iPhone, use the same Apple account with iCloud Drive enabled on both devices. Enable **Settings → iCloud → iCloud 历史归档** on Mac and **Settings → iCloud 同步 → 同步 Clip 历史** in iPhone Clip. Keep Mac Clip running: the archive initially adds the latest 500 items, then newly copied text, links, and images. Find an item in iPhone Clip, open it and tap Copy, then paste into another app. Keep both apps open during the first check and wait for the sync status to update. Receiving history does not replace the phone's system clipboard. File paths are excluded and rich text becomes plain text. Local Mac cleanup does not delete the separate cloud archive. App Store and TestFlight iPhone builds use Production, so the Mac build must target the matching CloudKit environment. Sync is off by default; enabling it changes resource usage beyond the historical build 26 measurements above.
+
 ## Build and verify
+
+Use `open -g -a Clip --args --background` to start capture and sync without opening the main window; the menu bar or Dock can still open it. Release builds target CloudKit Production to match App Store/TestFlight. The original development archive remains intact; production uses a separate cache and seeds the latest 500 records from local history.
 
 `bash build.sh --build-only` compiles and runs the production self-test without installing. `bash build.sh` installs the catalog's display name into `/Applications`. The build reuses the headquarters Xcode selector, CodingKey checker and icon converter. It preserves the Apple Development signing identity when available.
 
