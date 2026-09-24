@@ -1,0 +1,52 @@
+{
+  "product": "Clip",
+  "source_version": "1.1",
+  "source_build": "34",
+  "source_recorded_at": "2026-09-10",
+  "synthetic_demo_data": true,
+  "sources": [
+    {
+      "file": "build/homepage-recording/raw/search.mov",
+      "sha256": "69aeaa951a959785710100e18208137616a8e27a1a875b93d713c08e4d291a0c",
+      "duration": 15.095
+    },
+    {
+      "file": "build/homepage-recording/raw/edit.mov",
+      "sha256": "36e57e41d327353f6e4a31b68ae8f5aa82b0701d120bc8a4b1f021127009d889",
+      "duration": 18.075
+    },
+    {
+      "file": "build/homepage-recording/raw/organize.mov",
+      "sha256": "89fea28e73fc1a358f3fec92b02609c1d44f532213a331f27df9438fc793bebf",
+      "duration": 20.02
+    }
+  ],
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 30,
+  "duration": 38.6,
+  "audio": "silent; original sources have no audio",
+  "retained_footage_speed": 1,
+  "scope": [
+    "搜索记录",
+    "编辑保存",
+    "从已有收藏夹取出并复制"
+  ],
+  "not_covered": [
+    "向其他应用自动粘贴",
+    "系统剪贴板写入",
+    "云同步",
+    "新用户安装与权限授予"
+  ],
+  "edit_file": "edit.json",
+  "composition": "ClipSample",
+  "final_visual_review": "passed",
+  "reviewed_media_sha256": {
+    "sample.mp4": "0a6f43d83fa967b04ba7738fa1bf31db2066bbca2223570e693dfbbd91246744",
+    "poster.jpg": "fe308c2a2dbcd6e6d6c9a3a963d43158866a1dcbab3a747dbf684bbd6f958476",
+    "sample.vtt": "56353dae1247c46efba472640f2ec878f5f1ee5882b0d3f053f1030c12f2db69"
+  },
+  "review_notes": "Full decode and viewport black-frame check passed. Key action frames, captions and layout independently reviewed. 1158 frames, 38.6 seconds, video stream only."
+}

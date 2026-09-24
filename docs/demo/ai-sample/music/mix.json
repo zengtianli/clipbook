@@ -1,0 +1,16 @@
+{
+  "track": "Sherwood",
+  "author": "Chris Murphy (zesona)",
+  "license": "CC0-1.0",
+  "source_url": "https://opengameart.org/content/sherwood",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "music_sha256": "a7796c847682f5fd00041ffc0b0d71b67d95a41b4d6d914cd8e11bc37fe29a88",
+  "input_video_sha256": "0a6f43d83fa967b04ba7738fa1bf31db2066bbca2223570e693dfbbd91246744",
+  "output_sha256": "98828656c26f69aa8051e7e9c272af961cce9c1feb71cbcd67067b953b009aed",
+  "duration_seconds": 38.6,
+  "target_lufs_before_fades": -22,
+  "fade_in_seconds": 1.2,
+  "fade_out_seconds": 3.2,
+  "video_stream": "copied without re-encoding",
+  "output": "sample-music.mp4"
+}
