@@ -8,7 +8,19 @@
 
 [Product page and real demo](https://app-mac-clips.tianli.cyou/) · [Measured comparison and limitations](promotion/COMPARISON.md)
 
-Build 26 occupies approximately 3.3 MB on this Mac. In a controlled image-browsing test, Clip's own physical footprint dropped from 275.5 to 117.3 MiB (about 57%). This is a before/after result, not a Deck memory benchmark. Matched latency testing is still pending. There is no public installer yet.
+<!-- lightweight:start -->
+## Lightweight (measured)
+
+| Download | Idle memory | Idle CPU | Cold launch to window |
+|---|---|---|---|
+| **2.0 MB** (installed 3.6 MB) | **53 MB** | **0.1%** | **1.2 s** |
+
+Native SwiftUI/AppKit with no third-party dependencies; history is stored with the system SQLite. Every 0.25 s it only compares the pasteboard change counter; images are decoded at preview size with a 48-image cache, and hiding the main window unloads the interface.
+
+<sub>v1.1 (36) · Mac16,12 / Apple M4 / macOS 27.2 · measured 2026-09-26. Memory is phys_footprint (the Memory column in Activity Monitor); CPU is CPU time ÷ wall time over 60 idle seconds; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
+<!-- lightweight:end -->
+
+In a controlled image-browsing test, Clip's own physical footprint dropped from 275.5 to 117.3 MiB (about 57%, build 26). This is a before/after result, not a Deck memory benchmark. Matched latency testing is still pending.
 
 A native Swift clipboard library for macOS. A menu-bar icon opens the three-column interface: filter, select and edit. Custom shortcuts are unassigned by default. Standard Command-C copies selected text, or all selected records when there is no text selection. Multiple text records are joined in display order with blank lines; files and images retain native pasteboard payloads. Every action offers application-only or global scope under Settings → Shortcuts. Global actions use the selection retained in Clip. Clear a custom binding to unregister it immediately. Conflicts and registration failures are shown; no fallback combination is chosen automatically.
 
@@ -16,7 +28,7 @@ Capture text, rich text, links, images and files; deduplicate content, pin entri
 
 Link-title fetching and iCloud archiving are optional network features. Link responses are streamed and cancelled at 256 KiB, even when a server ignores the Range header. Automatic paste needs macOS Accessibility permission.
 
-To receive Mac clipboard history on iPhone, use the same Apple account with iCloud Drive enabled on both devices. Enable **Settings → iCloud → iCloud 历史归档** on Mac and **Settings → iCloud 同步 → 同步 Clip 历史** in iPhone Clip. Keep Mac Clip running: the archive initially adds the latest 500 items, then newly copied text, links, and images. Find an item in iPhone Clip, open it and tap Copy, then paste into another app. Keep both apps open during the first check and wait for the sync status to update. Receiving history does not replace the phone's system clipboard. File paths are excluded and rich text becomes plain text. Local Mac cleanup does not delete the separate cloud archive. App Store and TestFlight iPhone builds use Production, so the Mac build must target the matching CloudKit environment. Sync is off by default; enabling it changes resource usage beyond the historical build 26 measurements above.
+To receive Mac clipboard history on iPhone, use the same Apple account with iCloud Drive enabled on both devices. Enable **Settings → iCloud → iCloud 历史归档** on Mac and **Settings → iCloud 同步 → 同步 Clip 历史** in iPhone Clip. Keep Mac Clip running: the archive initially adds the latest 500 items, then newly copied text, links, and images. Find an item in iPhone Clip, open it and tap Copy, then paste into another app. Keep both apps open during the first check and wait for the sync status to update. Receiving history does not replace the phone's system clipboard. File paths are excluded and rich text becomes plain text. Local Mac cleanup does not delete the separate cloud archive. App Store and TestFlight iPhone builds use Production, so the Mac build must target the matching CloudKit environment. Sync is off by default; the measurements above are with sync off, and enabling it adds to them.
 
 ## Build and verify
 

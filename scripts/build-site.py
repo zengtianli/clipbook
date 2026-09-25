@@ -6,6 +6,10 @@ import html
 import json
 import re
 import shutil
+import sys
+
+sys.path.insert(0, str(Path.home() / "Apps/apps-portal/site"))
+import perf_block  # shared lightweight block; numbers come from perf/lightweight.json
 
 ROOT = Path(__file__).resolve().parents[1]
 SCENES = [("search", "找到需要的记录", "输入关键词，从结果中选中需要的片段。"),
@@ -77,14 +81,15 @@ def main():
         videos.append(f'<article>{player}<h3>{title}</h3><p>{description}</p><a href="media/{name}.mp4" download>下载这一段 ↗</a></article>')
     values = {"DOWNLOAD": "downloads/" + archive.name, "VERSION": release["version"],
               "MIN_OS": release["minimum_macos"], "FILENAME": archive.name,
-              "SIZE": f'{release["bytes"] / 1024 / 1024:.1f} MB', "SHA256": release["sha256"],
+              "SIZE": perf_block.size_mb(release["bytes"]), "SHA256": release["sha256"],
+              "LIGHT": perf_block.standalone_section(ROOT / "perf/lightweight.json", release["version"], "#8250ad"),
               "HERO": '<img src="media/overview.png" alt="Clip 的真实三栏窗口：来源与类型筛选、剪贴板记录、正文编辑">' if (media / "overview.png").is_file() else '<div class="preview-placeholder">等待真实窗口截图</div>',
               "VIDEOS": "".join(videos), "GUIDE": guide_player,
               "GUIDE_DOWNLOAD": "media/" + guide_files["sample.mp4"]}
     page = (ROOT / "site/index.html").read_text()
     page = page.replace('href="style.css"', f'href="style.css?v={sha(ROOT / "site/style.css")[:12]}"')
     for key, value in values.items():
-        page = page.replace("{{" + key + "}}", value if key in ("HERO", "VIDEOS", "GUIDE") else html.escape(value, quote=True))
+        page = page.replace("{{" + key + "}}", value if key in ("HERO", "VIDEOS", "GUIDE", "LIGHT") else html.escape(value, quote=True))
     assert not re.search(r"\{\{[^}]+\}\}", page), "Unresolved website placeholder"
     (out / "index.html").write_text(page)
     files = [{"path": p.relative_to(out).as_posix(), "sha256": sha(p)} for p in sorted(out.rglob("*")) if p.is_file()]

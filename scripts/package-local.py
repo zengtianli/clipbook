@@ -3,13 +3,15 @@ from pathlib import Path
 import argparse
 import hashlib
 import json
+import os
 import plistlib
 import re
 import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
-WORK = ROOT / "build/local-release"
+# release-local.sh may redirect outputs (trial builds must not touch the published zip).
+WORK = ROOT / os.environ.get("CLIP_LOCAL_RELEASE_DIR", "build/local-release")
 APP = WORK / "Clip.app"
 
 def main():

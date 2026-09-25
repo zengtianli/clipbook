@@ -6,14 +6,21 @@ source "$HOME/Dev/tools/dev/lib/tools/macapp/xcode_env.sh"
 xcode_env_use macosx
 source "$HOME/Dev/tools/dev/lib/tools/macapp/scrub_env.sh"
 mkdir -p build
+# CLIP_DERIVED_DATA redirects the Xcode products (default .dd-cloud) for trial builds.
+DD="${CLIP_DERIVED_DATA:-.dd-cloud}"
+LOG="${CLIP_CLOUD_BUILD_LOG:-build/cloud-build.log}"
 python3 "$HOME/Dev/tools/dev/lib/tools/macapp/check_codingkeys.py" .
 xcodegen generate --spec cloud-project.yml
 COUNT=$(git rev-list --count HEAD)
+# Release strips symbols before Xcode signs (Xcode runs strip -x -T); the dSYM beside
+# the product keeps crash symbolication. Behaviour is unchanged; like an archive build,
+# Xcode then omits the get-task-allow debugger entitlement.
 scrub_env_run xcodebuild -project Clipbook.xcodeproj -scheme Clipbook \
   -destination 'platform=macOS,arch=arm64' -configuration Release \
-  -derivedDataPath .dd-cloud -allowProvisioningUpdates CURRENT_PROJECT_VERSION="$COUNT" \
-  build > build/cloud-build.log 2>&1 || { tail -60 build/cloud-build.log; exit 1; }
-APP=.dd-cloud/Build/Products/Release/Clipbook.app
+  -derivedDataPath "$DD" -allowProvisioningUpdates CURRENT_PROJECT_VERSION="$COUNT" \
+  DEPLOYMENT_POSTPROCESSING=YES STRIP_INSTALLED_PRODUCT=YES STRIP_STYLE=non-global \
+  build > "$LOG" 2>&1 || { tail -60 "$LOG"; exit 1; }
+APP="$DD/Build/Products/Release/Clipbook.app"
 "$APP/Contents/MacOS/Clipbook" --selftest
 codesign --verify --deep --strict "$APP"
 python3 - "$APP" <<'PY'
