@@ -375,5 +375,12 @@
     "organize.vtt": "29d95633ac86e43901634b15ff2cf500376c42c7b36d4c927016db43d6b48e04",
     "edit.png": "96fbd53ec2c470c9d223d901a9f6e833f336fd3b761c9b9f6b67083f0f32744e"
   },
-  "review_notes": "主线程核对真实页面截图、保存完成与复制提示关键帧；保留原速与局部放大标识。发行构建号变动只涉及提交与打包元数据，录制仍如实标为 build34。"
+  "review_notes": "主线程核对真实页面截图、保存完成与复制提示关键帧；保留原速与局部放大标识。发行构建号变动只涉及提交与打包元数据，录制仍如实标为 build34。",
+  "reused_for": {
+    "1.1.1": {
+      "reviewed_at": "2026-09-26",
+      "reason": "原录制仍为1.1 build34 本地版；当前本地版相同操作视图和搜索、编辑、收藏流程未变。对已录版本之后的源码diff逐项核对：新增后台启动分支、iCloud Production同步与strip；云功能在CLIP_LOCAL_DISTRIBUTION编译关闭，影片不展示云同步/自动粘贴。",
+      "source_diff": "git diff 75d375d..4b2a9b8 -- Sources: ClipbookApp的background分支和MacClipSync；发布36以来的其它变更为图标/名称引用和文档。"
+    }
+  }
 }

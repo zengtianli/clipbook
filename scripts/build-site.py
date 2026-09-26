@@ -38,7 +38,8 @@ def main():
     if not args.preview:
         recording = json.loads((media / "recording.json").read_text())
         assert recording.get("final_visual_review") == "passed", "Final visual review is required"
-        assert recording.get("version") == release["version"] and recording.get("edition") == release["edition"], "Recording edition differs from release"
+        compatible = recording.get('reused_for', {}).get(release['version'])
+        assert (recording.get("version") == release["version"] or compatible) and recording.get("edition") == release["edition"], "Recording edition differs from release"
         for name in needed:
             if name != "recording.json":
                 assert recording.get("reviewed_media_sha256", {}).get(name) == sha(media / name), f"Reviewed media changed: {name}"
@@ -47,7 +48,7 @@ def main():
     guide_files = {name: f"clip-guide-{sha(guide_dir / name)[:12]}{(guide_dir / name).suffix}"
                    for name in ("sample.mp4", "poster.jpg", "sample.vtt")}
     assert guide.get("final_visual_review") == "passed", "Guide visual review is required"
-    assert guide.get("source_version") == release["version"], "Guide source version differs from release"
+    assert guide.get("source_version") == release["version"] or guide.get('reused_for', {}).get(release['version']), "Guide source version differs from release"
     for name in guide_files:
         assert guide.get("reviewed_media_sha256", {}).get(name) == sha(guide_dir / name), f"Reviewed guide changed: {name}"
     out = args.out
@@ -73,7 +74,8 @@ def main():
                     f'<track kind="subtitles" src="media/{guide_files["sample.vtt"]}" srclang="zh" label="中文">'
                     '你的浏览器不支持视频，请下载观看。</video>'
                     '<h3>39 秒，了解 Clip 的三个常用操作</h3>'
-                    '<p>搜索记录 → 编辑保存 → 收藏复制。静音中文字幕，关键操作局部放大。</p></article>')
+                    '<p>搜索记录 → 编辑保存 → 收藏复制。静音中文字幕，关键操作局部放大。</p>'
+                    f'<p>原片为 Clip {html.escape(guide["source_version"])} 本地版实录；当前版沿用相同的搜索、编辑和收藏界面。云同步与自动粘贴不在本演示范围。</p></article>')
     videos = []
     for name, title, description in SCENES:
         player = (f'<video controls playsinline preload="metadata" poster="media/{name}.png"><source src="media/{name}.mp4" type="video/mp4"><track kind="subtitles" src="media/{name}.vtt" srclang="zh" label="中文">你的浏览器不支持视频，请下载观看。</video>'

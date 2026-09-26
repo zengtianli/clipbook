@@ -48,5 +48,12 @@
     "poster.jpg": "fe308c2a2dbcd6e6d6c9a3a963d43158866a1dcbab3a747dbf684bbd6f958476",
     "sample.vtt": "56353dae1247c46efba472640f2ec878f5f1ee5882b0d3f053f1030c12f2db69"
   },
-  "review_notes": "Full decode and viewport black-frame check passed. Key action frames, captions and layout independently reviewed. 1158 frames, 38.6 seconds, video stream only."
+  "review_notes": "Full decode and viewport black-frame check passed. Key action frames, captions and layout independently reviewed. 1158 frames, 38.6 seconds, video stream only.",
+  "reused_for": {
+    "1.1.1": {
+      "reviewed_at": "2026-09-26",
+      "reason": "原录制仍为1.1 build34 本地版；当前本地版相同操作视图和搜索、编辑、收藏流程未变。对已录版本之后的源码diff逐项核对：新增后台启动分支、iCloud Production同步与strip；云功能在CLIP_LOCAL_DISTRIBUTION编译关闭，影片不展示云同步/自动粘贴。",
+      "source_diff": "git diff 75d375d..4b2a9b8 -- Sources: ClipbookApp的background分支和MacClipSync；发布36以来的其它变更为图标/名称引用和文档。"
+    }
+  }
 }

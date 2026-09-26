@@ -5,3 +5,32 @@ form: mac
 lifecycle: active
 bundle_id: cyou.tianli.clipbook
 origin: own
+sop:
+  test: bash tests/test-link-title.sh
+  ui:
+  - Sources/Native/Views.swift
+  - Sources/Native/Settings.swift
+  - Sources/Native/Shortcuts.swift
+  - Sources/ClipbookApp.swift
+  media:
+  - docs/demo/*.png
+  - docs/demo/*.mp4
+  - promotion/video
+  media_meta: docs/demo/recording.json
+  release: build/local-release/release.json
+  build_number: git-count
+  site_build: ~/Dev/.venv/bin/python scripts/build-site.py
+  site_deploy: products-only
+  measure:
+    archive: release
+    env: clip
+    data: 本机真实剪贴板库的快照副本（隔离数据目录，不碰原库）
+  source:
+  - Sources/**/*.swift
+  - cloud-project.yml
+  - Cloud.entitlements
+  - icon/AppIcon.icns
+  - build.sh
+  - build-cloud.sh
+  - release-local.sh
+  - scripts/package-local.py
