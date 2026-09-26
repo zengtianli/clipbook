@@ -1,0 +1,49 @@
+{
+  "product": "Clip CloudKit installed edition",
+  "version": "1.1.1 (48)",
+  "measured_at": "2026-09-26",
+  "device": "Mac16,12 / Apple M4 / macOS 27.2",
+  "size": {
+    "installed_bytes": 2375680,
+    "installed_mb": 2.27
+  },
+  "idle": {
+    "process": "Clip CloudKit Production 正式安装版；主进程、辅助进程与子进程合计",
+    "footprint_mb": 25.0,
+    "main_footprint_mb": 25.0,
+    "cpu_pct": 0.03,
+    "main_cpu_pct": 0.03,
+    "processes": [
+      {
+        "pid": 62338,
+        "name": "main",
+        "cpu_pct": 0.033,
+        "footprint_peak_mb": 25.0
+      }
+    ],
+    "window_s": 60,
+    "scope": "主进程 + XPC 辅助进程 + 子进程合计",
+    "settle_s": 45,
+    "method": "正常更新后后台驻留超过 45 秒，60 秒 CPU 窗口与 phys_footprint 合计峰值；未写剪贴板、未重置云容器。",
+    "cpu_note": "CloudKit 功能开关为 True；主窗口隐藏，保留原有用户偏好与真实数据。该窗口仅代表空闲常驻，未触发上传、下载或新增复制，不表示云同步传输峰值。",
+    "cpu_note_en": "CloudKit setting: True; main window hidden, original preferences and real data retained. Idle residency only, without triggered transfers or new clipboard copies; not a sync peak."
+  },
+  "data": "正式安装的 CloudKit Production 版，真实记录 2767 条；与网页下载的本地版分开记录。",
+  "data_en": "Installed CloudKit Production edition, 2767 real records; measured separately from the downloadable local edition.",
+  "measured_artifact": {
+    "version": "1.1.1",
+    "build": "48",
+    "pid": 62338,
+    "previous_pid": 1133,
+    "hid_idle_s": 2533,
+    "preferences_changed_keys": [
+      "NSWindow Frame ClipbookMain"
+    ],
+    "functional_preferences_unchanged": true,
+    "cloud_environment": "Production",
+    "database_quick_check": "ok",
+    "rows": 2767,
+    "executable_sha256": "2aff7f261f1586ae2d737c576b6022b156a30c0b4d4609269fbdb62fd4f8cc9b"
+  },
+  "speed_gui": []
+}

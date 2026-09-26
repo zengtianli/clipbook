@@ -3,7 +3,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source /Users/tianli/Dev/tools/dev/lib/tools/macapp/xcode_env.sh
 xcode_env_use macosx
-xcrun swiftc -parse-as-library Sources/Native/Settings.swift Sources/Native/LinkTitle.swift tests/LinkTitleTest.swift -o build/link-title-test
+mkdir -p build
+xcrun swiftc -parse-as-library Sources/Native/ClipCopy.swift Sources/Native/Settings.swift Sources/Native/LinkTitle.swift tests/LinkTitleTest.swift -o build/link-title-test
 python3 - <<'PY'
 import http.server,threading,time,subprocess
 class Handler(http.server.BaseHTTPRequestHandler):

@@ -1,0 +1,41 @@
+{
+  "version": "1.1.1",
+  "build": "48",
+  "edition": "local",
+  "rows": 2767,
+  "load": "{ 4.00 3.72 4.54 }",
+  "launch": {
+    "runs_ms": [
+      544,
+      472,
+      487,
+      475,
+      484
+    ],
+    "median_ms": 484
+  },
+  "idle": {
+    "process": "62984",
+    "footprint_mb": 54.0,
+    "main_footprint_mb": 54.0,
+    "cpu_pct": 0.05,
+    "main_cpu_pct": 0.05,
+    "processes": [
+      {
+        "pid": 62984,
+        "name": "main",
+        "cpu_pct": 0.049,
+        "footprint_peak_mb": 54.0
+      }
+    ],
+    "window_s": 60,
+    "scope": "\u4e3b\u8fdb\u7a0b + XPC \u8f85\u52a9\u8fdb\u7a0b + \u5b50\u8fdb\u7a0b\u5408\u8ba1"
+  },
+  "size": {
+    "download_bytes": 1786637,
+    "download_mb": 1.7,
+    "installed_bytes": 2428928,
+    "installed_mb": 2.32
+  },
+  "executable_sha256": "df5898ba4f206a647506abf627dc42b16f84c05d9cce6c8ce96099c54649fd56"
+}

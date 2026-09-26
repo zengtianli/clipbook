@@ -1,0 +1,15 @@
+{
+  "version": "1.1.1",
+  "build": "48",
+  "pid": 62338,
+  "previous_pid": 1133,
+  "hid_idle_s": 2533,
+  "preferences_changed_keys": [
+    "NSWindow Frame ClipbookMain"
+  ],
+  "functional_preferences_unchanged": true,
+  "cloud_environment": "Production",
+  "database_quick_check": "ok",
+  "rows": 2767,
+  "executable_sha256": "2aff7f261f1586ae2d737c576b6022b156a30c0b4d4609269fbdb62fd4f8cc9b"
+}
