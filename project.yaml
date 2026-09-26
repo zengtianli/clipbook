@@ -8,7 +8,7 @@ origin: own
 sop:
   test: bash tests/test-link-title.sh
   ui:
-  - Sources/Native/Views.swift
+  - Sources/Native/*View.swift
   - Sources/Native/Settings.swift
   - Sources/Native/Shortcuts.swift
   - Sources/ClipbookApp.swift
