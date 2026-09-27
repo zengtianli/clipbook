@@ -1,5 +1,7 @@
 name: clipbook
-display_name: Clip
+name_en: Clip
+name_zh: 剪贴板
+display_name: Clip · 剪贴板
 family: clip
 form: mac
 lifecycle: active
