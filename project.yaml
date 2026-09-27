@@ -9,6 +9,11 @@ bundle_id: cyou.tianli.clipbook
 origin: own
 sop:
   test: bash tests/test-link-title.sh
+  accept:
+    functionality: bash scripts/accept/functionality.sh
+    recovery: bash scripts/accept/recovery.sh
+    privacy: bash scripts/accept/privacy.sh
+    native_ui: bash scripts/accept/native_ui.sh
   ui:
   - Sources/Native/*View.swift
   - Sources/Native/Settings.swift

@@ -37,8 +37,9 @@ python3 - "$APP/Contents/Info.plist" <<'PY'
 import pathlib, plistlib, re, sys
 catalog = pathlib.Path('project.yaml').read_text()
 info = plistlib.loads(pathlib.Path(sys.argv[1]).read_bytes())
-for field, key in [('display_name', 'CFBundleDisplayName'), ('bundle_id', 'CFBundleIdentifier')]:
-    expected = re.search(r'^' + field + r':\s*([^#\n]+)', catalog, re.M).group(1).strip()
+# The installed app name is the English brand (name_en); display_name is the bilingual registry label.
+for fields, key in [(('name_en', 'display_name'), 'CFBundleDisplayName'), (('bundle_id',), 'CFBundleIdentifier')]:
+    expected = next(m.group(1).strip() for f in fields if (m := re.search(r'^' + f + r':\s*([^#\n]+)', catalog, re.M)))
     assert info[key] == expected, (key, info[key], expected)
 assert info['CFBundleName'] == info['CFBundleDisplayName']
 assert info['CFBundleIconFile'] == 'AppIcon'

@@ -35,6 +35,20 @@ enum Boot {
         if CommandLine.arguments.contains("--shortcut-runtime-test") {
             exit(MainActor.assumeIsolated { ShortcutSelfTest.runtime() })
         }
+        // Isolated acceptance entries: no Dock icon, no status item, no AppDelegate, nothing ordered on screen.
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: "--ui-self-test") {
+            exit(MainActor.assumeIsolated {
+                NSApplication.shared.setActivationPolicy(.prohibited)
+                return UISelfTest.run(outdir: args.indices.contains(i + 1) ? args[i + 1] : nil)
+            })
+        }
+        if args.contains("--recovery-test") {
+            exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return RecoverySelfTest.run() })
+        }
+        if args.contains("--privacy-test") {
+            exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return PrivacySelfTest.run() })
+        }
         if CommandLine.arguments.contains("--selftest") {
             exit(SelfTest.run())
         }

@@ -30,8 +30,8 @@ def main():
         shutil.copy2(ROOT / "icon/AppIcon.icns", APP / "Contents/Resources/AppIcon.icns")
         version = re.search(r"MARKETING_VERSION:\s*['\"]?([\d.]+)", (ROOT / "cloud-project.yml").read_text()).group(1)
         build = subprocess.check_output(["git", "rev-list", "--count", "HEAD"], cwd=ROOT, text=True).strip()
-        info = {"CFBundleIdentifier": field("bundle_id"), "CFBundleName": field("display_name"),
-                "CFBundleDisplayName": field("display_name"), "CFBundleExecutable": "Clipbook",
+        info = {"CFBundleIdentifier": field("bundle_id"), "CFBundleName": field("name_en"),
+                "CFBundleDisplayName": field("name_en"), "CFBundleExecutable": "Clipbook",
                 "CFBundleShortVersionString": version, "CFBundleVersion": build,
                 "CFBundlePackageType": "APPL", "CFBundleIconFile": "AppIcon",
                 "LSMinimumSystemVersion": "14.0", "LSUIElement": False,
