@@ -34,3 +34,8 @@ sop:
   - build-cloud.sh
   - release-local.sh
   - scripts/package-local.py
+  product:
+    distribution: public
+    source_visibility: public
+    source_url: https://github.com/zengtianli/clipbook
+    rationale: 原生 Mac 剪贴板库。键盘顺手，轻量常驻，让查找与复用更快一步。 面向外部使用者提供现有公开产品与源码入口，持续维护获取、教程和版本证据。
