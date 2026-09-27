@@ -20,3 +20,7 @@
 - 4 个本地提交领先 origin/main：23e458a、7c7dfb4、07c473e、8e10aaa，加上本轮新提交。按边界不推送。
 - build-receipt 与装机来源不一致：`/Applications/Clip.app` 仍是 build 48（commit 2c18539）。需要 `./build.sh` 装机后执行 `app_sop.py build-receipt`，按边界本轮没做。
 - installed_icon 由本人在 Chapter 确认。
+
+## 第二轮（同日）
+- Chapter 复检：没有待修的验收脚本（media_playback 已重新通过，其余证据仍有效）。剩下的 readme 未推送、build-receipt 两项分别要 push 和装机，按边界没做，也没有派子 agent。
+- 发版决定（1.1.1 (48) 之后有源码改动）留给本人。装机后可按 `release-local.sh` 的既有流程出本地包。
