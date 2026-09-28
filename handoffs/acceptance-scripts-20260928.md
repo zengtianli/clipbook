@@ -36,3 +36,7 @@
   4. 回读 https://app-mac-clips.tianli.cyou/release.json。
 - 另外，build/local-release/release-notes.md 还是 1.1 build 36 的旧文案，看起来不参与站点构建，需要时手工更新。
 - 版本变更后重跑了 accept：functionality、recovery、privacy、native_ui 都通过。media_playback 第一次线上视频 readyState 0，curl 回读 200/206 正常，重试一次通过。
+
+## 第四轮（同日）
+- 待办只剩 perf：实测版本还是 1.1.1 (48)，当前是 1.1.2 (59)。开工时回读：接着交流电，但 HID 空闲 0 秒（用户正在用），loadavg 7.6/14.9/81.5，过不了空闲门。`app_sop.py run --stage perf` 连试 5 分钟都拿不到锁，每次返回 busy（其他产品的 app_sop 正在运行），没有采样。
+- 等空闲后由 Chapter 自动补测。补测后按第三轮的顺序接手：build-site，然后 products-only 部署，再回读线上 release.json。
