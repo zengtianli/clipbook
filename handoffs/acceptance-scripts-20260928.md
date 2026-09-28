@@ -24,3 +24,15 @@
 ## 第二轮（同日）
 - Chapter 复检：没有待修的验收脚本（media_playback 已重新通过，其余证据仍有效）。剩下的 readme 未推送、build-receipt 两项分别要 push 和装机，按边界没做，也没有派子 agent。
 - 发版决定（1.1.1 (48) 之后有源码改动）留给本人。装机后可按 `release-local.sh` 的既有流程出本地包。
+
+## 第三轮（同日，已获装机/发版/推送长期授权）
+- 版本升到 1.1.2（commit 3a9f0aa，build 59）。docs/demo 的 recording.json 和 ai-sample/manifest.json 都登记了 reused_for 1.1.2，原因是自 1.1.1 以来 Sources 只加了自检入口，没有改视图。
+- `./build.sh` 已把 1.1.2 (59) 装到 /Applications/Clip.app。又用 `app_sop.py build-receipt --artifact /Applications/Clip.app --build-command ./build.sh` 重建一次并写了 receipt，回读已装版本与 receipt 一致。常驻实例在 Chapter 里点重启。
+- `bash release-local.sh` 已出本地包：build/local-release/Clip-1.1.2-local-arm64.zip，sha256 a7a98436…f91b。
+- **发版页面没部署**：`scripts/build-site.py` 要求 perf/lightweight.json 是当前版本的实测。perf 采样要过空闲/电源门，本轮没法测。接手顺序：
+  1. `~/Dev/.venv/bin/python ~/Apps/chapter/engine/app_sop.py run --app clipbook --stage perf`，等空闲门放行。
+  2. `~/Dev/.venv/bin/python scripts/build-site.py`
+  3. `cd ~/Apps/apps-portal/site && bash deploy.sh --products-only clipbook --dry-run`，核对计划后再 `--deploy --plan <plan.json>`。
+  4. 回读 https://app-mac-clips.tianli.cyou/release.json。
+- 另外，build/local-release/release-notes.md 还是 1.1 build 36 的旧文案，看起来不参与站点构建，需要时手工更新。
+- 版本变更后重跑了 accept：functionality、recovery、privacy、native_ui 都通过。media_playback 第一次线上视频 readyState 0，curl 回读 200/206 正常，重试一次通过。
