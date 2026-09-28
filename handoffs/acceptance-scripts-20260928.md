@@ -43,3 +43,9 @@
 
 ## 第五轮（2026-09-29 01:00）
 - 仍然只有 perf 未完成。`app_sop.py run --stage perf` 拿到了锁，但空闲门（steady）没放行：接着交流电，但 15 分钟内 HID 空闲最多约 330 秒，门槛是 600 秒，1 分钟负载 13.7 到 17.9。没有采样，等 Chapter 在条件满足时自动补测。补测后按第三轮的顺序接手：build-site，然后 products-only 部署，再回读 release.json。
+
+## 第六轮（2026-09-29 05:00，perf 补测 + 发版上线）
+- 空闲门放行（空闲超过 3 小时、接交流电、负载降到 6.8）后跑了 `run --stage perf`。1.1.2 (59) 已实测：安装后 2.43 MB，空闲内存 53–55.6 MB，CPU 0.07%，速度 474 ms。结果在 perf/lightweight.json（4c3d018）。README 数字由 app_sop 自动更新（b80472b）。
+- 当时 GitHub 的 TLS 和 VPS 的 SSH 都间歇超时：第一次推送失败；第一次产品页部署在备份这一步就断了（日志里没有触发回滚，线上未改）。网络恢复后重新推送成功，远端 HEAD 为 b80472b。之后又跑了一次 `run --stage promo --stage perf --retry --now`，目录门户和产品页都部署完成。
+- 线上回读：https://app-mac-clips.tianli.cyou/release.json 显示 1.1.2 build 59，sha a7a98436，对应 3a9f0aa；下载 zip 为 200，1839509 字节。homepage_desktop 和 homepage_mobile 已重跑 accept，都通过。
+- 最后的 check-only 没有剩余问题，machine_state 为 current_passed。仍待本人在 Chapter 里确认装机图标。
