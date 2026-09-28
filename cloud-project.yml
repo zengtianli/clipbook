@@ -27,7 +27,7 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Clip
         INFOPLIST_KEY_CFBundleName: Clip
         INFOPLIST_KEY_CFBundleIconFile: AppIcon
-        MARKETING_VERSION: '1.1.1'
+        MARKETING_VERSION: '1.1.2'
         CURRENT_PROJECT_VERSION: '1'
         ENABLE_HARDENED_RUNTIME: YES
     info:
