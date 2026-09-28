@@ -40,3 +40,6 @@
 ## 第四轮（同日）
 - 待办只剩 perf：实测版本还是 1.1.1 (48)，当前是 1.1.2 (59)。开工时回读：接着交流电，但 HID 空闲 0 秒（用户正在用），loadavg 7.6/14.9/81.5，过不了空闲门。`app_sop.py run --stage perf` 连试 5 分钟都拿不到锁，每次返回 busy（其他产品的 app_sop 正在运行），没有采样。
 - 等空闲后由 Chapter 自动补测。补测后按第三轮的顺序接手：build-site，然后 products-only 部署，再回读线上 release.json。
+
+## 第五轮（2026-09-29 01:00）
+- 仍然只有 perf 未完成。`app_sop.py run --stage perf` 拿到了锁，但空闲门（steady）没放行：接着交流电，但 15 分钟内 HID 空闲最多约 330 秒，门槛是 600 秒，1 分钟负载 13.7 到 17.9。没有采样，等 Chapter 在条件满足时自动补测。补测后按第三轮的顺序接手：build-site，然后 products-only 部署，再回读 release.json。
