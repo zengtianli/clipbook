@@ -49,3 +49,8 @@
 - 当时 GitHub 的 TLS 和 VPS 的 SSH 都间歇超时：第一次推送失败；第一次产品页部署在备份这一步就断了（日志里没有触发回滚，线上未改）。网络恢复后重新推送成功，远端 HEAD 为 b80472b。之后又跑了一次 `run --stage promo --stage perf --retry --now`，目录门户和产品页都部署完成。
 - 线上回读：https://app-mac-clips.tianli.cyou/release.json 显示 1.1.2 build 59，sha a7a98436，对应 3a9f0aa；下载 zip 为 200，1839509 字节。homepage_desktop 和 homepage_mobile 已重跑 accept，都通过。
 - 最后的 check-only 没有剩余问题，machine_state 为 current_passed。仍待本人在 Chapter 里确认装机图标。
+
+## 第七轮（2026-09-29 09:50，主页带 facts.json 重建部署）
+- 起因：apps-site 那边受阻，因为 Clip 主页包里没有数字文件。另一会话已提交 4d39455：build-site.py 调用 apps-portal 的 product_facts，输出 facts.json。本轮重跑 `scripts/build-site.py`，然后 `deploy.sh --products-only clipbook` 先 dry-run 核对计划（只动 clipbook 一个目录，24 个文件），再 --deploy。哈希校验全部通过。
+- 回读：https://app-mac-clips.tianli.cyou/facts.json 与本地 build/site/facts.json 逐字节一致，内容是 1.1.2 (59)，1.8 MB / 2.5 MB / 55.6 MB / 0.07% / 474 ms。release.json 仍为 1.1.2 (59)。4d39455 已推送，远端 HEAD 与本地一致。
+- homepage_desktop 和 homepage_mobile 已重跑 accept，都通过。check-only 结果：current_passed / complete，没有缺项。
