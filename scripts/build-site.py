@@ -10,6 +10,7 @@ import sys
 
 sys.path.insert(0, str(Path.home() / "Apps/apps-portal/site"))
 import perf_block  # shared lightweight block; numbers come from perf/lightweight.json
+import product_facts  # facts.json published with the page for the portal and Chapter
 
 ROOT = Path(__file__).resolve().parents[1]
 SCENES = [("search", "找到需要的记录", "输入关键词，从结果中选中需要的片段。"),
@@ -94,6 +95,7 @@ def main():
         page = page.replace("{{" + key + "}}", value if key in ("HERO", "VIDEOS", "GUIDE", "LIGHT") else html.escape(value, quote=True))
     assert not re.search(r"\{\{[^}]+\}\}", page), "Unresolved website placeholder"
     (out / "index.html").write_text(page)
+    product_facts.write(out, product_facts.from_repo(ROOT, product_id="clipbook", icon="images/icon.png"))
     files = [{"path": p.relative_to(out).as_posix(), "sha256": sha(p)} for p in sorted(out.rglob("*")) if p.is_file()]
     (out / "site-manifest.json").write_text(json.dumps({"product": "Clip", "preview": args.preview, "files": files}, ensure_ascii=False, indent=2) + "\n")
     print(out)
