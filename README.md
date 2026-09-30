@@ -46,7 +46,47 @@
 - 忽略指定 app、跳过密码管理器标记的内容、保留上限与时长、纯文本模式
 - 自定义快捷键可在「设置 → 快捷键」录制，默认未绑定；每项均可选择「仅 Clip 内」或「全局」。全局操作使用 Clip 中保留的选择，清除立即解绑，冲突或注册失败有提示，不自动退到其他按键。`clipbook://toggle` 继续供外部自动化使用。
 
-构建：`./build.sh`（安装名由 project.yaml 的 display_name 派生）。
+## 命令行 `clip`（给 agent 与脚本）
+
+界面给人用，命令行给 agent 用。`clip` 是 Clip.app 自带的同一个已签名程序（`Clip.app/Contents/Resources/bin/clip → ../../MacOS/Clipbook`），与窗口共用同一套业务代码和同一个库：`ClipStore`（入库、去重、编辑、淘汰）、`Classifier`、`Paster`、`DeckImporter`、`AppSettings`，以及窗口按钮用的共享校验 `ClipRules`（合并限制、收藏夹图标/颜色白名单、转换可用范围、导出）。不启动界面、不抢焦点，`--help` 约 20 ms。
+
+安装：`./build.sh` 装好 App 后自动运行 `scripts/install-cli.py`，建立 `~/.local/bin/clip → /Applications/Clip.app/Contents/Resources/bin/clip`；已存在的无关文件或链接不会被覆盖。也可手动执行 `python3 scripts/install-cli.py /Applications/Clip.app`。
+
+```bash
+clip status --json                         # 版本、App 是否运行、记录数、记录偏好、Deck、iCloud 开关
+clip stats --json                          # 左栏计数：类型 / 来源 app / 收藏夹
+clip list --kind link --limit 20 --json    # 与网格相同的排序、筛选与分页；--no-text 只给元数据
+clip search 发票 --json                     # = list --query
+clip show 1234 --json                      # 全文、标题、链接页面标题、文件路径（含是否存在）、原图路径、可用转换
+clip add --text "https://example.com" --json      # 与复制入库同一路径：识别类型、同内容顶上、按设置抓链接标题
+echo "草稿" | clip add --stdin --title 备忘 --json
+clip edit 1234 --text "新正文" --title 标题       # =「保存」：先校验再写，只写有变化的部分
+clip transform 1234 json                   # =「转换」，结果保存；默认不动剪贴板，--copy 才写入
+clip merge 12 13 14 --json                 # =「合并成一条」（图片、文件不能合并）
+clip pin 1234 · clip unpin 1234
+clip delete 12 13 --yes                    # 不可撤销，必须 --yes；--dry-run 只报数
+clip clear --dry-run --json                # 清空历史（保留置顶与收藏夹里的），执行需 --yes
+clip collection create 工作 --icon briefcase --color '#16a34a'
+clip collection add 工作 1234 1235 · clip collection move 工作 up · clip collection delete 工作 --yes
+clip settings --json · clip settings set maxItems 3000 · clip pause · clip resume · clip ignore add com.example.app
+clip settings set launchAtLogin true --dry-run     # 开机自启（系统登录项）；去掉 --dry-run 才生效
+clip import-deck --json                    # =「导入 Deck 历史」，可重复执行
+clip export 1234 -o ~/Desktop/shot.png     # 图片原图
+clip cloud status --json · clip cloud list --favorites --json   # iCloud 状态与本机归档缓存（只读，与手机列表同一规则）
+clip cloud push --dry-run --json           # 「补充最近历史」待归档条数；--yes 请运行中的 Clip 执行
+clip cloud on --yes · clip cloud off --yes # 请运行中的 Clip 拨「iCloud 历史归档」开关
+clip copy 1234                             # 改写系统剪贴板：只在用户明确要求时使用
+```
+
+约定：每个命令都有 `--help`（退出 0）和 `--json`（稳定对象，含 `"ok"`；失败时 `"ok": false` 与 `"error"`）。JSON 的 `"command"` 是完整命令路径（如 `collection create`、`cloud list`），成功与失败相同。退出码 `0` 成功、`1` 运行错误、`2` 参数错误或缺少 `--yes`、`3` 记录/收藏夹/库不存在、`4` 需要运行中的 Clip 或已安装的 App（或本地版不含 iCloud）、`5` 库或导入正被占用。读命令以只读方式打开库，不建目录、不建库、不迁移、不写偏好。写命令沿用窗口的校验与取值范围（最多保留 100–100000 条，保留时长 0/7/30/90/365 天，图标与颜色白名单，富文本才可转纯文本，图片/文件不能改正文或合并），并按「最多保留 / 保留时长」淘汰旧的无保护记录；`clip add` 的来源记为 Clip CLI（`cyou.tianli.clipbook.cli`）；同内容已存在时与再次复制相同：顶到最上，来源也改记为这次的来源，`--json` 的 `previous_source` 给出原来源（要保留原来源用 `--from <id>`，即「另存」）。`clip edit` 先校验全部参数再写，被拒绝时记录不变；正文与原来相同则不重写，富文本不会被降成纯文本。Deck 导入在 App 与命令行之间加了进程锁，同时只跑一个。写完会发一个本机通知，运行中的 Clip（本版起）随即重新读取列表或偏好；`clip copy` 写入的剪贴板带 `org.nspasteboard.source` 标记，运行中的 Clip 不会把它当成新复制再记一次、也不响提示音。隔离运行用 `CLIPBOOK_HOME`、`CLIPBOOK_PREFERENCES_SUITE`，再加 `CLIPBOOK_BACKGROUND=1` 时 `copy` 写入隔离的命名剪贴板。
+
+iCloud：同步由 App 进程持有，命令行从不打开同步库写入。`cloud status` / `cloud list` 只读打开本机归档缓存，列表直接调用手机端的 `ClipLibrary.list`（同一份代码：每个内容取最新一行、删除标记隐藏、新的在上、筛选与搜索相同），新鲜度取决于 App 上次同步。`cloud push`（=「补充最近历史」）与 `cloud on|off`（=「iCloud 历史归档」开关）会上传或停止同步你的 iCloud，必须 `--yes`，由运行中的 Clip 执行（App 做账户检查；Clip 未运行时退出码 4），结果用 `cloud status` 回读（`enabled`、`recent_pending`、归档标记计数）。iCloud 开着时，`clip add` / `edit` / 导入写入后运行中的 Clip 会像对待新复制一样把最新记录归档；Clip 没在运行时，下次启动补上。开机自启 `settings set launchAtLogin` 调用与设置页开关同一段代码（系统登录项），只对安装在 Applications 的 Clip 生效，隔离运行时退出码 4。
+
+只在 App 里：粘贴到其他 App（切回前台并合成 ⌘V）、快捷键录制、辅助功能授权、iCloud 实时同步状态与错误提示、打开数据目录/在 Finder 中显示/打开链接（`show --json` 已给出路径和 URL）、提示音试听、窗口显示、预览与拖放。手机端收藏/删除在 iPhone/iPad 上做。
+
+验证：`bash tests/test-cli.sh [Clip.app]` 经包内入口在隔离库上跑一遍（并核对用户的通用剪贴板未被改动）；生产 `--selftest` 另有一组 `clip` 断言。
+
+构建：`./build.sh`（安装名取 project.yaml 的 name_en：Clip）。
 
 需要只启动记录和同步、不打开主窗口时，可用 `open -g -a Clip --args --background`；菜单栏或 Dock 仍可打开主窗口。正式构建使用 CloudKit Production，与 App Store／TestFlight 的手机端对接；旧开发云归档保留在原目录，正式云缓存单独保存，并从本地主历史补充最近 500 条。
 

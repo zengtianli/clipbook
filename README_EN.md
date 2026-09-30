@@ -34,11 +34,51 @@ Link-title fetching and iCloud archiving are optional network features. Link res
 
 To receive Mac clipboard history on iPhone, use the same Apple account with iCloud Drive enabled on both devices. Enable **Settings → iCloud → iCloud 历史归档** on Mac and **Settings → iCloud 同步 → 同步 Clip 历史** in iPhone Clip. Keep Mac Clip running: the archive initially adds the latest 500 items, then newly copied text, links, and images. Find an item in iPhone Clip, open it and tap Copy, then paste into another app. Keep both apps open during the first check and wait for the sync status to update. Receiving history does not replace the phone's system clipboard. File paths are excluded and rich text becomes plain text. Local Mac cleanup does not delete the separate cloud archive. App Store and TestFlight iPhone builds use Production, so the Mac build must target the matching CloudKit environment. Sync is off by default; the measurements above are with sync off, and enabling it adds to them.
 
+## Command line `clip` (for agents and scripts)
+
+The window is for people; the command line is for agents. `clip` is the same signed program that ships inside Clip.app (`Clip.app/Contents/Resources/bin/clip → ../../MacOS/Clipbook`). It shares the window's business code and library: `ClipStore` (capture, dedupe, edit, retention), `Classifier`, `Paster`, `DeckImporter`, `AppSettings`, and the shared button rules in `ClipRules` (merge limits, collection icon/color whitelist, which transforms apply, export). It never starts the interface or takes focus; `--help` returns in about 20 ms.
+
+Install: after `./build.sh` installs the app it runs `scripts/install-cli.py`, which links `~/.local/bin/clip → /Applications/Clip.app/Contents/Resources/bin/clip` and never overwrites an unrelated file or link. It can also be run by hand: `python3 scripts/install-cli.py /Applications/Clip.app`.
+
+```bash
+clip status --json                         # version, whether the app runs, record count, recording prefs, Deck, iCloud switch
+clip stats --json                          # sidebar counts: kinds / source apps / collections
+clip list --kind link --limit 20 --json    # same order, filters and paging as the grid; --no-text for metadata only
+clip search invoice --json                 # = list --query
+clip show 1234 --json                      # full text, title, link page title, file paths (with existence), image path, transforms
+clip add --text "https://example.com" --json      # same path as a capture: kind detection, dedupe moves to top, link title per settings
+echo "draft" | clip add --stdin --title memo --json
+clip edit 1234 --text "new text" --title title    # = Save: validates first, writes only what changed
+clip transform 1234 json                   # = Transform, saved; leaves the clipboard alone unless --copy
+clip merge 12 13 14 --json                 # = Merge into one (images and files cannot be merged)
+clip pin 1234 · clip unpin 1234
+clip delete 12 13 --yes                    # irreversible, requires --yes; --dry-run only reports
+clip clear --dry-run --json                # clear history (keeps pinned and collection items); run it with --yes
+clip collection create Work --icon briefcase --color '#16a34a'
+clip collection add Work 1234 1235 · clip collection move Work up · clip collection delete Work --yes
+clip settings --json · clip settings set maxItems 3000 · clip pause · clip resume · clip ignore add com.example.app
+clip settings set launchAtLogin true --dry-run     # launch at login (a system login item); drop --dry-run to apply
+clip import-deck --json                    # = Import Deck history; safe to repeat
+clip export 1234 -o ~/Desktop/shot.png     # original image
+clip cloud status --json · clip cloud list --favorites --json   # iCloud state and this Mac's archive cache (read-only, the phone's list rule)
+clip cloud push --dry-run --json           # how many records "补充最近历史" would archive; --yes asks the running Clip to do it
+clip cloud on --yes · clip cloud off --yes # ask the running Clip to flip the "iCloud 历史归档" switch
+clip copy 1234                             # replaces the system clipboard: use only when the user asks for it
+```
+
+Contract: every command has `--help` (exit 0) and `--json` (a stable object with `"ok"`; failures return `"ok": false` and `"error"`). The JSON `"command"` is the full command path (e.g. `collection create`, `cloud list`), the same on success and failure. Exit codes: `0` success, `1` runtime error, `2` bad arguments or missing `--yes`, `3` record/collection/library not found, `4` needs a running Clip or the installed app (or the local edition has no iCloud), `5` library or import busy. Read commands open the library read-only: no directory, database, migration or preference write. Write commands reuse the window's validation and ranges (keep 100–100000 records, retention 0/7/30/90/365 days, icon and color whitelist, plain-text transform only for rich text, no text edit or merge for images/files) and apply the keep/retention limits to old unprotected records. `clip add` records the source as Clip CLI (`cyou.tianli.clipbook.cli`). Existing identical content is treated like a repeated copy: it moves to the top and its source becomes this one; `--json` returns the old one as `previous_source` (use `--from <id>`, i.e. "Save as new", to keep a source). `clip edit` validates every argument before writing, so a refused edit leaves the record unchanged; an unchanged body is not rewritten, so rich text is not reduced to plain text. Deck import holds a lock shared by the app and the command line. After a write, a local notification tells a running Clip (this build onward) to re-read its list or preferences. Clipboard writes from `clip copy` carry an `org.nspasteboard.source` marker, so a running Clip neither records them again nor plays its sound. For isolated runs set `CLIPBOOK_HOME` and `CLIPBOOK_PREFERENCES_SUITE`; with `CLIPBOOK_BACKGROUND=1` as well, `copy` writes to an isolated named pasteboard.
+
+iCloud: the app process owns sync and the command line never opens the sync store for writing. `cloud status` / `cloud list` open this Mac's archive cache read-only and list it with the phone's own `ClipLibrary.list` (the same code: newest row per item, deletions hide, newest first, same filters and search), as fresh as the app's last sync. `cloud push` (= "补充最近历史", add recent history) and `cloud on|off` (= the "iCloud 历史归档" switch) upload to or stop syncing your iCloud, so they require `--yes` and are run by the running Clip (which does the account checks; exit 4 when Clip is not running). Read the result back with `cloud status` (`enabled`, `recent_pending`, archive marker counts). With iCloud on, after `clip add` / `edit` / import a running Clip archives the newest records as it does for a new copy; if Clip is not running, the next start catches up. Launch at login, `settings set launchAtLogin`, calls the same code as the Settings toggle (a system login item); it applies only to a Clip installed in Applications and exits 4 in an isolated run.
+
+App only: pasting into another app (activate it and send ⌘V), shortcut recording, Accessibility permission, live iCloud sync status and errors, opening the data folder / revealing in Finder / opening links (`show --json` already returns the paths and URL), sound preview, windows, previews and drag and drop. Phone-side favorite/delete happen on iPhone/iPad.
+
+Verify: `bash tests/test-cli.sh [Clip.app]` runs the in-bundle entry against an isolated library (and checks the user's general clipboard is untouched); the production `--selftest` has its own `clip` assertions.
+
 ## Build and verify
 
 Use `open -g -a Clip --args --background` to start capture and sync without opening the main window; the menu bar or Dock can still open it. Release builds target CloudKit Production to match App Store/TestFlight. The original development archive remains intact; production uses a separate cache and seeds the latest 500 records from local history.
 
-`bash build.sh --build-only` compiles and runs the production self-test without installing. `bash build.sh` installs the catalog's display name into `/Applications`. The build reuses the headquarters Xcode selector, CodingKey checker and icon converter. It preserves the Apple Development signing identity when available.
+`bash build.sh --build-only` compiles and runs the production self-test without installing. `bash build.sh` installs the app as the catalog's English name (`name_en`: Clip) into `/Applications` and links the `clip` command. The build reuses the headquarters Xcode selector, CodingKey checker and icon converter. It preserves the Apple Development signing identity when available.
 
 `build/Clipbook --selftest` exercises the real store, importer, classifier and watcher with isolated fixtures. `bash tests/test-link-title.sh` verifies bounded HTTP fetching against a local server that ignores Range.
 
