@@ -156,7 +156,7 @@ struct DetailPane: View {
                 if dirty(item) { Text("· 有未保存的修改").font(.caption).foregroundStyle(Color.accentColor) }
                 Spacer()
                 Menu("转换") {
-                    ForEach(Transform.allCases.filter { $0 != .plain || item.kind == .richText }) { t in
+                    ForEach(Transform.options(for: item.kind)) { t in
                         Button(t.label) { model.apply(t, to: item) }
                     }
                 }

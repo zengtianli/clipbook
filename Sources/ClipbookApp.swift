@@ -14,6 +14,8 @@ private final class ClipPreviewPanel: NSPanel {
 @main
 enum Boot {
     static func main() {
+        // `clip …` (Contents/Resources/bin/clip) and CLI verbs: the agent-facing command line. No NSApplication.
+        if ClipCLI.requested(CommandLine.arguments) { exit(ClipCLI.main(CommandLine.arguments)) }
         if CommandLine.arguments.contains("--keyboard-window-test") {
             exit(MainActor.assumeIsolated { KeyboardMemorySelfTest.windowRuntime() })
         }
@@ -147,6 +149,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             buildStatusItem()
             buildWindow()
+            // `clip` changed the library or the preferences from another process: re-read what this app owns,
+            // and archive new records as a capture would be when iCloud is on.
+            let home = AppModel.shared.store.home.path
+            let cloudOn = { ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") }
+            ClipSignal.observe(ClipSignal.storeChanged, scope: home) {
+                AppModel.shared.reload()
+                if cloudOn() { AppModel.shared.cloud.storeChangedExternally() }
+            }
+            ClipSignal.observe(ClipSignal.preferencesChanged, scope: AppPreferences.domain) {
+                AppSettings.shared.reload(); AppModel.shared.applySettings()
+            }
+            // `clip cloud push|on|off`: the Settings → iCloud button and toggle, run by this app.
+            if ProductIdentity.cloudSupported {
+                ClipSignal.observe(ClipSignal.cloudPushRequested, scope: home) { Task { await AppModel.shared.cloud.pushRequested() } }
+                ClipSignal.observe(ClipSignal.cloudEnableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(true) } }
+                ClipSignal.observe(ClipSignal.cloudDisableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(false) } }
+            }
             if CommandLine.arguments.contains("--background") {
                 AppModel.shared.suspendInterface()
             } else {

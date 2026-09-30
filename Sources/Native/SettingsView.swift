@@ -33,7 +33,7 @@ struct SettingsView: View {
                 Toggle("纯文本模式（不保存富文本格式）", isOn: $settings.plainTextOnly)
                 Toggle("自动获取链接标题", isOn: $settings.fetchLinkTitles)
                 Text("开启后会访问所复制链接的网页。").font(.caption).foregroundStyle(.secondary)
-                Stepper("最多保留 \(settings.maxItems) 条", value: $settings.maxItems, in: 100...100000, step: 100)
+                Stepper("最多保留 \(settings.maxItems) 条", value: $settings.maxItems, in: RecordingLimits.maxItemsRange, step: 100)
                 Picker("保留时长", selection: $settings.retentionDays) {
                     Text("不限").tag(0); Text("7 天").tag(7); Text("30 天").tag(30); Text("90 天").tag(90); Text("365 天").tag(365)
                 }

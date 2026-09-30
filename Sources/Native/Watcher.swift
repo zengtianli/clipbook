@@ -42,6 +42,8 @@ final class PasteboardWatcher {
         let c = pb.changeCount
         guard c != lastCount else { return }
         lastCount = c
+        // Written by Clip itself (e.g. `clip copy` from another process): no sound, no re-capture.
+        if pb.string(forType: Paster.sourceType) == Paster.sourceID { return }
         // Feedback observes copying, independently of history capture preferences.
         if c != suppressedChangeCount, !(pb.types ?? []).isEmpty { onCopy(c) }
         guard !paused, c != suppressedChangeCount else { return }
@@ -73,11 +75,8 @@ final class PasteboardWatcher {
         // ③ 图片
         if types.contains(.png) || types.contains(.tiff) {
             let data = pb.data(forType: .png) ?? pb.data(forType: .tiff)
-            guard let data, let rep = NSBitmapImageRep(data: data) else { return nil }
-            let png = types.contains(.png) ? data : rep.representation(using: .png, properties: [:])
-            guard let png else { return nil }
-            return Capture(kind: .image, text: "图片 \(rep.pixelsWide)×\(rep.pixelsHigh)", imagePNG: png,
-                           width: rep.pixelsWide, height: rep.pixelsHigh, appName: appName, appBundle: appBundle)
+            guard let data else { return nil }
+            return ClipRules.imageCapture(data, appName: appName, appBundle: appBundle)
         }
         return nil
     }

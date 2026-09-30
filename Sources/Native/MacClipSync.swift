@@ -14,14 +14,35 @@ final class MacClipSync: ObservableObject {
     private var subscription: AnyCancellable?
     private var importing = false
     private let markerScope: String
+    /// This build's CloudKit environment (Info.plist ClipCloudEnvironment). Development and Production have
+    /// independent CloudKit metadata and account identities: separate archive caches, markers and account keys.
+    /// Keep the original archive intact; seed the production archive from the main history.
+    nonisolated static var production: Bool { Bundle.main.object(forInfoDictionaryKey: "ClipCloudEnvironment") as? String == "Production" }
+    nonisolated static var markerScope: String { production ? "v2.Production" : "v1" }
+    nonisolated static var accountKey: String { production ? "cloudAccount.Production" : "cloudAccount" }
+    nonisolated static func archiveHome(store home: URL) -> URL {
+        home.appendingPathComponent(production ? "CloudLibrary-Production" : "CloudLibrary", isDirectory: true)
+    }
+    /// 「补充最近历史」 covers this many of the newest records (the grid order).
+    static let recentLimit = 500
+
     init(model: AppModel) {
         self.model = model
-        let production = Bundle.main.object(forInfoDictionaryKey: "ClipCloudEnvironment") as? String == "Production"
-        // Development and Production have independent CloudKit metadata and account identities.
-        // Keep the original archive intact; seed the production archive from the main history.
-        markerScope = production ? "v2.Production" : "v1"
-        library = ClipLibrary(home: model.store.home.appendingPathComponent(production ? "CloudLibrary-Production" : "CloudLibrary"),
-            preferences: AppPreferences.defaults, cloudAccountKey: production ? "cloudAccount.Production" : "cloudAccount")
+        markerScope = Self.markerScope
+        library = ClipLibrary(home: Self.archiveHome(store: model.store.home), preferences: AppPreferences.defaults,
+                              cloudAccountKey: Self.accountKey)
+    }
+
+    /// Per-record archive marker. A capture is exported once; edits with a new content hash form a new archive item.
+    static func archiveMarker(_ item: ClipItem, scope: String) -> (key: String, digest: String) {
+        let fingerprint = "\(item.kind.rawValue):\(item.text):\(item.blob ?? "")"
+        return ("cloudArchive.\(scope).\(item.id)", ClipLibrary.key(text: fingerprint, image: nil))
+    }
+    /// Whether archiving would upload this record: not a file, within the archive's size caps, not archived as is.
+    static func needsArchive(_ item: ClipItem, store: ClipStore, scope: String) throws -> Bool {
+        guard item.kind != .file, item.text.utf8.count <= ClipLibrary.maxTextBytes, item.bytes <= ClipLibrary.maxImageBytes else { return false }
+        let marker = archiveMarker(item, scope: scope)
+        return try store.meta(marker.key) != marker.digest
     }
     func start() {
         Task {
@@ -56,31 +77,38 @@ final class MacClipSync: ObservableObject {
     }
     private func send(_ item: ClipItem) throws {
         defer { library.releaseCaches() }
-        guard item.kind != .file else { return }
-        guard item.text.utf8.count <= ClipLibrary.maxTextBytes, item.bytes <= ClipLibrary.maxImageBytes else { return }
-        let marker = "cloudArchive.\(markerScope).\(item.id)"
-        // A capture is exported once. Edits with a new content hash form a new archive item.
-        let fingerprint = "\(item.kind.rawValue):\(item.text):\(item.blob ?? "")"
-        let digest = ClipLibrary.key(text: fingerprint, image: nil)
-        if try model.store.meta(marker) == digest { return }
+        guard try Self.needsArchive(item, store: model.store, scope: markerScope) else { return }
+        let marker = Self.archiveMarker(item, scope: markerScope)
         let image = try model.store.blobURL(item).map { try Data(contentsOf: $0) }
         let key = try library.save(text: item.text, image: image, title: item.title, source: item.appName.isEmpty ? "Mac Clip" : item.appName,
             at: item.createdAt, revive: false)
         if item.pinned { try library.mutate(key, favorite: true) }
-        try model.store.setMeta(marker, digest)
+        try model.store.setMeta(marker.key, marker.digest)
         try model.store.setMeta("cloudReceived.\(markerScope).\(key)", String(item.id))
     }
     func sendRecent() async {
         guard library.ready, !busy else { return }
         busy = true; defer { busy = false }
         do {
-            let items = try model.store.list(pageSize: 500)
+            let items = try model.store.list(pageSize: Self.recentLimit)
             for (index, item) in items.enumerated() {
                 try send(item)
                 if index.isMultiple(of: 20) { await Task.yield() }
             }
             status = "已整理最近 \(items.count) 条，iCloud 将增量同步"
         } catch { status = "整理未完成：\(error.localizedDescription)" }
+    }
+    /// `clip cloud push`: the 「补充最近历史」 button, only when the button would be enabled.
+    func pushRequested() async {
+        guard library.cloudEnabled else { return }
+        await sendRecent()
+    }
+    /// Another process (`clip add`, `clip edit`, Deck import) changed the store while iCloud is on: archive the newest
+    /// records the way a capture is archived. Idempotent through the per-record marker; never deletes from the archive.
+    func storeChangedExternally() {
+        guard library.ready, library.cloudEnabled, !importing, !busy else { return }
+        do { for item in try model.store.list(pageSize: 50) { try send(item) } }
+        catch { status = error.localizedDescription }
     }
     private func receive() {
         guard library.ready, !importing else { return }

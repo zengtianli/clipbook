@@ -65,7 +65,7 @@ struct GridPane: View {
             }
             .accessibilityIdentifier("batchAddToCollection")
             Button("合并成一条") { model.merge(model.items.filter { model.selection.contains($0.id) }.map(\.id)) }
-                .disabled(model.items.filter { model.selection.contains($0.id) }.contains { $0.kind == .image || $0.kind == .file })
+                .disabled(ClipRules.mergeRefusal(model.items.filter { model.selection.contains($0.id) }) != nil)
                 .accessibilityIdentifier("merge")
             Button("删除", role: .destructive) { AppDelegate.shared.confirmDelete(model.selection) }.accessibilityIdentifier("batchDelete")
             Spacer()

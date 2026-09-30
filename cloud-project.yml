@@ -30,6 +30,17 @@ targets:
         MARKETING_VERSION: '1.1.2'
         CURRENT_PROJECT_VERSION: '1'
         ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    # The agent CLI is a mode of the same executable: Contents/Resources/bin/clip -> ../../MacOS/Clipbook.
+    # Created before Xcode's final code signing so the link is sealed into the bundle.
+    postBuildScripts:
+      - name: Link clip command
+        script: |
+          mkdir -p "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bin"
+          ln -sfn ../../MacOS/Clipbook "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bin/clip"
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/bin/clip
+        basedOnDependencyAnalysis: false
     info:
       path: build/CloudInfo.plist
       properties:

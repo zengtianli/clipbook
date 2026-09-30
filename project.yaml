@@ -9,6 +9,11 @@ bundle_id: cyou.tianli.clipbook
 origin: own
 sop:
   test: bash tests/test-link-title.sh
+  # Agent CLI: same executable as the app (Contents/Resources/bin/clip -> ../../MacOS/Clipbook),
+  # linked to ~/.local/bin/clip by scripts/install-cli.py after build.sh installs.
+  cli:
+    commands: [clip]
+    app: cyou.tianli.clipbook
   accept:
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
@@ -41,6 +46,7 @@ sop:
   - build-cloud.sh
   - release-local.sh
   - scripts/package-local.py
+  - scripts/install-cli.py
   product:
     distribution: public
     source_visibility: public

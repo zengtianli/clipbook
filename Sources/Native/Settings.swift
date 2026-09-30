@@ -7,6 +7,18 @@ enum AppPreferences {
         if let suite = ProcessInfo.processInfo.environment["CLIPBOOK_PREFERENCES_SUITE"], let defaults = UserDefaults(suiteName: suite) { return defaults }
         return .standard
     }
+    /// The preferences domain in use: the isolated suite, or the app's own domain.
+    static var domain: String {
+        if let suite = ProcessInfo.processInfo.environment["CLIPBOOK_PREFERENCES_SUITE"], !suite.isEmpty { return suite }
+        return Bundle.main.bundleIdentifier ?? "cyou.tianli.clipbook"
+    }
+}
+
+/// Ranges the Settings window offers (最多保留 N 条 Stepper, 保留时长 Picker); `clip settings set` uses the same.
+enum RecordingLimits {
+    static let maxItemsRange = 100...100000
+    static let retentionChoices = [0, 7, 30, 90, 365]
+    static func clampMaxItems(_ n: Int) -> Int { min(maxItemsRange.upperBound, max(maxItemsRange.lowerBound, n)) }
 }
 
 /// 记录偏好自动保存。快捷键由 ClipShortcuts 管理，默认空。
@@ -47,19 +59,54 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// What is stored in the preferences domain, with the same defaults and clamps the window applies.
+    struct Stored: Equatable {
+        var paused: Bool, ignoredBundles: [String], maxItems: Int, retentionDays: Int, plainTextOnly: Bool
+        var fetchLinkTitles: Bool, copySound: Bool, copySoundName: String, copySoundVolume: Double
+        init(_ d: UserDefaults) {
+            paused = d.bool(forKey: "paused")
+            ignoredBundles = d.stringArray(forKey: "ignoredBundles") ?? []
+            maxItems = RecordingLimits.clampMaxItems(d.object(forKey: "maxItems") as? Int ?? 5000)
+            retentionDays = max(0, d.object(forKey: "retentionDays") as? Int ?? 0)
+            plainTextOnly = d.bool(forKey: "plainTextOnly")
+            fetchLinkTitles = d.object(forKey: "fetchLinkTitles") as? Bool ?? true
+            copySound = d.object(forKey: "copySound") as? Bool ?? true
+            let savedSound = d.string(forKey: "copySoundName") ?? "Tink"
+            copySoundName = MainActor.assumeIsolated { CopyFeedback.soundNames }.contains(savedSound) ? savedSound : "Tink"
+            copySoundVolume = min(1, max(0, d.object(forKey: "copySoundVolume") as? Double ?? 0.35))
+        }
+    }
+
     init(defaults: UserDefaults = AppPreferences.defaults) {
         d = defaults
-        paused = d.bool(forKey: "paused")
-        ignoredBundles = d.stringArray(forKey: "ignoredBundles") ?? []
-        maxItems = min(100000, max(100, d.object(forKey: "maxItems") as? Int ?? 5000))
-        retentionDays = max(0, d.object(forKey: "retentionDays") as? Int ?? 0)
-        plainTextOnly = d.bool(forKey: "plainTextOnly")
-        fetchLinkTitles = d.object(forKey: "fetchLinkTitles") as? Bool ?? true
-        copySound = d.object(forKey: "copySound") as? Bool ?? true
-        let savedSound = d.string(forKey: "copySoundName") ?? "Tink"
-        copySoundName = CopyFeedback.soundNames.contains(savedSound) ? savedSound : "Tink"
-        copySoundVolume = min(1, max(0, d.object(forKey: "copySoundVolume") as? Double ?? 0.35))
+        let v = Stored(defaults)
+        paused = v.paused
+        ignoredBundles = v.ignoredBundles
+        maxItems = v.maxItems
+        retentionDays = v.retentionDays
+        plainTextOnly = v.plainTextOnly
+        fetchLinkTitles = v.fetchLinkTitles
+        copySound = v.copySound
+        copySoundName = v.copySoundName
+        copySoundVolume = v.copySoundVolume
         refreshLoginStatus()
+    }
+
+    /// Re-read the domain after another process (`clip settings set …`) changed it. Only changed values are
+    /// assigned, so the watcher / store subscriptions fire exactly for what changed.
+    func reload() {
+        _ = d.synchronize()  // pick up the other process's write before reading
+        let v = Stored(d)
+        if paused != v.paused { paused = v.paused }
+        if ignoredBundles != v.ignoredBundles { ignoredBundles = v.ignoredBundles }
+        if maxItems != v.maxItems { maxItems = v.maxItems }
+        if retentionDays != v.retentionDays { retentionDays = v.retentionDays }
+        if plainTextOnly != v.plainTextOnly { plainTextOnly = v.plainTextOnly }
+        if fetchLinkTitles != v.fetchLinkTitles { fetchLinkTitles = v.fetchLinkTitles }
+        if copySound != v.copySound { copySound = v.copySound }
+        if copySoundName != v.copySoundName { copySoundName = v.copySoundName }
+        if copySoundVolume != v.copySoundVolume { copySoundVolume = v.copySoundVolume }
+        refreshLoginStatus()  // `clip settings set launchAtLogin` changes the system login item
     }
 }
 

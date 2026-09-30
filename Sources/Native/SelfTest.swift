@@ -189,6 +189,10 @@ enum SelfTest {
             check(false, "Store 抛错：\(error)")
         }
 
+        print("· clip 命令行（生产 ClipCLI.run；隔离库、偏好与剪贴板）")
+        try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+        MainActor.assumeIsolated { CLISelfTest.run(tmp: tmp).forEach { check($0.0, $0.1) } }
+
         print("· Transform")
         check(Transform.trim.apply("  a b \n") == "a b" && Transform.oneLine.apply("a\n  b\nc") == "a b c", "去空白 / 去换行")
         check(Transform.json.apply("{\"b\":1,\"a\":[2]}") == "{\n  \"a\" : [\n    2\n  ],\n  \"b\" : 1\n}", "JSON 格式化（键排序）")

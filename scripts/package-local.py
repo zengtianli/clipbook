@@ -27,6 +27,9 @@ def main():
         (APP / "Contents/MacOS").mkdir(parents=True)
         (APP / "Contents/Resources").mkdir()
         shutil.copy2(WORK / "Clipbook", APP / "Contents/MacOS/Clipbook")
+        # Agent CLI: same executable, linked inside the bundle before ad-hoc signing seals it.
+        (APP / "Contents/Resources/bin").mkdir()
+        os.symlink("../../MacOS/Clipbook", APP / "Contents/Resources/bin/clip")
         shutil.copy2(ROOT / "icon/AppIcon.icns", APP / "Contents/Resources/AppIcon.icns")
         version = re.search(r"MARKETING_VERSION:\s*['\"]?([\d.]+)", (ROOT / "cloud-project.yml").read_text()).group(1)
         build = subprocess.check_output(["git", "rev-list", "--count", "HEAD"], cwd=ROOT, text=True).strip()

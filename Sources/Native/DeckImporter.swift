@@ -17,6 +17,19 @@ enum DeckImporter {
         }
     }
 
+    enum ImportError: Error, CustomStringConvertible {
+        case busy
+        var description: String { "另一个 Deck 导入正在进行（Clip 设置页或 clip import-deck），请等它结束" }
+    }
+
+    /// One import at a time across processes (the Settings button and `clip import-deck`).
+    private static func acquireLock(in home: URL) throws -> Int32 {
+        let fd = open(home.appendingPathComponent(".deck-import.lock").path, O_CREAT | O_RDWR, 0o644)
+        guard fd >= 0 else { throw ClipStore.StoreError.open("无法创建导入锁：\(String(cString: strerror(errno)))") }
+        guard flock(fd, LOCK_EX | LOCK_NB) == 0 else { close(fd); throw ImportError.busy }
+        return fd
+    }
+
     static var defaultDeckHome: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Deck", isDirectory: true)
     }
@@ -26,6 +39,8 @@ enum DeckImporter {
     }
 
     static func run(into store: ClipStore, deckHome: URL = defaultDeckHome) throws -> Report {
+        let lock = try acquireLock(in: store.home)
+        defer { flock(lock, LOCK_UN); close(lock) }
         let fm = FileManager.default
         let tmp = fm.temporaryDirectory.appendingPathComponent("clipbook-deck-import-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
         try fm.createDirectory(at: tmp, withIntermediateDirectories: true)

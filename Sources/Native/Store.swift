@@ -8,12 +8,18 @@ import SQLite3
 /// 留存：非置顶、不在收藏夹的条目超过 `maxItems` 或超过 `retentionDays` 时淘汰，blob 一起删。
 final class ClipStore {
     enum StoreError: Error, CustomStringConvertible {
-        case open(String), sql(String)
+        case open(String), sql(String), missing(String)
         var description: String {
             switch self {
             case .open(let m): return "打不开数据库：\(m)"
             case .sql(let m):  return "SQL 失败：\(m)"
+            case .missing(let m): return "还没有剪贴板库：\(m)"
             }
+        }
+        /// SQLITE_BUSY / SQLITE_LOCKED after the busy timeout: another process (the app) holds the write lock.
+        var isBusy: Bool {
+            if case .sql(let m) = self { return m.contains("database is locked") || m.contains("database table is locked") }
+            return false
         }
     }
 
@@ -34,6 +40,8 @@ final class ClipStore {
 
     let home: URL
     let blobDir: URL
+    /// Opened with `readOnly: true`: never creates, migrates or writes (used by `clip` read commands).
+    let readOnly: Bool
     var maxItems = 5000
     /// 0 = 不按时长淘汰
     var retentionDays = 0
@@ -50,14 +58,29 @@ final class ClipStore {
         return base.appendingPathComponent("Clipbook", isDirectory: true)
     }
 
-    init(home: URL) throws {
+    static func databaseURL(home: URL) -> URL { home.appendingPathComponent("clipbook.sqlite3") }
+
+    /// `readOnly: true` opens an existing library for reading only: no directory or database is created,
+    /// no migration runs, and SQLite refuses writes. A missing library throws `.missing`.
+    init(home: URL, readOnly: Bool = false) throws {
         self.home = home
         self.blobDir = home.appendingPathComponent("blobs", isDirectory: true)
+        self.readOnly = readOnly
+        let path = Self.databaseURL(home: home).path
+        if readOnly {
+            guard FileManager.default.fileExists(atPath: path) else { throw StoreError.missing(path) }
+            guard sqlite3_open_v2(path, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else {
+                throw StoreError.open(String(cString: sqlite3_errmsg(db)))
+            }
+            // The app and `clip` may use the library at the same time; wait briefly instead of failing.
+            sqlite3_busy_timeout(db, 3000)
+            return
+        }
         try FileManager.default.createDirectory(at: blobDir, withIntermediateDirectories: true)
-        let path = home.appendingPathComponent("clipbook.sqlite3").path
         guard sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else {
             throw StoreError.open(String(cString: sqlite3_errmsg(db)))
         }
+        sqlite3_busy_timeout(db, 3000)
         try exec("PRAGMA journal_mode=WAL")
         try exec("PRAGMA foreign_keys=ON")
         try migrate()
@@ -130,6 +153,11 @@ final class ClipStore {
 
     func setMeta(_ key: String, _ value: String) throws {
         try run("INSERT INTO meta(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", [key, value])
+    }
+
+    /// Number of meta keys starting with `prefix` (iCloud archive markers per scope).
+    func metaCount(prefix: String) throws -> Int {
+        try scalarInt("SELECT COUNT(*) FROM meta WHERE substr(key, 1, ?) = ?", [prefix.count, prefix])
     }
 
     // MARK: - 写
@@ -208,6 +236,11 @@ final class ClipStore {
     func delete(_ ids: [Int64]) throws {
         try exec("BEGIN")
         do { for id in ids { try delete(id) }; try exec("COMMIT") } catch { try? exec("ROLLBACK"); throw error }
+    }
+
+    /// 清空会删掉的条数（不含置顶与收藏夹里的）
+    func clearableCount() throws -> Int {
+        try scalarInt("SELECT COUNT(*) FROM items WHERE pinned = 0 AND id NOT IN (SELECT item_id FROM item_collections)", [])
     }
 
     /// 清空：保留置顶和收藏夹里的
@@ -379,6 +412,20 @@ final class ClipStore {
 
     func item(id: Int64) throws -> ClipItem? {
         try first("SELECT \(Self.columns) FROM items WHERE id = ?", [id])
+    }
+
+    /// The record that already holds this exact content (ingest would move it to the top instead of adding).
+    func existing(_ c: Capture) throws -> ClipItem? {
+        try first("SELECT \(Self.columns) FROM items WHERE hash = ?", [Self.hash(of: c)])
+    }
+
+    /// Time of the most recent capture / copy (created_at is bumped when a record is re-copied).
+    func newestCreatedAt() throws -> Date? {
+        var stmt: OpaquePointer?
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_prepare_v2(db, "SELECT MAX(created_at) FROM items", -1, &stmt, nil) == SQLITE_OK else { throw err() }
+        guard sqlite3_step(stmt) == SQLITE_ROW else { throw err() }
+        return sqlite3_column_type(stmt, 0) == SQLITE_NULL ? nil : Date(timeIntervalSince1970: sqlite3_column_double(stmt, 0))
     }
 
     func blobURL(_ item: ClipItem) -> URL? { item.blob.map { blobDir.appendingPathComponent($0) } }

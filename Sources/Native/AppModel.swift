@@ -13,37 +13,6 @@ enum SidebarSelection: Hashable {
     case collection(Int64)
 }
 
-enum Transform: String, CaseIterable, Identifiable {
-    case plain, trim, upper, lower, capitalize, oneLine, json
-    var id: String { rawValue }
-    var label: String {
-        switch self {
-        case .plain:      return "转纯文本"
-        case .trim:       return "去首尾空白"
-        case .upper:      return "全大写"
-        case .lower:      return "全小写"
-        case .capitalize: return "首字母大写"
-        case .oneLine:    return "去换行"
-        case .json:       return "JSON 格式化"
-        }
-    }
-    func apply(_ s: String) -> String {
-        switch self {
-        case .plain:      return s
-        case .trim:       return s.trimmingCharacters(in: .whitespacesAndNewlines)
-        case .upper:      return s.uppercased()
-        case .lower:      return s.lowercased()
-        case .capitalize: return s.capitalized
-        case .oneLine:    return s.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.joined(separator: " ")
-        case .json:
-            guard let d = s.data(using: .utf8), let obj = try? JSONSerialization.jsonObject(with: d),
-                  let out = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted, .sortedKeys]),
-                  let str = String(data: out, encoding: .utf8) else { return s }
-            return str
-        }
-    }
-}
-
 /// 窗口与菜单共用的状态。所有落盘走 ClipStore；这里只做「查出来给界面」与「按钮→动作」。
 @MainActor
 final class AppModel: ObservableObject {
@@ -112,7 +81,7 @@ final class AppModel: ObservableObject {
                 self?.watcher.paused = paused
                 self?.watcher.ignoredBundles = Set(ignored)
                 self?.watcher.plainTextOnly = plain
-                self?.store.maxItems = min(100000, max(100, maximum))
+                self?.store.maxItems = RecordingLimits.clampMaxItems(maximum)
             }.store(in: &settingsSubscriptions)
         settings.$retentionDays.sink { [weak self] days in self?.store.retentionDays = max(0, days) }
             .store(in: &settingsSubscriptions)
@@ -131,7 +100,7 @@ final class AppModel: ObservableObject {
         watcher.paused = settings.paused
         watcher.ignoredBundles = Set(settings.ignoredBundles)
         watcher.plainTextOnly = settings.plainTextOnly
-        store.maxItems = max(settings.maxItems, 50)
+        store.maxItems = RecordingLimits.clampMaxItems(settings.maxItems)
         store.retentionDays = settings.retentionDays
     }
 
@@ -328,8 +297,7 @@ final class AppModel: ObservableObject {
 
     func saveAsNew(from item: ClipItem, text: String) {
         do {
-            let it = try store.ingest(Capture(kind: Classifier.kind(of: text), text: text,
-                                              appName: item.appName, appBundle: item.appBundle, title: item.title))
+            let it = try store.ingest(ClipRules.saveAsNew(from: item, text: text))
             reload()
             selection = [it.id]
             notice = "已另存为新条目"
@@ -354,6 +322,7 @@ final class AppModel: ObservableObject {
     }
 
     func merge(_ ids: [Int64]) {
+        if let refusal = ClipRules.mergeRefusal(ids.compactMap { try? store.item(id: $0) }) { notice = "合并失败：\(refusal)"; return }
         do {
             let it = try store.merge(ids)
             reload()
@@ -386,11 +355,7 @@ final class AppModel: ObservableObject {
     }
 
     func moveCollection(_ id: Int64, by delta: Int) {
-        var ids = collections.map(\.id)
-        guard let i = ids.firstIndex(of: id) else { return }
-        let j = i + delta
-        guard ids.indices.contains(j) else { return }
-        ids.swapAt(i, j)
+        guard let ids = ClipRules.reorder(collections.map(\.id), moving: id, by: delta) else { return }
         mutate { try store.reorderCollections(ids) }
     }
 
@@ -461,13 +426,13 @@ final class AppModel: ObservableObject {
     }
 
     func exportImage(_ item: ClipItem) {
-        guard let url = store.blobURL(item) else { return }
+        guard store.blobURL(item) != nil else { return }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = (item.title.isEmpty ? "clipbook-\(item.id)" : item.title) + ".png"
         panel.allowedContentTypes = [.png]
         if panel.runModal() == .OK, let dest = panel.url {
-            try? FileManager.default.removeItem(at: dest)
-            do { try FileManager.default.copyItem(at: url, to: dest); notice = "已导出" } catch { notice = "导出失败：\(error)" }
+            // The save panel already confirmed replacing an existing file.
+            do { try ClipRules.exportImage(item, store: store, to: dest, overwrite: true); notice = "已导出" } catch { notice = "导出失败：\(error)" }
         }
     }
 }

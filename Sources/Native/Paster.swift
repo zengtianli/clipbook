@@ -3,6 +3,18 @@ import ApplicationServices
 
 /// 把一条记录写回剪贴板；「粘贴」按钮再把用户原来的 app 拉回前台并补一下 ⌘V（需辅助功能授权）。
 enum Paster {
+    /// nspasteboard.org source marker. Every write by Clip (window or `clip copy`) carries it, so another
+    /// clipboard manager attributes the copy to Clip, and a running Clip watcher skips a write made by a
+    /// different Clip process (the CLI), which `suppressedChangeCount` cannot see.
+    static let sourceType = NSPasteboard.PasteboardType("org.nspasteboard.source")
+    static let sourceID = "cyou.tianli.clipbook"
+
+    private static func finish(_ pb: NSPasteboard, _ success: Bool) -> Int {
+        guard success else { return -1 }
+        pb.setString(sourceID, forType: sourceType)
+        return pb.changeCount
+    }
+
     /// 写剪贴板。返回写完后的 changeCount，Watcher 用它跳过自己这次写入。
     @discardableResult
     static func write(_ item: ClipItem, store: ClipStore, pasteboard pb: NSPasteboard = .general) -> Int {
@@ -24,7 +36,7 @@ enum Paster {
                 success = pb.setData(data, forType: .png)
             }
         }
-        return success ? pb.changeCount : -1
+        return finish(pb, success)
     }
 
     /// Preserve display order. Text selections paste as one block; file/image payloads
@@ -53,7 +65,7 @@ enum Paster {
         }
         guard !objects.isEmpty else { return -1 }
         pb.clearContents()
-        return pb.writeObjects(objects) ? pb.changeCount : -1
+        return finish(pb, pb.writeObjects(objects))
     }
 
     static var accessibilityTrusted: Bool { AXIsProcessTrusted() }

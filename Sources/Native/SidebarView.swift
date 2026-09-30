@@ -86,8 +86,8 @@ struct CollectionEditor: View {
     @State private var icon = "folder"
     @State private var color = "#2563eb"
 
-    static let icons = ["folder", "star", "tag", "bookmark", "heart", "flag", "bolt", "briefcase", "book", "terminal", "doc.text", "link", "photo", "person", "cart", "globe"]
-    static let colors = ["#2563eb", "#dc2626", "#ea580c", "#ca8a04", "#16a34a", "#0d9488", "#7c3aed", "#db2777", "#6b7280"]
+    static let icons = CollectionStyle.icons
+    static let colors = CollectionStyle.colors
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {

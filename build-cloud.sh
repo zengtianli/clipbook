@@ -23,6 +23,9 @@ scrub_env_run xcodebuild -project Clipbook.xcodeproj -scheme Clipbook \
 APP="$DD/Build/Products/Release/Clipbook.app"
 "$APP/Contents/MacOS/Clipbook" --selftest
 codesign --verify --deep --strict "$APP"
+# The agent CLI is the same signed executable, linked inside the bundle; it must answer --help without any UI.
+[ "$(readlink "$APP/Contents/Resources/bin/clip")" = "../../MacOS/Clipbook" ] || { echo 'Missing Contents/Resources/bin/clip link'; exit 1; }
+"$APP/Contents/Resources/bin/clip" --help > /dev/null
 python3 - "$APP" <<'PY'
 import pathlib, plistlib, subprocess, sys
 app = pathlib.Path(sys.argv[1])
@@ -54,3 +57,4 @@ fi
 ditto "$APP" "$DEST"
 codesign --verify --deep --strict "$DEST"
 echo "Installed: $DEST"
+python3 scripts/install-cli.py "$DEST"
