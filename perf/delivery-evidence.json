@@ -35,10 +35,10 @@
       "result": "passed",
       "scope": "media",
       "method": "ui_automation",
-      "checked_at": "2026-09-30T22:26:45.946097+08:00",
-      "input_sha256": "7841f313eaca9f8d6b3f7a172a8a840b0717a2eb9b410c36619cc81b622d245d",
+      "checked_at": "2026-10-01T10:22:18.231019+08:00",
+      "input_sha256": "2af5b2fbe684541e522ce1e2f8e154786620fd297c5e00597430bb20991c45fd",
       "evidence": "perf/acceptance/media_playback.json",
-      "evidence_sha256": "cc987fdaa69b1a085c5897feb1125799bc92a8ae4d570f5b2b65843d1933e3dd",
+      "evidence_sha256": "d6ccacd2da42b83e70da5e22a46bad8f64826b8ba73ae7f5553701de825abbc9",
       "detail": "builtin:media_playback：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py → 17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、"
     },
     "functionality": {
@@ -102,5 +102,5 @@
       "detail": "builtin:cli_entry：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py → 命令行在 App 里：clip — usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）"
     }
   },
-  "updated_at": "2026-10-01T10:17:18.616260+08:00"
+  "updated_at": "2026-10-01T10:22:18.303562+08:00"
 }
