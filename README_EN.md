@@ -13,7 +13,7 @@
 
 | Download | Idle memory | Idle CPU | Cold launch to window |
 |---|---|---|---|
-| **1.8 MB** (installed 2.5 MB) | **55.6 MB** | **0.07%** | **474 ms** |
+| **2.0 MB** (installed 2.9 MB) | **54.5 MB** | **0.05%** | **480 ms** |
 
 Native SwiftUI/AppKit with no third-party dependencies; history is stored with the system SQLite. Every 0.25 s it only compares the pasteboard change counter; images are decoded at preview size with a 48-image cache, and hiding the main window unloads the interface.
 
@@ -21,7 +21,7 @@ Other running components (separate devices and sampling windows; figures are not
 
 - Installed CloudKit edition (window hidden): v1.1.1 (48); 2026-09-26; Mac16,12 / Apple M4 / macOS 27.2; Installed 2.4 MB; Memory 26.2 MB; CPU 0.03%; Measured operation Not measured; CloudKit setting: True; main window hidden, original preferences and real data retained. Idle residency only, without triggered transfers or new clipboard copies; not a sync peak.
 
-<sub>v1.1.2 (59) · Mac16,12 / Apple M4 / macOS 27.2 · Local release; isolated snapshot of 2767 real clipboard records and separate preferences; named pasteboard polling remains active with no new copy, UI shown in background, no cloud sync. · measured 2026-09-29. Measured on the listed device; re-measured for each version. Memory uses phys_footprint; CPU is CPU time ÷ wall time over a 60-second sampling window; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
+<sub>v1.2.0 (70) · Mac16,12 / Apple M4 / macOS 27.2 · Local release; isolated snapshot of 2767 real clipboard records and separate preferences; named pasteboard polling remains active with no new copy, UI shown in background, no cloud sync. · measured 2026-10-01. Measured on the listed device; re-measured for each version. Memory uses phys_footprint; CPU is CPU time ÷ wall time over a 60-second sampling window; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
 <!-- lightweight:end -->
 
 In a controlled image-browsing test, Clip's own physical footprint dropped from 275.5 to 117.3 MiB (about 57%, build 26). This is a before/after result, not a Deck memory benchmark. Matched latency testing is still pending.
