@@ -1,0 +1,50 @@
+{
+  "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
+  "executable_sha256": "f84c89d35a35e095068a43d8aba2db4bf4d1a842d322c8d72dd1a22e6925bfa9",
+  "entry": "--privacy-test",
+  "exit_code": 0,
+  "checks": {
+    "cloud_disabled_by_default_no_cloud_library": true,
+    "cloud_mapping_file_paths_not_uploaded": true,
+    "cloud_mapping_local_only_store": true,
+    "cloud_mapping_rich_text_as_plain_text": true,
+    "cloud_mapping_text_and_image_archived": true,
+    "concealed_image_not_recorded": true,
+    "concealed_type_not_recorded": true,
+    "control_plain_copy_recorded": true,
+    "general_pasteboard_untouched": true,
+    "ignored_bundle_not_recorded": true,
+    "isolated_named_pasteboard": true,
+    "link_title_control_fetches_when_enabled": true,
+    "link_title_not_fetched_when_disabled": true,
+    "no_cloud_archive_markers_written": true,
+    "own_copy_suppressed": true,
+    "paused_not_recorded_resume_records": true,
+    "transient_type_not_recorded": true
+  },
+  "screenshots": [],
+  "not_covered": [
+    "iCloud 真实上传与 CloudKit 账户切换（仅在本地模式驱动生产映射 MacClipSync.sendRecent → ClipLibrary.save，不连 iCloud）",
+    "编辑/删除/收藏的云端双向镜像（产品声明不承诺）",
+    "来源应用识别依赖系统前台应用；忽略名单用当前前台 bundle 驱动同一生产判据"
+  ],
+  "static": {
+    "checks": {
+      "entitlements_icloud_only": true,
+      "system_libraries_only": true,
+      "no_permission_usage_strings": true,
+      "network_apis_confined": true,
+      "link_title_ephemeral_session": true,
+      "no_third_party_urls_in_binary": true
+    },
+    "findings": {
+      "extra_entitlements": [],
+      "non_system_libs": [],
+      "usage_strings": "",
+      "network_source_files": [
+        "Sources/Native/LinkTitle.swift"
+      ],
+      "third_party_urls": []
+    }
+  }
+}

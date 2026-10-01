@@ -1,0 +1,109 @@
+{
+  "summary": "desktop 1440px：HTTP 200，标题「Clip · 复制过的，再找回来」，无横向溢出，3 张图片全部加载",
+  "passed": true,
+  "url": "https://app-mac-clips.tianli.cyou/",
+  "viewport": [
+    1440,
+    900
+  ],
+  "http_status": 200,
+  "title": "Clip · 复制过的，再找回来",
+  "inner_width": 1440,
+  "scroll_width": 1440,
+  "horizontal_overflow": false,
+  "images": [
+    {
+      "src": "https://app-mac-clips.tianli.cyou/images/icon.png",
+      "complete": true,
+      "natural_width": 1024,
+      "natural_height": 1024,
+      "rendered_width": 42,
+      "rendered_height": 42,
+      "alt": ""
+    },
+    {
+      "src": "https://app-mac-clips.tianli.cyou/media/overview.png",
+      "complete": true,
+      "natural_width": 1380,
+      "natural_height": 844,
+      "rendered_width": 674,
+      "rendered_height": 420,
+      "alt": "Clip 的真实三栏窗口：来源与类型筛选、剪贴板记录、正文编辑"
+    },
+    {
+      "src": "https://app-mac-clips.tianli.cyou/images/icon.png",
+      "complete": true,
+      "natural_width": 1024,
+      "natural_height": 1024,
+      "rendered_width": 78,
+      "rendered_height": 78,
+      "alt": "Clip 图标"
+    }
+  ],
+  "videos": [
+    {
+      "src": "https://app-mac-clips.tianli.cyou/media/clip-guide-0a6f43d83fa9.mp4",
+      "ready_state": 4,
+      "duration": 38.6,
+      "current_time": 0,
+      "paused": true,
+      "error": null,
+      "video_width": 1920,
+      "video_height": 1080,
+      "tracks": 1,
+      "play_error": null
+    },
+    {
+      "src": "https://app-mac-clips.tianli.cyou/media/search.mp4",
+      "ready_state": 4,
+      "duration": 9.8,
+      "current_time": 0,
+      "paused": true,
+      "error": null,
+      "video_width": 1280,
+      "video_height": 1024,
+      "tracks": 1,
+      "play_error": null
+    },
+    {
+      "src": "https://app-mac-clips.tianli.cyou/media/edit.mp4",
+      "ready_state": 4,
+      "duration": 11.2,
+      "current_time": 0,
+      "paused": true,
+      "error": null,
+      "video_width": 1280,
+      "video_height": 1024,
+      "tracks": 1,
+      "play_error": null
+    },
+    {
+      "src": "https://app-mac-clips.tianli.cyou/media/organize.mp4",
+      "ready_state": 4,
+      "duration": 12.8,
+      "current_time": 0,
+      "paused": true,
+      "error": null,
+      "video_width": 1280,
+      "video_height": 1024,
+      "tracks": 1,
+      "play_error": null
+    }
+  ],
+  "failed_requests": [],
+  "requests": 12,
+  "screenshot": "perf/acceptance/homepage_desktop.png",
+  "screenshot_sha256": "888879000613028188e402ef4cfb71608178212b7fff1d1f67a4134eeda266f5",
+  "screenshot_check": "极差 255，标准差 31.2",
+  "browser": {
+    "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+    "kind": "headless_shell",
+    "version": "Google Chrome for Testing 151.0.7922.34"
+  },
+  "probe_timed_out": false,
+  "method": "隔离无界面浏览器（临时配置、无调试端口、不操作桌面）经本地透传代理加载线上页面，探针读取布局与资源状态",
+  "limits": [
+    "单一桌面视口",
+    "机器判定布局与资源；视觉美观未做人工审阅"
+  ]
+}

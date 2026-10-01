@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "built_at": "2026-09-28T11:48:19+08:00",
+  "built_at": "2026-10-01T10:14:29+08:00",
   "artifact": {
     "bundle_id": "cyou.tianli.clipbook",
-    "version": "1.1.2",
-    "build": "59",
+    "version": "1.2.0",
+    "build": "70",
     "executable": "Contents/MacOS/Clipbook",
-    "sha256": "9b98d6cc153cabe3ef0f2373a6541555f0e3c3b472c4e047dbb2d4769c4d8e55",
+    "sha256": "423180312182cf13cd0612de370016653fa6f03044af26a01fc63ed0d2d52fcb",
     "icon": {
       "path": "Contents/Resources/AppIcon.icns",
       "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
@@ -22,9 +22,9 @@
       "build-cloud.sh",
       "project.yaml"
     ],
-    "sha256": "20de2d64a703e5debda940876a2b343bd5944f65d294bbd380cec8f38c136ed2",
-    "file_count": 32,
-    "commit": "3a9f0aafe9e59188b3dcbdac343b5976b0a52bdc",
+    "sha256": "7a51988513026a6551c94dff45406fb237925a7d12a26b560fb3bbe0bc72390d",
+    "file_count": 36,
+    "commit": "362641117d27eafebbd9cba219ef0dbf1eb2245c",
     "dirty_scope": "组件当前 Git 工作树；跨仓/软链输入的实际内容由 sha256 核验",
     "dirty": false
   },

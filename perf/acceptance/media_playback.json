@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "name": "media_playback",
+  "app_id": "clipbook",
+  "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-09-30T22:26:37.220458+08:00",
+  "finished_at": "2026-09-30T22:26:45.946097+08:00",
+  "input_sha256": "7841f313eaca9f8d6b3f7a172a8a840b0717a2eb9b410c36619cc81b622d245d",
+  "log": "perf/acceptance/media_playback.log",
+  "log_sha256": "1709eea4022d36378a188d932564806e856a6d9cdb07624134956d70d49d8c73",
+  "summary": "17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、",
+  "detail": {
+    "summary": "17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、promotion/video/maccy-images-raw.mov 8.1s h264、promotion/video/pastepal-bench-scene.mp4 8.0s h264、promotion/video/pastepal-images-raw.mov 12.0s h264、promotion/video/scene-0.mp4 14.0s h264、promotion/video/scene-1.mp4 8.0s h264、promotion/video/scene-2.mp4 19.0s h264、promotion/video/scene-end.mp4 10.0s h264）；推广页 4 个视频在无界面浏览器中实际播放（1.0/39s、1.5/10s、1.4/11s、1.3/13s）",
+    "passed": true,
+    "local_videos": [
+      {
+        "path": "promotion/video/capture-test.mov",
+        "bytes": 198144,
+        "sha256": "c6cf5130c6abbac604711d5828504f77dd13b57d40f5b7b3b30f747c9821a85a",
+        "duration": 3.011667,
+        "codec": "h264",
+        "size": [
+          1220,
+          642
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-bench-scene.mp4",
+        "bytes": 74982,
+        "sha256": "1b9ad625dd6f9d7756248017ad50dff15dd0e108d059b6815ec510aac4d2d988",
+        "duration": 8.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-competitors.mp4",
+        "bytes": 358146,
+        "sha256": "49efc4d9161a8b48ed422b56f1f534bfcd0ff9b706ea06bb4cba98c23718aa2c",
+        "duration": 36.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-demo-raw.mov",
+        "bytes": 3444273,
+        "sha256": "7c00e2d83b0ddea53eab7e2c416153421d79b6f4e24ede757d8d479ab545702f",
+        "duration": 55.063333,
+        "codec": "h264",
+        "size": [
+          1220,
+          642
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-demo.mp4",
+        "bytes": 595187,
+        "sha256": "0970d028365672d985c0a2a1a60598fe6173e9b281829c013ff12e47555e3849",
+        "duration": 51.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-edit-raw.mov",
+        "bytes": 3506309,
+        "sha256": "3573cc60ba219e237e8bdf65983ae75af53ebe5011b99ace6cb9f5c56e6d7713",
+        "duration": 20.003333,
+        "codec": "h264",
+        "size": [
+          1286,
+          708
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-images-raw.mov",
+        "bytes": 1248501,
+        "sha256": "7e7a9ff979b47860a8061c55de6da33349ce8f1b7dfb0394dec0ba9709fa38f5",
+        "duration": 10.011667,
+        "codec": "h264",
+        "size": [
+          1286,
+          708
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/clip-keyboard-raw.mov",
+        "bytes": 2072311,
+        "sha256": "d1dd06c38d5e02213c1be3db8401c71120ac54f2e959a395b3e4bfb98543b977",
+        "duration": 25.018333,
+        "codec": "h264",
+        "size": [
+          1220,
+          642
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/competitor-results-scene.mp4",
+        "bytes": 115830,
+        "sha256": "d0cdd3e42ad6060ee2863ba9ab55118fd99e94f21e5a924a0a26ef165e112fdb",
+        "duration": 12.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/maccy-bench-scene.mp4",
+        "bytes": 57248,
+        "sha256": "5743adc185b90a5a0909df035afd45e5ada2c7c134acdbffb33ed67e3d31e1a8",
+        "duration": 8.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/maccy-images-raw.mov",
+        "bytes": 872497,
+        "sha256": "16c465d9968703512f032d307fad057c052459c4f39d7dece98c31a8c58e54c0",
+        "duration": 8.078333,
+        "codec": "h264",
+        "size": [
+          896,
+          846
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/pastepal-bench-scene.mp4",
+        "bytes": 112478,
+        "sha256": "09fb9d13d3cecb20d2fd5830494825ba5163b8f2bc5b118d5ca1d28492dd3fa0",
+        "duration": 8.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/pastepal-images-raw.mov",
+        "bytes": 3681006,
+        "sha256": "8859be4f8f38a853bc92f01060bda7a739f80030967856537f0d21eedce1f125",
+        "duration": 12.001667,
+        "codec": "h264",
+        "size": [
+          1498,
+          964
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/scene-0.mp4",
+        "bytes": 166437,
+        "sha256": "94f45c2921c2b0114c8a48f1608c227d0b27c8dc4cd059e28e1000ca184e04cb",
+        "duration": 14.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/scene-1.mp4",
+        "bytes": 70409,
+        "sha256": "39995553d3c276965a0471c9d33f9d0f37284688684ee8e0401309a42078dc75",
+        "duration": 8.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/scene-2.mp4",
+        "bytes": 252316,
+        "sha256": "c2312289b7f155d814939736dc9d4d7444506fc20ece450b2dfcf5aeaf7060fd",
+        "duration": 19.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      },
+      {
+        "path": "promotion/video/scene-end.mp4",
+        "bytes": 108290,
+        "sha256": "4d032bbcfb83adb5038b3f126b514fec3deb7f721f876b65b87c000b1331aff4",
+        "duration": 10.0,
+        "codec": "h264",
+        "size": [
+          1220,
+          772
+        ],
+        "decode_ok": true,
+        "decode_errors": null,
+        "ok": true
+      }
+    ],
+    "page_url": "https://app-mac-clips.tianli.cyou/",
+    "page_videos": [
+      {
+        "src": "https://app-mac-clips.tianli.cyou/media/clip-guide-0a6f43d83fa9.mp4",
+        "ready_state": 4,
+        "duration": 38.6,
+        "current_time": 1.025951,
+        "paused": false,
+        "error": null,
+        "video_width": 1920,
+        "video_height": 1080,
+        "tracks": 1,
+        "play_error": null,
+        "ok": true
+      },
+      {
+        "src": "https://app-mac-clips.tianli.cyou/media/search.mp4",
+        "ready_state": 4,
+        "duration": 9.8,
+        "current_time": 1.479321,
+        "paused": false,
+        "error": null,
+        "video_width": 1280,
+        "video_height": 1024,
+        "tracks": 1,
+        "play_error": null,
+        "ok": true
+      },
+      {
+        "src": "https://app-mac-clips.tianli.cyou/media/edit.mp4",
+        "ready_state": 4,
+        "duration": 11.2,
+        "current_time": 1.412155,
+        "paused": false,
+        "error": null,
+        "video_width": 1280,
+        "video_height": 1024,
+        "tracks": 1,
+        "play_error": null,
+        "ok": true
+      },
+      {
+        "src": "https://app-mac-clips.tianli.cyou/media/organize.mp4",
+        "ready_state": 4,
+        "duration": 12.8,
+        "current_time": 1.338983,
+        "paused": false,
+        "error": null,
+        "video_width": 1280,
+        "video_height": 1024,
+        "tracks": 1,
+        "play_error": null,
+        "ok": true
+      }
+    ],
+    "page_title": "Clip · 复制过的，再找回来",
+    "page_screenshot": "perf/acceptance/media_playback.png",
+    "browser": {
+      "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",
+      "kind": "headless_shell",
+      "version": "Google Chrome for Testing 151.0.7922.34"
+    },
+    "local_sha256": [
+      "0970d028365672d985c0a2a1a60598fe6173e9b281829c013ff12e47555e3849",
+      "09fb9d13d3cecb20d2fd5830494825ba5163b8f2bc5b118d5ca1d28492dd3fa0",
+      "16c465d9968703512f032d307fad057c052459c4f39d7dece98c31a8c58e54c0",
+      "1b9ad625dd6f9d7756248017ad50dff15dd0e108d059b6815ec510aac4d2d988",
+      "3573cc60ba219e237e8bdf65983ae75af53ebe5011b99ace6cb9f5c56e6d7713",
+      "39995553d3c276965a0471c9d33f9d0f37284688684ee8e0401309a42078dc75",
+      "49efc4d9161a8b48ed422b56f1f534bfcd0ff9b706ea06bb4cba98c23718aa2c",
+      "4d032bbcfb83adb5038b3f126b514fec3deb7f721f876b65b87c000b1331aff4",
+      "5743adc185b90a5a0909df035afd45e5ada2c7c134acdbffb33ed67e3d31e1a8",
+      "7c00e2d83b0ddea53eab7e2c416153421d79b6f4e24ede757d8d479ab545702f",
+      "7e7a9ff979b47860a8061c55de6da33349ce8f1b7dfb0394dec0ba9709fa38f5",
+      "8859be4f8f38a853bc92f01060bda7a739f80030967856537f0d21eedce1f125",
+      "94f45c2921c2b0114c8a48f1608c227d0b27c8dc4cd059e28e1000ca184e04cb",
+      "c2312289b7f155d814939736dc9d4d7444506fc20ece450b2dfcf5aeaf7060fd",
+      "c6cf5130c6abbac604711d5828504f77dd13b57d40f5b7b3b30f747c9821a85a",
+      "d0cdd3e42ad6060ee2863ba9ab55118fd99e94f21e5a924a0a26ef165e112fdb",
+      "d1dd06c38d5e02213c1be3db8401c71120ac54f2e959a395b3e4bfb98543b977"
+    ],
+    "method": "ffprobe/ffmpeg 全量解码 + 隔离无界面浏览器静音播放（readyState/currentTime/duration）",
+    "limits": [
+      "静音自动播放；字幕文字与拖动进度未做人工审阅"
+    ]
+  }
+}

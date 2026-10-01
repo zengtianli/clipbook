@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "name": "cli_entry",
+  "app_id": "clipbook",
+  "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-01T10:17:03.410174+08:00",
+  "finished_at": "2026-10-01T10:17:03.769220+08:00",
+  "input_sha256": "08089a5c704003bbed723d417325eeb5cb59c9fac249dcc3b8151e94f977c13c",
+  "log": "perf/acceptance/cli_entry.log",
+  "log_sha256": "b90c43ac966eced9289601f5dc62f67d28e860d038ba1a0a285ea05f9f1682c8",
+  "summary": "命令行在 App 里：clip — usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+  "detail": {
+    "summary": "命令行在 App 里：clip — usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+    "passed": true,
+    "commands": [
+      "clip"
+    ],
+    "app": "cyou.tianli.clipbook",
+    "host_app": "/Applications/Clip.app",
+    "target": "/Applications/Clip.app/Contents/MacOS/Clipbook",
+    "inside_app": true,
+    "help_summary": "usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+    "entries": [
+      {
+        "command": "clip",
+        "link": "~/.local/bin/clip",
+        "target": "/Applications/Clip.app/Contents/MacOS/Clipbook",
+        "inside_app": true,
+        "executable": true,
+        "exit_code": 0,
+        "summary": "usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+        "error": null
+      }
+    ]
+  }
+}

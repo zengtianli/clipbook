@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "checks": {
+    "icon_review": {
+      "result": "passed",
+      "scope": "icon",
+      "method": "ui_automation",
+      "checked_at": "2026-09-28T00:19:28.407979+08:00",
+      "input_sha256": "fe14948e4a53e6e04f9742a3571742c601fa93f1f6beaab9917bf5f657ae7e8e",
+      "evidence": "perf/acceptance/icon_review.json",
+      "evidence_sha256": "a84282f8a355a9d7cb977ded30e5d75195424fd890c41ab6f37f1b5880070e3b",
+      "detail": "builtin:icon_review：/Users/tianli/Dev/.venv/bin/python /Users/tianli/Apps/chapter/engine/acceptors/icon_review.py → 机器审阅：尺寸齐全、非空白（16–1024 px 共 10 个表示，浅色/深色底拼图已存）"
+    },
+    "homepage_desktop": {
+      "result": "passed",
+      "scope": "promo_ui",
+      "method": "ui_automation",
+      "checked_at": "2026-09-29T09:53:36.944673+08:00",
+      "input_sha256": "62655a1f5b11a2cc5473d04d0129e896ab4b31439725d8d2992340ecc97558c6",
+      "evidence": "perf/acceptance/homepage_desktop.json",
+      "evidence_sha256": "204682e858551b8ef626320b8c21d86771e83d87ab675dccc305645e9b9bdd84",
+      "detail": "builtin:homepage_desktop：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/homepage.py --viewport desktop → desktop 1440px：HTTP 200，标题「Clip · 复制过的，再找回来」，无横向溢出，3 张图片全部加载"
+    },
+    "homepage_mobile": {
+      "result": "passed",
+      "scope": "promo_ui",
+      "method": "ui_automation",
+      "checked_at": "2026-09-29T09:53:39.635554+08:00",
+      "input_sha256": "62655a1f5b11a2cc5473d04d0129e896ab4b31439725d8d2992340ecc97558c6",
+      "evidence": "perf/acceptance/homepage_mobile.json",
+      "evidence_sha256": "93200ad43b73c099f3e73a031111a71637f9a3a51767f7d064121c9d1ecef8e5",
+      "detail": "builtin:homepage_mobile：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/homepage.py --viewport mobile → mobile 390px：HTTP 200，标题「Clip · 复制过的，再找回来」，无横向溢出，3 张图片全部加载"
+    },
+    "media_playback": {
+      "result": "passed",
+      "scope": "media",
+      "method": "ui_automation",
+      "checked_at": "2026-09-30T22:26:45.946097+08:00",
+      "input_sha256": "7841f313eaca9f8d6b3f7a172a8a840b0717a2eb9b410c36619cc81b622d245d",
+      "evidence": "perf/acceptance/media_playback.json",
+      "evidence_sha256": "cc987fdaa69b1a085c5897feb1125799bc92a8ae4d570f5b2b65843d1933e3dd",
+      "detail": "builtin:media_playback：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py → 17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、"
+    },
+    "functionality": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-10-01T10:17:18.578680+08:00",
+      "input_sha256": "8ec3b832ca041c342e6bd8e2e689f8c0ecf69daa0e39e9710e8f4f994e6dace1",
+      "evidence": "perf/acceptance/functionality.json",
+      "evidence_sha256": "fb26943e982e23f5ce6efd0fade1f361d5cfbf1e2e0c00332e42643c73787d9d",
+      "detail": "sop.accept：bash scripts/accept/functionality.sh → 当前源码 Release 构建：生产 --selftest 176 项断言全过，链接标题有界抓取测试通过，clip 命令行经包内入口隔离验证通过（可执行 f84c89d35a35）"
+    },
+    "recovery": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-10-01T10:17:12.055077+08:00",
+      "input_sha256": "8ec3b832ca041c342e6bd8e2e689f8c0ecf69daa0e39e9710e8f4f994e6dace1",
+      "evidence": "perf/acceptance/recovery.json",
+      "evidence_sha256": "dea831997edef7a9ca4a1a7567a003279b4c538304df833baf026bfeef65e35e",
+      "detail": "sop.accept：bash scripts/accept/recovery.sh → 故障与恢复自检 18/18 项通过（当前源码 Release 构建，Clipbook --recovery-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）"
+    },
+    "privacy": {
+      "result": "passed",
+      "scope": "code",
+      "method": "real_product",
+      "checked_at": "2026-10-01T10:17:14.615173+08:00",
+      "input_sha256": "8ec3b832ca041c342e6bd8e2e689f8c0ecf69daa0e39e9710e8f4f994e6dace1",
+      "evidence": "perf/acceptance/privacy.json",
+      "evidence_sha256": "98e03382481332027d599e15b9e5efc5d46986edc3933003d98d2bb0de8de32b",
+      "detail": "sop.accept：bash scripts/accept/privacy.sh → 隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过"
+    },
+    "native_ui": {
+      "result": "passed",
+      "scope": "ui",
+      "method": "ui_automation",
+      "checked_at": "2026-10-01T10:17:16.666655+08:00",
+      "input_sha256": "4c82f86cb77fbebd94289669a88f46e2643235be5edd3818f9c950f5aa2324fe",
+      "evidence": "perf/acceptance/native_ui.json",
+      "evidence_sha256": "3144764789b9fb7db7b2386a179c16dd820d73923f3ae7063b57db0e93ded0bd",
+      "detail": "sop.accept：bash scripts/accept/native_ui.sh → 进程内离屏界面自检 26/26 项通过（当前源码 Release 构建，Clipbook --ui-self-test /Users/tianli/Apps/clip/mac/perf/acceptance/native_ui，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）"
+    },
+    "installed_icon": {
+      "result": "passed",
+      "scope": "installed_icon",
+      "method": "ui_automation",
+      "checked_at": "2026-10-01T10:17:13.268123+08:00",
+      "input_sha256": "e643a505b9287515bc7e0ffae36ac927680156d12428fa1d99fd1399c17959c9",
+      "evidence": "perf/acceptance/installed_icon.json",
+      "evidence_sha256": "30ab029ad5f1a236b085004a859bc3824c4c734bedbaba2eb9096bf0a5cded6d",
+      "detail": "builtin:installed_icon：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/installed_icon.py → 系统实际显示的装机图标与源图标一致（Clip.app 1.2.0 (70)：256px 均差 5.22 超差 0.00%，512px 均差 6.67 超差 0.47%；macOS 27.2.0，离屏读取）"
+    },
+    "cli_entry": {
+      "result": "passed",
+      "scope": "cli_entry",
+      "method": "real_product",
+      "checked_at": "2026-10-01T10:17:03.769220+08:00",
+      "input_sha256": "08089a5c704003bbed723d417325eeb5cb59c9fac249dcc3b8151e94f977c13c",
+      "evidence": "perf/acceptance/cli_entry.json",
+      "evidence_sha256": "3cb7fbc7c9a82dc5b591e8666bd637576d8b7a1f697f306de71513dbc8e24184",
+      "detail": "builtin:cli_entry：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py → 命令行在 App 里：clip — usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）"
+    }
+  },
+  "updated_at": "2026-10-01T10:17:18.616260+08:00"
+}

@@ -1,0 +1,20 @@
+PASS reopen_preserves_rows_pin_collection_blob
+PASS wal_uncheckpointed_second_connection_reads — wal 197792 B
+PASS wal_snapshot_recovers_after_simulated_crash
+PASS missing_blob_listed_thumbnail_nil
+PASS missing_blob_copy_fails_cleanly
+PASS missing_blob_copy_selection_reports_error — 复制失败：无法写入剪贴板或原文件不可读
+PASS missing_rtf_falls_back_to_plain_text
+PASS missing_blob_item_deletable
+PASS corrupt_db_store_throws_readable_error — SQL 失败：file is not a database
+PASS corrupt_db_startup_path_throws — SQL 失败：file is not a database
+PASS corrupt_db_file_not_overwritten
+PASS deck_missing_source_throws_library_unchanged
+PASS deck_wrong_schema_throws_library_unchanged
+PASS deck_import_temp_copy_cleaned
+PASS link_title_unreachable_returns_nil_bounded — 0.03s
+PASS link_title_invalid_url_nil
+PASS max_items_eviction_no_orphan_blobs — 保留 3 条，磁盘 3 个 blob，引用 3 个
+PASS clear_all_removes_every_blob
+{"checks":{"clear_all_removes_every_blob":true,"corrupt_db_file_not_overwritten":true,"corrupt_db_startup_path_throws":true,"corrupt_db_store_throws_readable_error":true,"deck_import_temp_copy_cleaned":true,"deck_missing_source_throws_library_unchanged":true,"deck_wrong_schema_throws_library_unchanged":true,"link_title_invalid_url_nil":true,"link_title_unreachable_returns_nil_bounded":true,"max_items_eviction_no_orphan_blobs":true,"missing_blob_copy_fails_cleanly":true,"missing_blob_copy_selection_reports_error":true,"missing_blob_item_deletable":true,"missing_blob_listed_thumbnail_nil":true,"missing_rtf_falls_back_to_plain_text":true,"reopen_preserves_rows_pin_collection_blob":true,"wal_snapshot_recovers_after_simulated_crash":true,"wal_uncheckpointed_second_connection_reads":true},"not_covered":["启动失败弹窗（AppDelegate.init 捕获错误后 NSAlert.runModal + exit(2)，模态 UI 不驱动；已断言同一 AppModel(home:) 抛出可读错误）","磁盘已满 / 只读卷写入失败","多进程同时写同一库（生产为单实例）","写 blob 成功但 INSERT 失败时遗留的孤儿文件（生产无清理保证）","进程被真实 SIGKILL（以复制未 checkpoint 的 db+wal 快照代替）"],"ok":true,"screenshots":[]}
+故障与恢复自检 18/18 项通过（当前源码 Release 构建，Clipbook --recovery-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）

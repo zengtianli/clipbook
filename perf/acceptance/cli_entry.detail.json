@@ -1,0 +1,24 @@
+{
+  "summary": "命令行在 App 里：clip — usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+  "passed": true,
+  "commands": [
+    "clip"
+  ],
+  "app": "cyou.tianli.clipbook",
+  "host_app": "/Applications/Clip.app",
+  "target": "/Applications/Clip.app/Contents/MacOS/Clipbook",
+  "inside_app": true,
+  "help_summary": "usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+  "entries": [
+    {
+      "command": "clip",
+      "link": "~/.local/bin/clip",
+      "target": "/Applications/Clip.app/Contents/MacOS/Clipbook",
+      "inside_app": true,
+      "executable": true,
+      "exit_code": 0,
+      "summary": "usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据）",
+      "error": null
+    }
+  ]
+}

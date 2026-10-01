@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "name": "native_ui",
+  "app_id": "clipbook",
+  "command": "bash scripts/accept/native_ui.sh",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-01T10:17:03.770921+08:00",
+  "finished_at": "2026-10-01T10:17:16.666655+08:00",
+  "input_sha256": "4c82f86cb77fbebd94289669a88f46e2643235be5edd3818f9c950f5aa2324fe",
+  "log": "perf/acceptance/native_ui.log",
+  "log_sha256": "7fd4850a708c7c39086c8404b4553112232596a973280275de5b85f639dc6823",
+  "summary": "进程内离屏界面自检 26/26 项通过（当前源码 Release 构建，Clipbook --ui-self-test /Users/tianli/Apps/clip/mac/perf/acceptance/native_ui，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）",
+  "detail": {
+    "summary": "进程内离屏界面自检 26/26 项通过（当前源码 Release 构建，Clipbook --ui-self-test /Users/tianli/Apps/clip/mac/perf/acceptance/native_ui，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）",
+    "executable_sha256": "f84c89d35a35e095068a43d8aba2db4bf4d1a842d322c8d72dd1a22e6925bfa9",
+    "entry": "--ui-self-test /Users/tianli/Apps/clip/mac/perf/acceptance/native_ui",
+    "exit_code": 0,
+    "checks": {
+      "copy_selection_display_order": true,
+      "copy_selection_mixed_image_text": true,
+      "default_shortcuts_empty_none_registered": true,
+      "delete_removes_row_and_blob": true,
+      "filter_reset_all": true,
+      "fixtures_seeded": true,
+      "general_pasteboard_untouched": true,
+      "kind_filter": true,
+      "main_screenshot_not_blank": true,
+      "main_screenshot_size": true,
+      "merge_selection": true,
+      "model_loads_isolated_store": true,
+      "no_focus_or_general_pasteboard_side_effects": true,
+      "resume_interface_keeps_selection_and_draft": true,
+      "save_text_reclassifies": true,
+      "search_filters_items": true,
+      "search_no_match_empty": true,
+      "select_all": true,
+      "selection_click_command_shift": true,
+      "settings_render_registers_nothing": true,
+      "settings_screenshot_not_blank": true,
+      "settings_screenshot_size": true,
+      "source_app_filter": true,
+      "suspend_interface_releases_page": true,
+      "toggle_pin": true,
+      "window_stays_offscreen_and_inactive": true
+    },
+    "screenshots": [
+      "perf/acceptance/native_ui/main.png",
+      "perf/acceptance/native_ui/settings.png"
+    ],
+    "not_covered": [
+      "真实鼠标点击 / 键盘事件分发（按约束不合成事件；键盘导航由 --keyboard-window-test 与 --selftest 覆盖）",
+      "窗口上屏、激活与 Dock/⌘Tab 行为（按约束不 order 上屏、不激活）",
+      "粘贴到前一个应用（需要辅助功能与激活，隔离模式下生产代码只写演示 pasteboard）",
+      "删除/清空确认对话框（NSAlert.runModal 为模态 UI）",
+      "像素级外观：离屏 cacheDisplay 不绘制选中高亮/强调材质（侧栏选中行呈黑块、选中标签为空白），截图只验收布局与内容非空白"
+    ]
+  }
+}

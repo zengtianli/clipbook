@@ -1,0 +1,28 @@
+PASS fixtures_seeded — 21 条，类型 ["code", "color", "image", "link", "richText", "text"]
+PASS model_loads_isolated_store — items 21 total 21
+PASS window_stays_offscreen_and_inactive
+PASS main_screenshot_size — 位图 1380×844，内容 (1380.0, 792.0)
+PASS main_screenshot_not_blank — 亮度标准差 0.115，量化颜色 165
+PASS search_filters_items — 命中 2
+PASS search_no_match_empty
+PASS kind_filter — color 3 / image 3
+PASS source_app_filter
+PASS filter_reset_all
+PASS selection_click_command_shift
+PASS select_all
+PASS copy_selection_display_order — The quick brown fox⏎⏎短句
+PASS copy_selection_mixed_image_text — 2 项
+PASS general_pasteboard_untouched
+PASS toggle_pin
+PASS save_text_reclassifies
+PASS merge_selection — Quarterly numbers look fine⏎⏎The quick brown fox
+PASS delete_removes_row_and_blob
+PASS suspend_interface_releases_page — 暂停后仅保留所选 2 条
+PASS resume_interface_keeps_selection_and_draft
+PASS default_shortcuts_empty_none_registered — 绑定 0，注册调用 0
+PASS settings_screenshot_size — 位图 620×734，内容 (620.0, 682.0)
+PASS settings_screenshot_not_blank — 亮度标准差 0.089，量化颜色 32
+PASS settings_render_registers_nothing
+PASS no_focus_or_general_pasteboard_side_effects
+{"checks":{"copy_selection_display_order":true,"copy_selection_mixed_image_text":true,"default_shortcuts_empty_none_registered":true,"delete_removes_row_and_blob":true,"filter_reset_all":true,"fixtures_seeded":true,"general_pasteboard_untouched":true,"kind_filter":true,"main_screenshot_not_blank":true,"main_screenshot_size":true,"merge_selection":true,"model_loads_isolated_store":true,"no_focus_or_general_pasteboard_side_effects":true,"resume_interface_keeps_selection_and_draft":true,"save_text_reclassifies":true,"search_filters_items":true,"search_no_match_empty":true,"select_all":true,"selection_click_command_shift":true,"settings_render_registers_nothing":true,"settings_screenshot_not_blank":true,"settings_screenshot_size":true,"source_app_filter":true,"suspend_interface_releases_page":true,"toggle_pin":true,"window_stays_offscreen_and_inactive":true},"not_covered":["真实鼠标点击 / 键盘事件分发（按约束不合成事件；键盘导航由 --keyboard-window-test 与 --selftest 覆盖）","窗口上屏、激活与 Dock/⌘Tab 行为（按约束不 order 上屏、不激活）","粘贴到前一个应用（需要辅助功能与激活，隔离模式下生产代码只写演示 pasteboard）","删除/清空确认对话框（NSAlert.runModal 为模态 UI）","像素级外观：离屏 cacheDisplay 不绘制选中高亮/强调材质（侧栏选中行呈黑块、选中标签为空白），截图只验收布局与内容非空白"],"ok":true,"screenshots":["main.png","settings.png"]}
+进程内离屏界面自检 26/26 项通过（当前源码 Release 构建，Clipbook --ui-self-test /Users/tianli/Apps/clip/mac/perf/acceptance/native_ui，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）

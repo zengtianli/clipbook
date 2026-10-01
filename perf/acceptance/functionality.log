@@ -1,0 +1,225 @@
+sandbox_extension_consume failed: 1 (Operation not permitted)
+Clipbook --selftest
+· 快捷键 / 设置生产路径
+  ✅ 首次启动无绑定、无全局注册，⌘, 不被默认截获
+  ✅ 允许复制动作录制⌘C，仅应用内且零全局注册
+  ✅ 录制⌘C后分发至复制动作
+  ✅ ⌘C不能改成删除等其他动作
+  ✅ 有选中文字时转交原生文本拷贝，不复制整条记录
+  ✅ 没有文本选区时复制所选记录，即使搜索框仍有焦点
+  ✅ 设置窗口或没有记录时不误复制后台记录
+  ✅ 录制仅应用内的⌘,无需全局注册
+  ✅ 真实动作分发：配置后的⌘,进入设置动作
+  ✅ 按住不重复触发
+  ✅ 重复组合被拒绝，不覆盖既有动作
+  ✅ 录制期间应用快捷键暂停，防止误操作
+  ✅ 从独立UserDefaults重建后绑定与动作恢复
+  ✅ 全部12个动作均可在全局与应用内切换，并实际注册/注销
+  ✅ 只有显式选择全局才调用注册器
+  ✅ 全局注册回调进入同一生产动作分发
+  ✅ 更换失败保留旧绑定，错误可见且不自动尝试别的键
+  ✅ 重新确认仍生效的原绑定不重复注册，可清除上次失败提示
+  ✅ 录制时真注销已有全局键
+  ✅ 取消录制恢复已有用户绑定
+  ✅ 切回仅应用内立即解绑全局键
+  ✅ 拒绝覆盖用户KM的⌘⇧V（仅验证数据，不发送按键）
+  ✅ 普通输入字符不能被设为动作快捷键
+  ✅ 清除所有立即解绑并移除持久化配置
+  ✅ 损坏配置不注册且错误显形
+  ✅ 复制提示音默认开启
+  ✅ 关闭复制提示音后重建设置仍保持关闭
+  ✅ 复制失败或关闭提示音时不播放
+  ✅ 复制成功且开关开启时播放一次提示音
+  ✅ 音效选择和音量重建后保持
+  ✅ 外部复制触发一次声音回调，暂停历史记录不影响声音，重复轮询不重响
+  ✅ 重复复制相同文字仍响
+  ✅ 只清空剪贴板不响
+  ✅ Clip已反馈的复制不由监听器重响
+  ✅ 文本框即时反馈与后续剪贴板监听共用去重，一次复制只响一次
+  ✅ 真实多选复制：按显示顺序写入两条正文，保留选择
+  ✅ 单选复制仍只写入所选一条
+  ✅ 空选择不清空剪贴板
+  ✅ 多文件复制保留两个原生文件URL载荷
+  ✅ 未创建设置窗口也能把偏好同步到实际Watcher与Store
+  ✅ 记录偏好重建后完整恢复
+  ✅ 网格原生 responder：首次方向键选中第一条
+  ✅ 右移一格、下移一行遵循三列布局
+  ✅ Shift 下移扩选至不完整末行
+  ✅ Shift 反向移动收缩选择
+  ✅ Home 和左边界不越界
+  ✅ End 和底边界不越界
+  ✅ 带命令修饰键的系统编辑动作不被网格截获
+  ✅ Esc 清除网格选择
+  ✅ 隐藏界面只保留所选记录与未保存草稿
+  ✅ 后台数据变化不重建整页界面数据
+  ✅ 恢复界面读取新记录并保留选择
+  ✅ 2400×1200 原图按 512×256 解码，保留比例
+  ✅ 预览缩小不改变原图
+· Classifier
+  ✅ 单行 http(s) → link
+  ✅ 句子里夹链接 → text
+  ✅ #hex / rgb() → color
+  ✅ 带说明的色值不算 color
+  ✅ Python 片段 → code
+  ✅ Swift 片段 → code
+  ✅ 两行中文 → text（不误判代码）
+  ✅ 单行含关键字 → text（单行永不算代码）
+· 入库 / 去重 / 顺序
+  ✅ 两条不同文本 → 2 行
+  ✅ 新的在上
+  ✅ 同内容再复制不产生新行（id 复用 1）
+  ✅ 再复制的旧条目顶到最上、来源更新
+  ✅ 更早时间戳的重复（导入场景）不把条目往回拖
+· 图片 / 富文本 blob
+  ✅ PNG 落盘到 blobs/
+  ✅ 尺寸与字节数记录正确
+  ✅ 删除条目时 blob 一起删
+  ✅ RTF 落盘
+  ✅ 富文本编辑保存 → 降为纯文本，RTF 删掉
+· 编辑保存
+  ✅ 覆盖原条目，且按新内容重识别为 link
+  ✅ 改成与另一条相同 → 另一条被删，库里不留两份
+  ✅ 标题保存并去首尾空白
+  ✅ 有标题时卡片显示标题
+· 搜索 / 筛选 / 分页
+  ✅ 中文子串命中 1 条
+  ✅ 查询里的 % 按字面匹配
+  ✅ 链接标题（extra）参与搜索
+  ✅ 按类型筛（link 2 条）
+  ✅ 按来源 app 筛
+  ✅ 分页每页 3 条且不重叠
+  ✅ 侧栏计数
+· 收藏夹
+  ✅ 新建两个收藏夹按顺序
+  ✅ 一条可属多个收藏夹
+  ✅ 移出收藏夹
+  ✅ 收藏夹排序
+  ✅ 删收藏夹不删条目
+· 合并 / 置顶 / 留存 / 清空
+  ✅ 合并按顺序、空行分隔（hello⏎⏎world）
+  ✅ 置顶排到最上
+  ✅ 超 maxItems 淘汰最老的无保护条目；置顶与收藏夹里的不动
+  ✅ 清空保留置顶与收藏夹里的
+  ✅ 全清 → 0
+· Deck 导入（造一个 Deck 结构的库喂给同一个导入器）
+  ✅ 扫 7（加密的那条不扫）→ 导 7（扫 7 条：导入 7（文本 2 / 富文本 1 / 链接 1 / 图片 2 / 文件 1），跳过 0，失败 0）
+  ✅ 同内容两条合成一条 → 库里 6 条（实得 6）
+  ✅ 没原图的老图片用 preview_data 缩略导入 7×5
+  ✅ Deck 的 custom_title 进标题
+  ✅ app_path 推出 bundle id
+  ✅ url → link
+  ✅ file 路径按行
+  ✅ image 从 Blobs/<unique_id> 读出 3×2
+  ✅ richText 解出纯文本并存 RTF
+  ✅ 记录导入时间
+  ✅ 重复导入幂等（还是 6 条）
+· clip 命令行（生产 ClipCLI.run；隔离库、偏好与剪贴板）
+  ✅ clip 入口识别：clip 链接或命令词；GUI 启动与测试参数不进命令行
+  ✅ clip --help 退出 0，未知命令退出 2
+  ✅ clip status 在空目录只读：不建目录、不建库
+  ✅ clip 没有库时 list 返回 ok:false、退出 3
+  ✅ clip add 新增 → 同内容再加只顶上（去重）
+  ✅ clip add 与复制入库同一识别：单行链接 → link
+  ✅ clip add --stdin 带标题
+  ✅ clip 空内容 / 未给来源 → 退出 2
+  ✅ clip 来源记为 Clip CLI
+  ✅ clip 同内容再 add：与再次复制相同改记来源，JSON 给出原来源
+  ✅ clip 不存在的 id 退出 3，非法 id 退出 2
+  ✅ clip list 总数与顺序（新的在上）
+  ✅ clip --no-text 不输出正文与标题
+  ✅ clip search / --kind 筛选
+  ✅ clip 非法筛选参数退出 2
+  ✅ clip edit 与「保存」相同：改标题、按新内容重识别
+  ✅ clip edit 先校验再写：被拒绝时标题也不变
+  ✅ clip edit 正文未变不重写：富文本与 RTF 保留，只改标题
+  ✅ clip edit 无变化时 changed:false
+  ✅ clip transform 保存结果，默认不动剪贴板
+  ✅ clip 转纯文本只用于富文本
+  ✅ clip 图片不能转换或改正文（退出 2）
+  ✅ clip merge 拒绝图片 / 单条 / 不存在的 id
+  ✅ clip merge 按给出顺序空行连接
+  ✅ clip pin 后 --pinned 可见
+  ✅ clip delete 无 --yes 拒绝；--dry-run 不删
+  ✅ clip delete --yes 删除
+  ✅ clip export：图片原图；已存在需 --force；非图片退出 2
+  ✅ clip copy --dry-run 不写剪贴板
+  ✅ clip copy 写入正文并带来源标记；运行中的 Clip 不重复记录、不响
+  ✅ clip 单条 copy 与「复制」相同：顶到置顶之后的最上
+  ✅ clip 收藏夹图标沿用编辑器白名单
+  ✅ clip 按名字加入收藏夹并筛选
+  ✅ clip 上移与越界
+  ✅ clip 删收藏夹需 --yes，记录保留
+  ✅ clip clear 无 --yes 拒绝
+  ✅ clip clear 保留置顶（dry-run 预告与实删一致）
+  ✅ clip 设置取值沿用设置页范围；失败的 JSON command 与成功相同
+  ✅ clip 开机自启是系统登录项：隔离运行拒绝（退出 4），--dry-run 只报告
+  ✅ clip settings set / pause 写入同一偏好键
+  ✅ clip 运行中的设置对象 reload 后读到命令行的修改
+  ✅ clip resume 与忽略名单
+  ✅ clip settings --json 回读；快捷键只读列出（默认无绑定）
+  ✅ clip 另一个 Deck 导入进行中 → 退出 5
+  ✅ clip import-deck 导入并幂等
+  ✅ clip 没有 Deck 库退出 3
+  ✅ clip cloud status 只读（无归档缓存时为 null）
+  ✅ clip 没有归档缓存时 cloud list 退出 3（本地版 4）；失败的 command 仍是 cloud list
+  ✅ clip cloud 未知子命令退出 2
+  ✅ clip 归档未开：push 退出 2；off 无变化不发请求
+  ✅ clip cloud on 需 --yes；--dry-run 只报告
+  ✅ clip cloud on：Clip 未运行退出 4；运行中则请 App 拨开关（命令行不改 iCloud 状态）
+  ✅ clip cloud push --dry-run 报告待归档条数（MacClipSync 同一标记规则）；--yes 请 App 补充最近历史
+  ✅ clip cloud list 与手机 ClipLibrary.list 结果逐项相同（删除隐藏、收藏、类型、搜索）
+  ✅ clip cloud status 归档缓存统计；--favorites 与 --kind 互斥
+  ✅ clip 只读打开的库拒绝写入
+· Transform
+  ✅ 去空白 / 去换行
+  ✅ JSON 格式化（键排序）
+  ✅ 非 JSON 原样返回
+· Watcher.extract（私有 pasteboard 驱动同一函数）
+  ✅ 纯字符串 → text
+  ✅ 单行 http(s) → link
+  ✅ 纯空白 → 不记
+  ✅ 文件 URL + 文件名文本 → file 优先
+  ✅ 文本 + 渲染图 → text 优先
+  ✅ 文本 + RTF → richText
+  ✅ 纯文本模式 → 丢 RTF 记 text
+  ✅ 带 RTF 的色值仍识别为 color
+  ✅ 只有图 → image 5×3
+  ✅ ConcealedType → 不记
+· LinkTitle.parseTitle
+  ✅ 大小写不敏感、解实体、压空白
+  ✅ 没有 title → nil
+✅ selftest 全部通过
+[xcode_env] Xcode.app (Xcode 27.0, macosx SDK 27.0)
+PASS: ignored Range response returns title before delayed body finishes
+  ✅ clip --help 退出 0（23 ms，无界面）
+  ✅ 经链接重入真实可执行：Clip 1.2.0 (70)
+  ✅ 未知命令退出 2
+  ✅ 每个命令 --help 退出 0
+  ✅ status 只读：空目录不建库
+  ✅ 无库 list → ok:false 退出 3
+  ✅ add 新增并去重
+  ✅ add --stdin
+  ✅ list 顺序与总数
+  ✅ show 全文与来源
+  ✅ transform 保存
+  ✅ copy 写入隔离剪贴板
+  ✅ merge
+  ✅ delete 需 --yes，删后 show 退出 3
+  ✅ 收藏夹新建与加入
+  ✅ 设置范围校验与写入
+  ✅ 设置写入隔离偏好域
+  ✅ pause / resume
+  ✅ clear 需 --yes，保留收藏夹里的
+  ✅ 失败时 JSON command 与成功相同（collection create）
+  ✅ edit 先校验再写：被拒绝时标题不变
+  ✅ edit 正文未变不重写（changed:false）
+  ✅ 去重时给出原来源 previous_source
+  ✅ cloud 未知子命令退出 2
+  ✅ 无归档缓存 cloud list 退出 3
+  ✅ iCloud 归档未开时 cloud push 退出 2
+  ✅ cloud on 需 --yes；--dry-run 只报告
+  ✅ cloud on --yes：Clip 未运行→退出 4
+  ✅ 开机自启：隔离运行退出 4，--dry-run 只报告
+  ✅ 用户的通用剪贴板未被改动
+clip CLI 真实入口：30 项通过
+当前源码 Release 构建：生产 --selftest 176 项断言全过，链接标题有界抓取测试通过，clip 命令行经包内入口隔离验证通过（可执行 f84c89d35a35）
