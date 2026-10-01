@@ -59,6 +59,11 @@
       "reviewed_at": "2026-09-28",
       "reason": "1.1.2 相对 1.1.1 仅新增隔离的进程内自检入口（--ui-self-test/--recovery-test/--privacy-test，需隔离环境变量才运行）并修正安装名核对；主窗口、搜索、编辑、收藏流程与视图代码未变。",
       "source_diff": "git diff 2c18539..HEAD -- Sources: ClipbookApp.swift 的 Boot 自检分支 + UISelfTest/RecoverySelfTest/PrivacySelfTest 新文件；无视图文件改动。"
+    },
+    "1.2.0": {
+      "reviewed_at": "2026-10-01",
+      "reason": "1.2.0 相对 1.1.2 新增 agent 命令行 clip（同一可执行文件的命令模式，argv 分流在 NSApplication 之前）与跨进程刷新信号；窗口里的规则改为与命令行共用（转换菜单选项、合并按钮可用条件、收藏夹图标/颜色白名单、设置页保留条数范围），取值与显示和 1.1.2 相同。主窗口、搜索、编辑、收藏流程与可见界面未变；云功能在本地版编译关闭。",
+      "source_diff": "git diff 3a9f0aa..HEAD -- Sources: ClipCLI/ClipActions/CLISelfTest/CloudArchiveReader 新文件；DetailView/GridView/SidebarView/SettingsView 各 1-2 行改为引用 Transform.options、ClipRules.mergeRefusal、CollectionStyle、RecordingLimits（同值）；ClipbookApp.swift 加 CLI 分流与 ClipSignal 观察者，无新视图。"
     }
   }
 }
