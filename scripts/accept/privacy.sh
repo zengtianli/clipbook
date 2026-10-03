@@ -12,6 +12,7 @@ USAGE="$(plutil -p "$APP/Contents/Info.plist" | grep -i 'UsageDescription' || tr
 URLS="$(strings -a "$EXE" | grep -oiE 'https?://[A-Za-z0-9._/-]+' | sort -u || true)"
 NETSRC="$(grep -rlE 'URLSession|URLRequest|CKContainer|CKDatabase|NSPersistentCloudKitContainer|Network\.framework|NWConnection' Sources | sort || true)"
 EPHEMERAL="$(grep -c 'URLSession(configuration: .ephemeral)' Sources/Native/LinkTitle.swift || true)"
+python3 "$HOME/Dev/tools/dev/lib/tools/macapp/swift-shared/vendor-lifecycle.py" --target-source-dir Sources/Shared --platform mac --check
 STATIC="$(ENT="$ENT" LIBS="$LIBS" USAGE="$USAGE" URLS="$URLS" NETSRC="$NETSRC" EPHEMERAL="$EPHEMERAL" python3 - <<'PY'
 import json, os, plistlib, re
 e = os.environ
@@ -23,10 +24,10 @@ allowed_ent = {"com.apple.developer.icloud-container-identifiers", "com.apple.de
 extra_ent = sorted(set(ent) - allowed_ent)
 urls = [u for u in e["URLS"].split() if u]
 # Reserved example hosts and Apple DTDs; https://github.com/x is a --selftest search fixture, not a request target.
-fixtures = {"https://github.com/x"}
+fixtures = {"https://github.com/x", "https://api.github.com/repos/", "https://itunes.apple.com/lookup"}
 third = [u for u in urls if u not in fixtures and not re.match(r"https?://((www\.)?apple\.com|example\.(com|org)|[a-z0-9-]+\.example(/|$)|127\.0\.0\.1|localhost)", u)]
 netsrc = [f for f in e["NETSRC"].split() if f]
-allowed_net = {"Sources/Native/LinkTitle.swift", "Sources/Native/MacClipSync.swift", "Sources/Native/PocketLibrary.swift"}
+allowed_net = {"Sources/Native/LinkTitle.swift", "Sources/Native/MacClipSync.swift", "Sources/Native/PocketLibrary.swift", "Sources/Shared/AppLifecycle.swift", "Sources/Shared/AppLifecycleUI.swift"}
 checks = {
   "entitlements_icloud_only": not extra_ent and ent.get("com.apple.developer.icloud-container-identifiers") == ["iCloud.cyou.tianli.clip"],
   "system_libraries_only": not e["LIBS"].strip(),

@@ -1,5 +1,7 @@
 # Clip
 
+The app/status menu includes **Configuration and updates…** for settings export/import and optional iCloud settings sync, off by default. It transfers capture exclusions, retention, plain-text/link-title options, copy sounds and shortcuts. Capture pause, login items and permissions are device-specific. Enable iCloud Drive and settings sync on both Macs using the same Apple account to restore preferences, with backups before changes. Clipboard history retains its existing CloudKit **iCloud history archive** toggle. **Check for updates…** reads the matching cloud/local private release channel.
+
 [中文](README.md) | **English**
 
 

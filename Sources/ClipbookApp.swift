@@ -74,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var pendingURLs: [URL] = []
     private var pendingActions: [ClipAction] = []
     private(set) var shortcuts: ClipShortcuts!
+    private var configuration: AppConfiguration?
 
     override init() {
         super.init()
@@ -109,6 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         appMenu.addItem(.separator())
         let settingsItem = appMenu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
         settingsItem.target = self
+        for item in AppLifecycleUI.menuItems() { appMenu.addItem(item) }
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "隐藏 \(ProductIdentity.name)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "")
         appMenu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
@@ -145,6 +147,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
+            if !ProductIdentity.backgroundPreview {
+                let config = AppConfiguration(productID: "cyou.tianli.clipbook", defaultsKeys: ["ignoredBundles", "maxItems", "retentionDays", "plainTextOnly", "fetchLinkTitles", "copySound", "copySoundName", "copySoundVolume", "shortcuts.v1"], defaults: AppPreferences.defaults)
+                config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
+                configuration = config
+                AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: .privateCloud(channel: ProductIdentity.cloudSupported ? "cloud" : "local"))
+            }
             AppModel.shared.startWatching()
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             buildStatusItem()
@@ -219,6 +227,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(menuQuit), keyEquivalent: "")
         for it in menu.items { it.target = self }
+        for item in AppLifecycleUI.menuItems() { menu.insertItem(item, at: menu.numberOfItems - 1) }
     }
 
     @objc private func menuOpen() { showWindow() }

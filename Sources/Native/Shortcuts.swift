@@ -138,6 +138,15 @@ final class ClipShortcuts: ObservableObject {
     }
 
     func binding(_ action: ClipAction) -> ClipBinding? { bindings[action.rawValue] }
+    func reload() {
+        let restored: [String: ClipBinding]
+        if let data = defaults.data(forKey: Self.storageKey) {
+            guard let value = try? JSONDecoder().decode([String: ClipBinding].self, from: data) else { errors["load"] = "快捷键配置无法读取，原绑定保留。"; return }
+            restored = value
+        } else { restored = Self.defaultBindings }
+        guard restored != bindings else { return }
+        suspend(); bindings = restored; errors = [:]; resume()
+    }
     func status(_ action: ClipAction) -> String {
         if let error = errors[action.rawValue] { return error }
         guard let b = binding(action) else { return action == .copy ? "标准拷贝：选中文字优先，否则复制所选记录" : "未设置" }

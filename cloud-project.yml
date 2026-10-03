@@ -27,8 +27,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Clip
         INFOPLIST_KEY_CFBundleName: Clip
         INFOPLIST_KEY_CFBundleIconFile: AppIcon
-        MARKETING_VERSION: '1.2.0'
-        CURRENT_PROJECT_VERSION: '1'
+        MARKETING_VERSION: '1.2.1'
+        CURRENT_PROJECT_VERSION: '2'
         ENABLE_HARDENED_RUNTIME: YES
         ENABLE_USER_SCRIPT_SANDBOXING: NO
     # The agent CLI is a mode of the same executable: Contents/Resources/bin/clip -> ../../MacOS/Clipbook.
