@@ -11,7 +11,7 @@ OUT="$CLIP_LOCAL_RELEASE_DIR"
 mkdir -p "$OUT"
 python3 /Users/tianli/Dev/tools/dev/lib/tools/macapp/check_codingkeys.py .
 xcrun swiftc -O -parse-as-library -DCLIP_LOCAL_DISTRIBUTION \
-  -target arm64-apple-macosx14.0 Sources/Native/*.swift Sources/ClipbookApp.swift \
+  -target arm64-apple-macosx14.0 Sources/Native/*.swift Sources/ClipbookApp.swift Sources/Shared/*.swift \
   -o "$OUT/Clipbook"
 # Drop the local symbol table (about half the executable) before selftest and signing;
 # behaviour is unchanged and the selftest below runs on the stripped binary.

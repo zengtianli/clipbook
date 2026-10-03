@@ -1,6 +1,13 @@
 import AppKit
 import SwiftUI
 
+#if CLIP_LOCAL_DISTRIBUTION
+/// Public local packages follow the existing public repository release channel.
+private enum ClipLocalUpdates {
+    static let source: AppUpdateSource = .github(repository: "zengtianli/clipbook")
+}
+#endif
+
 /// Uses the production view without taking focus during an isolated capture.
 private final class ClipPreviewPanel: NSPanel {
     override var canBecomeKey: Bool { false }
@@ -52,6 +59,14 @@ enum Boot {
             exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return PrivacySelfTest.run() })
         }
         if CommandLine.arguments.contains("--selftest") {
+            #if CLIP_LOCAL_DISTRIBUTION
+            guard case .github(let repository) = ClipLocalUpdates.source,
+                  repository == "zengtianli/clipbook" else {
+                print("FAIL public local update source")
+                exit(1)
+            }
+            print("PASS public local update source: GitHub zengtianli/clipbook")
+            #endif
             exit(SelfTest.run())
         }
         MainActor.assumeIsolated {
@@ -151,7 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 let config = AppConfiguration(productID: "cyou.tianli.clipbook", defaultsKeys: ["ignoredBundles", "maxItems", "retentionDays", "plainTextOnly", "fetchLinkTitles", "copySound", "copySoundName", "copySoundVolume", "shortcuts.v1"], defaults: AppPreferences.defaults)
                 config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
                 configuration = config
+                #if CLIP_LOCAL_DISTRIBUTION
+                AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipLocalUpdates.source)
+                #else
                 AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: .privateCloud(channel: ProductIdentity.cloudSupported ? "cloud" : "local"))
+                #endif
             }
             AppModel.shared.startWatching()
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }

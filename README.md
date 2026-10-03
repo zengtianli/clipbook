@@ -90,6 +90,8 @@ iCloud：同步由 App 进程持有，命令行从不打开同步库写入。`cl
 
 构建：`./build.sh`（安装名取 project.yaml 的 name_en：Clip）。
 
+公开本地版用 `bash release-local.sh` 构建打包；「配置与更新…」从现有公开仓库 `zengtianli/clipbook` 的 GitHub Releases 检查新版并提供下载。云版继续使用本人 iCloud 的 `cloud` 更新频道。两种版本均可导出、导入配置，并选择开启 iCloud 配置同步；本地版的剪贴板历史仍保存在本机。
+
 需要只启动记录和同步、不打开主窗口时，可用 `open -g -a Clip --args --background`；菜单栏或 Dock 仍可打开主窗口。正式构建使用 CloudKit Production，与 App Store／TestFlight 的手机端对接；旧开发云归档保留在原目录，正式云缓存单独保存，并从本地主历史补充最近 500 条。
 
 链接标题现在流式读取，到 256 KiB 主动取消请求，服务器忽略 Range 也不会下载整个响应。构建支持 `--build-only`，安装不强杀正在运行的应用。针对性网络回归：`bash tests/test-link-title.sh`。
