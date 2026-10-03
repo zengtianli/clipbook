@@ -21,15 +21,38 @@ def sha(path):
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
+def historical_reuse(release, proof_path):
+    proof = json.loads(proof_path.read_text())
+    assert proof.get("state") == "passed" and proof.get("local_github_entry_selftest") and proof.get("original_selftest_passed"), "Current local production selftests are required"
+    assert proof.get("version") == release["version"] and str(proof.get("build")) == str(release["build"]), "Historical reuse tests belong to another release"
+    assert proof.get("sha256") == release["sha256"], "Historical reuse tests belong to another archive"
+    assert proof.get("source_head") == release.get("source_commit"), "Historical reuse tests belong to another source commit"
+    assert sha(Path(proof["log"])) == proof["log_sha256"], "Historical reuse test log changed"
+    receipt = json.loads(Path(proof["receipt_path"]).read_text())
+    assert receipt["source"]["sha256"] == proof["receipt_source_sha256"] and receipt["source"]["commit"] == proof["source_head"], "Historical reuse receipt source changed"
+    return {"archive_sha256": release["sha256"], "source_sha256": proof["receipt_source_sha256"],
+            "source_commit": proof["source_head"], "checked_at": proof["finished_at"],
+            "tests": ["original production --selftest", "actual local UI update source is GitHub zengtianli/clipbook"],
+            "reason": "Retain reviewed original footage as historical reference; the new configuration/update window is outside its recorded scope",
+            "not_covered": ["配置与更新窗口", "配置导出与导入", "真实跨设备 iCloud 配置同步", "GitHub 新版下载与手动安装"]}
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, default=ROOT / "build/site")
     parser.add_argument("--preview", action="store_true")
+    parser.add_argument("--keep-history", action="store_true", help="Explicitly retain reviewed original media/performance, labelled as historical evidence")
+    parser.add_argument("--history-tests", type=Path, help="Archive/source-bound current local build and production selftest proof")
     args = parser.parse_args()
+    if args.keep_history and (args.preview or not args.history_tests):
+        parser.error("--keep-history requires --history-tests and an actual release, without --preview")
+    if args.history_tests and not args.keep_history:
+        parser.error("--history-tests requires --keep-history")
     release_dir = ROOT / "build/local-release"
     release = json.loads((release_dir / "release.json").read_text())
     archive = release_dir / release["filename"]
     assert sha(archive) == release["sha256"], "Release archive changed"
+    reuse = historical_reuse(release, args.history_tests) if args.keep_history else None
+    measured = json.loads((ROOT / "perf/lightweight.json").read_text())
     media = ROOT / "docs/demo"
     needed = ["overview.png", "tutorial.mp4", "recording.json"]
     needed += [f"{name}.{ext}" for name, _, _ in SCENES for ext in ("mp4", "png", "vtt")]
@@ -38,6 +61,8 @@ def main():
         raise SystemExit("Actual reviewed media is required: " + ", ".join(missing))
     if not args.preview:
         recording = json.loads((media / "recording.json").read_text())
+        if reuse:
+            recording.setdefault("reused_for", {})[release["version"]] = reuse
         assert recording.get("final_visual_review") == "passed", "Final visual review is required"
         compatible = recording.get('reused_for', {}).get(release['version'])
         assert (recording.get("version") == release["version"] or compatible) and recording.get("edition") == release["edition"], "Recording edition differs from release"
@@ -46,6 +71,8 @@ def main():
                 assert recording.get("reviewed_media_sha256", {}).get(name) == sha(media / name), f"Reviewed media changed: {name}"
     guide_dir = media / "ai-sample"
     guide = json.loads((guide_dir / "manifest.json").read_text())
+    if reuse:
+        guide.setdefault("reused_for", {})[release["version"]] = reuse
     guide_files = {name: f"clip-guide-{sha(guide_dir / name)[:12]}{(guide_dir / name).suffix}"
                    for name in ("sample.mp4", "poster.jpg", "sample.vtt")}
     assert guide.get("final_visual_review") == "passed", "Guide visual review is required"
@@ -67,7 +94,9 @@ def main():
             shutil.copy2(media / name, out / "media" / name)
     for name, public_name in guide_files.items():
         shutil.copy2(guide_dir / name, out / "media" / public_name)
-    shutil.copy2(guide_dir / "manifest.json", out / "media/clip-guide-recording.json")
+    (out / "media/clip-guide-recording.json").write_text(json.dumps(guide, ensure_ascii=False, indent=2) + "\n")
+    if reuse:
+        (out / "media/recording.json").write_text(json.dumps(recording, ensure_ascii=False, indent=2) + "\n")
     guide_player = (f'<article class="featured-demo"><video controls playsinline preload="metadata" '
                     f'width="1920" height="1080" aria-label="Clip 完整使用演示：搜索、编辑保存、收藏复制" '
                     f'poster="media/{guide_files["poster.jpg"]}">'
@@ -85,19 +114,40 @@ def main():
     values = {"DOWNLOAD": "downloads/" + archive.name, "VERSION": release["version"],
               "MIN_OS": release["minimum_macos"], "FILENAME": archive.name,
               "SIZE": perf_block.size_mb(release["bytes"]), "SHA256": release["sha256"],
-              "LIGHT": perf_block.standalone_section(ROOT / "perf/lightweight.json", release["version"], "#8250ad"),
+              "LIGHT": perf_block.standalone_section(ROOT / "perf/lightweight.json", measured["version"].split(" ")[0] if reuse else release["version"], "#8250ad"),
               "HERO": '<img src="media/overview.png" alt="Clip 的真实三栏窗口：来源与类型筛选、剪贴板记录、正文编辑">' if (media / "overview.png").is_file() else '<div class="preview-placeholder">等待真实窗口截图</div>',
               "VIDEOS": "".join(videos), "GUIDE": guide_player,
               "GUIDE_DOWNLOAD": "media/" + guide_files["sample.mp4"]}
     page = (ROOT / "site/index.html").read_text()
+    history = None
+    if reuse:
+        history = {"measured_version": measured["version"], "measured_at": measured["measured_at"],
+                   "recorded_version": recording["version"], "recorded_build": recording["build"], "recorded_at": recording["recorded_at"],
+                   "guide_version": guide["source_version"], "guide_build": guide["source_build"], "guide_recorded_at": guide["source_recorded_at"],
+                   "not_covered": reuse["not_covered"]}
+        text = (f"当前下载为 Clip {release['version']}({release['build']}) 本地版。录像和截图为 {recording['version']}({recording['build']})（{recording['recorded_at']}），"
+                f"教程原片为 {guide['source_version']}({guide['source_build']})（{guide['source_recorded_at']}）；性能数据为 {measured['version']}（{measured['measured_at']}）。"
+                "历史参考、不代表新版新测。新增的「配置与更新…」窗口、配置导入/导出、可选 iCloud 配置同步和 GitHub 更新下载未在旧录像中展示。")
+        notice = '<aside class="wrap" role="note" style="padding:20px;border:1px solid #8250ad;margin-top:24px"><strong>历史参考、不代表新版新测</strong><p>' + html.escape(text) + '</p></aside>'
+        page = page.replace('<main>', '<main>' + notice, 1)
+        page = page.replace("当前下载版专注本地剪贴板，不含 iCloud 同步。", "当前下载版的剪贴板历史留在本机；可在「配置与更新…」导出、导入配置或选择开启 iCloud 配置同步。")
+        page = page.replace("本地发行版不提供 iCloud 同步。", "本地发行版的剪贴板历史保存在本机；配置可选择跟随 iCloud。")
+        page = page.replace("这个 Mac 安装包不含 iCloud 同步，两端记录不会互通。", "这个 Mac 安装包的剪贴板历史不走 iCloud，两端记录不会互通；配置可单独选择开启 iCloud 同步。")
+        values["GUIDE"] = values["GUIDE"].replace("当前版沿用相同的搜索、编辑和收藏界面。", "仅作为搜索、编辑和收藏流程的历史参考。")
     page = page.replace('href="style.css"', f'href="style.css?v={sha(ROOT / "site/style.css")[:12]}"')
     for key, value in values.items():
         page = page.replace("{{" + key + "}}", value if key in ("HERO", "VIDEOS", "GUIDE", "LIGHT") else html.escape(value, quote=True))
     assert not re.search(r"\{\{[^}]+\}\}", page), "Unresolved website placeholder"
     (out / "index.html").write_text(page)
-    product_facts.write(out, product_facts.from_repo(ROOT, product_id="clipbook", icon="images/icon.png"))
+    facts = product_facts.from_repo(ROOT, product_id="clipbook", icon="images/icon.png")
+    facts["download_bytes"] = archive.stat().st_size
+    if reuse:
+        facts.update(historical_reference=True, measured_version=measured["version"], historical_reference_note="历史参考、不代表新版新测")
+        facts["card_line"] = f"当前下载 {perf_block.size_mb(archive.stat().st_size)} · 历史实测 {measured['version']}（{measured['measured_at']}） · " + facts["card_line"]
+        facts["card_text"] = product_facts.card_text(facts["card_line"])
+    product_facts.write(out, facts)
     files = [{"path": p.relative_to(out).as_posix(), "sha256": sha(p)} for p in sorted(out.rglob("*")) if p.is_file()]
-    (out / "site-manifest.json").write_text(json.dumps({"product": "Clip", "preview": args.preview, "files": files}, ensure_ascii=False, indent=2) + "\n")
+    (out / "site-manifest.json").write_text(json.dumps({"product": "Clip", "preview": args.preview, "keep_history": args.keep_history, "history": history, "files": files}, ensure_ascii=False, indent=2) + "\n")
     print(out)
 
 if __name__ == "__main__":
