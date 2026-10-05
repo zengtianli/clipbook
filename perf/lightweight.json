@@ -1,16 +1,17 @@
 {
   "product": "clip",
-  "version": "1.2.0 (70)",
-  "measured_at": "2026-10-01",
+  "version": "1.2.1 (78)",
+  "measured_at": "2026-10-06",
   "device": "Mac16,12 / Apple M4 / macOS 27.2",
   "size": {
-    "download_bytes": 1986328,
-    "download_mb": 1.89,
-    "installed_bytes": 2895872,
-    "installed_mb": 2.76
+    "download_bytes": 2083786,
+    "download_mb": 1.99,
+    "installed_bytes": 3100672,
+    "installed_mb": 2.96,
+    "download_file": "Clip-1.2.1-local-arm64.zip"
   },
   "compare": [],
-  "env_note": "2026-10-01 主会话逐个顺序测量，负载均值 3.76 11.74 46.60；total = 9216.00M  used = 8024.38M  free = 1191.62M（开始时）；启动时间受负载影响，内存与 CPU 为进程自身数值",
+  "env_note": "2026-10-06 主会话逐个顺序测量，负载均值 6.12 27.69 35.51；total = 3072.00M  used = 1545.44M  free = 1526.56M（开始时）；启动时间受负载影响，内存与 CPU 为进程自身数值",
   "why": "原生 SwiftUI/AppKit，零第三方依赖，历史存系统 SQLite；每 0.25 秒只比对一次剪贴板变更计数；图片按预览尺寸解码、缓存限 48 张，隐藏主窗口即卸载界面。",
   "why_en": "Native SwiftUI/AppKit with no third-party dependencies; history is stored with the system SQLite. Every 0.25 s it only compares the pasteboard change counter; images are decoded at preview size with a 48-image cache, and hiding the main window unloads the interface.",
   "history": [
@@ -293,15 +294,82 @@
         "installed_bytes": 2547712,
         "installed_mb": 2.43
       }
+    },
+    {
+      "section": "version",
+      "replaced_on": "2026-10-06",
+      "reason": "按发布版本重测",
+      "value": "1.2.0 (70)"
+    },
+    {
+      "section": "idle",
+      "version": "1.2.0 (70)",
+      "replaced_on": "2026-10-06",
+      "reason": "版本变化；仅本次实测可作为当前证据",
+      "value": {
+        "process": "~/Apps/clip/mac/build/perf-run/Clip.app",
+        "footprint_mb": 52.0,
+        "main_footprint_mb": 52.0,
+        "cpu_pct": 0.05,
+        "main_cpu_pct": 0.05,
+        "processes": [
+          {
+            "name": "main",
+            "cpu_pct": 0.049,
+            "footprint_peak_mb": 52.0
+          }
+        ],
+        "window_s": 60,
+        "settle_s": 45,
+        "measured_at": "2026-10-01",
+        "method": "open -g -j 后台启动，静置 45 秒后 measure.py idle <PID> --seconds 60 --with-helpers：内存为主进程 + WebKit/XPC 辅助进程 + 子进程同一时刻 phys_footprint 之和的峰值（活动监视器「内存」列同口径），CPU 为这些进程窗口内 CPU 时间增量之和 ÷ 墙钟",
+        "load": "负载均值 2.76 8.72 40.63；total = 9216.00M  used = 8024.38M  free = 1191.62M",
+        "owner_idle_s_at_start": 5836
+      }
+    },
+    {
+      "section": "speed_gui",
+      "version": "1.2.0 (70)",
+      "replaced_on": "2026-10-06",
+      "reason": "版本变化；仅本次实测可作为当前证据",
+      "value": [
+        {
+          "key": "cold_launch_to_window",
+          "label": "冷启动到窗口出现",
+          "median_ms": 480,
+          "runs": 5,
+          "headline": true,
+          "raw_ms": [
+            941,
+            480,
+            493,
+            478,
+            392
+          ],
+          "method": "open -g -j 后台隐藏启动，被动读取窗口列表直到主窗口出现；不点击、不激活；5 次取中位",
+          "load": "负载均值 3.93 11.51 46.11；total = 9216.00M  used = 8024.38M  free = 1191.62M"
+        }
+      ]
+    },
+    {
+      "section": "size",
+      "version": "1.2.0 (70)",
+      "replaced_on": "2026-10-06",
+      "reason": "版本变化；旧安装包大小不沿用",
+      "value": {
+        "download_bytes": 1986328,
+        "download_mb": 1.89,
+        "installed_bytes": 2895872,
+        "installed_mb": 2.76
+      }
     }
   ],
-  "data": "本机真实剪贴板库的快照副本（隔离数据目录，不碰原库），2892 条记录",
+  "data": "本机真实剪贴板库的快照副本（隔离数据目录，不碰原库），2902 条记录",
   "data_en": "Local release; isolated snapshot of 2767 real clipboard records and separate preferences; named pasteboard polling remains active with no new copy, UI shown in background, no cloud sync.",
   "measured_artifact": {
-    "version": "1.1.1",
-    "build": "48",
-    "edition": "local",
-    "executable_sha256": "df5898ba4f206a647506abf627dc42b16f84c05d9cce6c8ce96099c54649fd56"
+    "version": "1.2.1",
+    "build": "78",
+    "executable_sha256": "3ac16dba30a36fa81a34505c861d3c97b1b42f20b5d900c411948909a9b34c77"
   },
   "components": [
     {
@@ -314,38 +382,38 @@
     {
       "key": "cold_launch_to_window",
       "label": "冷启动到窗口出现",
-      "median_ms": 480,
+      "median_ms": 488,
       "runs": 5,
       "headline": true,
       "raw_ms": [
-        941,
-        480,
-        493,
-        478,
-        392
+        876,
+        476,
+        487,
+        488,
+        497
       ],
       "method": "open -g -j 后台隐藏启动，被动读取窗口列表直到主窗口出现；不点击、不激活；5 次取中位",
-      "load": "负载均值 3.93 11.51 46.11；total = 9216.00M  used = 8024.38M  free = 1191.62M"
+      "load": "负载均值 5.50 26.49 34.95；total = 3072.00M  used = 1545.44M  free = 1526.56M"
     }
   ],
   "idle": {
     "process": "~/Apps/clip/mac/build/perf-run/Clip.app",
-    "footprint_mb": 52.0,
-    "main_footprint_mb": 52.0,
-    "cpu_pct": 0.05,
-    "main_cpu_pct": 0.05,
+    "footprint_mb": 54.0,
+    "main_footprint_mb": 54.0,
+    "cpu_pct": 0.07,
+    "main_cpu_pct": 0.07,
     "processes": [
       {
         "name": "main",
-        "cpu_pct": 0.049,
-        "footprint_peak_mb": 52.0
+        "cpu_pct": 0.066,
+        "footprint_peak_mb": 54.0
       }
     ],
     "window_s": 60,
     "settle_s": 45,
-    "measured_at": "2026-10-01",
+    "measured_at": "2026-10-06",
     "method": "open -g -j 后台启动，静置 45 秒后 measure.py idle <PID> --seconds 60 --with-helpers：内存为主进程 + WebKit/XPC 辅助进程 + 子进程同一时刻 phys_footprint 之和的峰值（活动监视器「内存」列同口径），CPU 为这些进程窗口内 CPU 时间增量之和 ÷ 墙钟",
-    "load": "负载均值 2.76 8.72 40.63；total = 9216.00M  used = 8024.38M  free = 1191.62M",
-    "owner_idle_s_at_start": 5836
+    "load": "负载均值 2.33 18.85 30.91；total = 3072.00M  used = 1545.44M  free = 1526.56M",
+    "owner_idle_s_at_start": 5946
   }
 }
