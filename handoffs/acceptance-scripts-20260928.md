@@ -62,3 +62,4 @@
 - 已排队（串行队列，开工时前面约 50 项）：test b249d427、accept cli_entry d28352ed / native_ui c62ceb5a / media_playback 0403351b、check 259cb9b7。这三项验收是装机和登记变化后唯一失效的。
 - **未收敛，需决定**：发布版 1.2.1 (78) 与装机 1.2.1 (79) 的构建输入逐文件相同（两份回执 source 都是 da2ca1fd…），只差一次只改 `scripts/build-site.py` 的提交带来的 git-count。Chapter 因装机较新把「当前版本」定为 79，而 `sop.measure.archive: release` 实测的是发布包 78，所以即使重测，perf 仍会显示「实测 78，当前 79」；release 项同时变为「发布版落后于装机」。两条出路：在同一个 HEAD 上先 `./build.sh`（回执包住）再 `bash release-local.sh` 让两者同号，然后实测、build-site、products-only 部署；或由 Chapter 引擎把「同源仅构建号不同」视为同一版本。
 - 待安静时做：性能实测（前置已齐：装机为当前源码已核验构建，发布 zip 与 release.json 的 sha 相符，sop.measure 已登记）；实测后去掉 `--keep-history` 重建并部署主页，线上卡片的「历史实测 1.2.0 (70)」才会消失。
+- 普通构建（不带 `--keep-history`）现在停在 `Guide source version differs from release`（`docs/demo/ai-sample/manifest.json` 没有 1.2.1 的沿用标注，本轮没加）。另外 `site/index.html` 里三句「不含 iCloud 同步」只在 `--keep-history` 分支被替换成现状描述；做普通构建前要先把模板本身改对，否则会把过时的说法发出去。改模板会让 homepage_desktop / homepage_mobile 两项验收失效，需随部署一起重跑。
