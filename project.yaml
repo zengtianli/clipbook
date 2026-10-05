@@ -14,6 +14,9 @@ sop:
   cli:
     commands: [clip]
     app: cyou.tianli.clipbook
+  account:
+    mode: none
+    rationale: 本地剪贴板工具，没有产品账号、注册或登录；可选的 iCloud 历史归档与配置同步使用本机已登录的 Apple 账户（系统管理的 CloudKit 私有库与 iCloud Drive），不由本产品创建或管理账号。
   accept:
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
