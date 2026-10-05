@@ -54,3 +54,11 @@
 - 起因：apps-site 那边受阻，因为 Clip 主页包里没有数字文件。另一会话已提交 4d39455：build-site.py 调用 apps-portal 的 product_facts，输出 facts.json。本轮重跑 `scripts/build-site.py`，然后 `deploy.sh --products-only clipbook` 先 dry-run 核对计划（只动 clipbook 一个目录，24 个文件），再 --deploy。哈希校验全部通过。
 - 回读：https://app-mac-clips.tianli.cyou/facts.json 与本地 build/site/facts.json 逐字节一致，内容是 1.1.2 (59)，1.8 MB / 2.5 MB / 55.6 MB / 0.07% / 474 ms。release.json 仍为 1.1.2 (59)。4d39455 已推送，远端 HEAD 与本地一致。
 - homepage_desktop 和 homepage_mobile 已重跑 accept，都通过。check-only 结果：current_passed / complete，没有缺项。
+
+## 第八轮（2026-10-05 19:40，Chapter 三项标准收尾；不测性能、不重录）
+- 装机：`app_sop.py build-receipt --app clipbook --artifact /Applications/Clip.app --source-glob …（同 sop.source + project.yaml）--build-command ./build.sh` 一次完成构建、selftest、装机和回执。现装 1.2.1 (79)，可执行 ff35a479…，来源 da2ca1fd…，`verify_build_receipt` 回读为真。装机前后 Clip 都没在运行（未启动它）；`~/Library/Application Support/Clipbook/` 的库、WAL、blob 数与偏好域哈希前后相同。旧包在 `~/.Trash/clip-pre-icloud-20261005-194116/`。
+- 登记（097233b）：`sop.account` mode none（无产品账号，可选 iCloud 用系统 Apple 账户）；`docs/demo/recording.json` 补 `reused_for["1.2.1"]`——1.2.0 以来 sop.ui 只有 ClipbookApp.swift +28、Shortcuts.swift +9，主窗口各视图未改，12 个已审素材 SHA 未变；「配置与更新」窗口列为 not_covered。
+- README「领先远端 3 个提交」是 10-04 的旧读数，开工时 origin/main 已等于 HEAD；工作区里 README.md 的 PRD 一行和 `docs/PRD-capture-ocr-clipboard.md` 是别的会话 15:16 留下的，未动、未提交。
+- 已排队（串行队列，开工时前面约 50 项）：test b249d427、accept cli_entry d28352ed / native_ui c62ceb5a / media_playback 0403351b、check 259cb9b7。这三项验收是装机和登记变化后唯一失效的。
+- **未收敛，需决定**：发布版 1.2.1 (78) 与装机 1.2.1 (79) 的构建输入逐文件相同（两份回执 source 都是 da2ca1fd…），只差一次只改 `scripts/build-site.py` 的提交带来的 git-count。Chapter 因装机较新把「当前版本」定为 79，而 `sop.measure.archive: release` 实测的是发布包 78，所以即使重测，perf 仍会显示「实测 78，当前 79」；release 项同时变为「发布版落后于装机」。两条出路：在同一个 HEAD 上先 `./build.sh`（回执包住）再 `bash release-local.sh` 让两者同号，然后实测、build-site、products-only 部署；或由 Chapter 引擎把「同源仅构建号不同」视为同一版本。
+- 待安静时做：性能实测（前置已齐：装机为当前源码已核验构建，发布 zip 与 release.json 的 sha 相符，sop.measure 已登记）；实测后去掉 `--keep-history` 重建并部署主页，线上卡片的「历史实测 1.2.0 (70)」才会消失。
