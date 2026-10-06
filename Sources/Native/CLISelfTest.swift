@@ -185,7 +185,7 @@ enum CLISelfTest {
         let helpText: String = ClipCLI.usage()
         let helpLines: [String] = helpText.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
         let helpCommands: [String] = ["status", "stats", "list", "search", "show", "export", "collections", "settings", "ignore list", "shortcut list",
-                                      "config status", "config export", "cloud status", "cloud list", "cloud show", "version", "add", "edit", "transform",
+                                      "config status", "config export", "update check", "cloud status", "cloud list", "cloud show", "version", "add", "edit", "transform",
                                       "pin", "unpin", "merge", "delete", "clear", "collection", "settings set", "pause", "resume", "ignore add",
                                       "ignore remove", "shortcut scope", "shortcut clear", "config import", "import-deck", "copy", "cloud push", "config sync"]
         func helpLists(_ name: String) -> Bool {
@@ -194,7 +194,7 @@ enum CLISelfTest {
         let unlisted: [String] = helpCommands.filter { !helpLists($0) }
         let afterWindow: String = helpText.components(separatedBy: "仅在窗口中").last ?? ""
         let windowOnly: String = afterWindow.components(separatedBy: "暂无命令").first ?? ""
-        let separated: Bool = helpText.contains("暂无命令") && !windowOnly.contains("检查更新") && !windowOnly.contains("同步状态")
+        let separated: Bool = helpText.contains("暂无命令") && !windowOnly.contains("检查更新") && !windowOnly.contains("同步状态") && !windowOnly.contains("升级到新版")
         let keepsHuman: Bool = windowOnly.contains("录制快捷键") && windowOnly.contains("试听")
         let helpNote: String = unlisted.isEmpty ? "" : "（缺 " + unlisted.joined(separator: "、") + "）"
         check(unlisted.isEmpty && separated && keepsHuman, "顶层帮助：每个子命令都在行首列出" + helpNote + "；「仅在窗口中」不混入暂无命令的项")
@@ -294,6 +294,39 @@ enum CLISelfTest {
         check(configSyncDry.code == 0 && configSyncDry.json["would_change"] as? Bool == true && clip("config", "sync", "on").code == 2
               && configSyncStopped.code == 4 && configSyncStopped.json["error"] as? String == "app_not_running"
               && !defaults.bool(forKey: "appLifecycle.configuration.enabled"), "config sync 要 --yes 与运行中的 Clip；命令行自己不拨开关")
+
+        // 检查更新: the shared command layer on an isolated release feed; never the user's iCloud Drive, never the network.
+        #if !CLIP_LOCAL_DISTRIBUTION
+        let noFeed = clip("update", "check", "--json")
+        check(noFeed.code == 1 && noFeed.json["ok"] as? Bool == false && noFeed.json["error"] as? String == "check_incomplete"
+              && noFeed.json["command"] as? String == "update check" && noFeed.json["exit_code"] as? Int == 1
+              && (noFeed.json["current"] as? [String: Any])?["version"] is String, "update check 读不到发行记录时退出 1、check_incomplete，仍给出当前版本")
+        let feedRoot = tmp.appendingPathComponent("cli-update-feed", isDirectory: true)
+        let feed = feedRoot.appendingPathComponent("TianliApps/Updates/\(ClipCLI.appBundleID)/cloud", isDirectory: true)
+        try? FileManager.default.createDirectory(at: feed, withIntermediateDirectories: true)
+        func publish(_ version: String, _ build: String) -> Result {
+            let release: [String: Any] = ["version": version, "build": build, "bundle_id": ClipCLI.appBundleID, "channel": "cloud",
+                                          "filename": "Clip-\(version).zip", "sha256": String(repeating: "a", count: 64), "size_bytes": 10]
+            try? JSONSerialization.data(withJSONObject: release).write(to: feed.appendingPathComponent("release.json"))
+            setenv("APP_LIFECYCLE_CLOUD_DIR", feedRoot.path, 1)
+            defer { unsetenv("APP_LIFECYCLE_CLOUD_DIR") }
+            return clip("update", "check", "--json")
+        }
+        let newer = publish("99.0", "1")
+        let newerUpgrade = newer.json["upgrade"] as? [String: Any]
+        check(newer.code == 0 && newer.json["ok"] as? Bool == true && newer.json["update_available"] as? Bool == true
+              && newer.json["state"] as? String == "update_available" && (newer.json["latest"] as? [String: Any])?["version"] as? String == "99.0"
+              && (newer.json["source"] as? [String: Any])?["kind"] as? String == "private_cloud"
+              && (newerUpgrade?["how"] as? String)?.contains("配置与更新") == true, "update check 报出此渠道的新版与升级办法（与窗口同一渠道）")
+        let host = ClipCLI.hostInfo()
+        let current = publish(host.version, host.build)
+        check(current.code == 0 && current.json["state"] as? String == "up_to_date" && current.json["update_available"] as? Bool == false
+              && (current.json["upgrade"] as? [String: Any])?["button"] is NSNull, "update check 已是最新时如实报告")
+        check(((try? FileManager.default.contentsOfDirectory(atPath: feed.path)) ?? []) == ["release.json"], "update check 不下载、不安装")
+        #endif
+        let badUpdate = clip("update", "--json"), badUpdateFlag = clip("update", "check", "--definitely-not-a-flag", "--json")
+        check(badUpdate.code == 2 && badUpdate.json["error"] as? String == "usage" && badUpdateFlag.code == 2
+              && badUpdateFlag.json["command"] as? String == "update check" && clip("update", "--help").code == 0, "update 用法错误退出 2，--help 退出 0")
 
         // Deck import through the production importer, with the cross-process lock.
         let deck = tmp.appendingPathComponent("cli-deck", isDirectory: true)

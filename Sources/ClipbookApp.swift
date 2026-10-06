@@ -1,12 +1,15 @@
 import AppKit
 import SwiftUI
 
-#if CLIP_LOCAL_DISTRIBUTION
+/// The release channel behind the 「配置与更新」 window and `clip update check`: one definition for both.
 /// Public local packages follow the existing public repository release channel.
-private enum ClipLocalUpdates {
+enum ClipUpdates {
+    #if CLIP_LOCAL_DISTRIBUTION
     static let source: AppUpdateSource = .github(repository: "zengtianli/clipbook")
+    #else
+    static var source: AppUpdateSource { .privateCloud(channel: ProductIdentity.cloudSupported ? "cloud" : "local") }
+    #endif
 }
-#endif
 
 /// Uses the production view without taking focus during an isolated capture.
 private final class ClipPreviewPanel: NSPanel {
@@ -60,7 +63,7 @@ enum Boot {
         }
         if CommandLine.arguments.contains("--selftest") {
             #if CLIP_LOCAL_DISTRIBUTION
-            guard case .github(let repository) = ClipLocalUpdates.source,
+            guard case .github(let repository) = ClipUpdates.source,
                   repository == "zengtianli/clipbook" else {
                 print("FAIL public local update source")
                 exit(1)
@@ -167,11 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 let config = ClipPortableConfiguration.make(defaults: AppPreferences.defaults)
                 config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
                 configuration = config
-                #if CLIP_LOCAL_DISTRIBUTION
-                AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipLocalUpdates.source)
-                #else
-                AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: .privateCloud(channel: ProductIdentity.cloudSupported ? "cloud" : "local"))
-                #endif
+                AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipUpdates.source)
             }
             AppModel.shared.startWatching()
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }

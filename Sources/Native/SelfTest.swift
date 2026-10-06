@@ -31,6 +31,20 @@ enum SelfTest {
         return a.rtf(from: NSRange(location: 0, length: a.length), documentAttributes: [:])!
     }
 
+    /// Every isolated suite the self-tests open leaves an empty 42-byte plist in ~/Library/Preferences once its domain is
+    /// removed. Last step of the run: delete those shells (this product's test prefixes only, empty ones only).
+    static func sweepTestPreferences() {
+        let directory = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Preferences", isDirectory: true)
+        let prefixes = ["Clip-shortcut-test-", "Clip-carbon-test-", "clip-navigation-", "cyou.tianli.clipbook.cli-selftest."]
+        CFPreferencesSynchronize(kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
+        for name in (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        where name.hasSuffix(".plist") && prefixes.contains(where: name.hasPrefix) {
+            let file = directory.appendingPathComponent(name)
+            let size = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.size] as? Int
+            if size == 42 { try? FileManager.default.removeItem(at: file) }
+        }
+    }
+
     static func run() -> Int32 {
         failures = []
         print("Clipbook --selftest")
@@ -228,6 +242,7 @@ enum SelfTest {
         check(LinkTitle.parseTitle("<html><head><TITLE>\n  A &amp; B\n</TITLE></head>") == "A & B", "大小写不敏感、解实体、压空白")
         check(LinkTitle.parseTitle("<html>no title</html>") == nil, "没有 title → nil")
 
+        sweepTestPreferences()
         if failures.isEmpty { print("✅ selftest 全部通过"); return 0 }
         print("🔴 selftest 失败 \(failures.count) 项："); failures.forEach { print("   - \($0)") }
         return 1

@@ -118,12 +118,16 @@ sop:
       command: clip ignore remove
     - name: 导入 Deck 历史
       command: clip import-deck
+    - name: Deck 导入状态（上次导入时间、没找到 Deck 的数据目录）
+      command: clip status
     - name: 复制时播放声音、音效、音量
       command: clip settings set
     - name: 试听
       human: 要真人听声音
     - name: 开机自启
       command: clip settings set
+    - name: 开机自启状态与错误提示
+      command: clip status
     # 只有运行中的 Clip 知道的三项（辅助功能授权、全局键注册结果、iCloud 实时状态）：1.2.1 (89) 起 App 把它们写进数据目录的
     # runtime-state.json，clip status / shortcut list / cloud status 照读，自检通过、已装机。真实 App 还没运行过这一版，
     # 没有实机看到它写出文件，所以先记 missing；本人下次打开 Clip 后跑 clip status --json，permissions.accessibility.trusted
@@ -169,10 +173,11 @@ sop:
       command: clip config export
     - name: 导入配置…
       command: clip config import
+    # 检查更新走共享命令层 AppLifecycleCLI（Sources/Shared，与窗口同一个发行渠道 ClipUpdates.source）。
     - name: 检查更新
-      missing: 共享生命周期模块暂无命令入口
+      command: clip update check
     - name: 升级到新版… / 下载新版…
-      missing: 共享生命周期模块暂无命令入口
+      missing: 共享命令层不做静默安装：clip update check 给出新版、按钮名、安装包地址与步骤，替换并重启 App 仍要本人在「配置与更新…」窗口确认
   account:
     mode: none
     rationale: 本地剪贴板工具，没有产品账号、注册或登录；可选的 iCloud 历史归档与配置同步使用本机已登录的 Apple 账户（系统管理的 CloudKit 私有库与 iCloud Drive），不由本产品创建或管理账号。

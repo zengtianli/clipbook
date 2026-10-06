@@ -51,7 +51,7 @@ code, _, p = run("frobnicate"); check(code == 2 and "未知命令" in p.stderr, 
 code, bad, _ = run("version", "--definitely-not-a-flag", "--json")
 check(code == 2 and bad["ok"] is False and bad["error"] == "usage" and bad["command"] == "version", "version 多余的参数退出 2")
 help_lines = [l.strip() for l in run("--help")[2].stdout.splitlines()]
-unlisted = [c for c in ["unpin", "pause", "resume", "ignore add", "ignore remove", "shortcut scope", "shortcut clear", "cloud show", "cloud list", "config import"]
+unlisted = [c for c in ["unpin", "pause", "resume", "ignore add", "ignore remove", "shortcut scope", "shortcut clear", "cloud show", "cloud list", "config import", "update check"]
             if not any(l == c or l.startswith(c + " ") for l in help_lines)]
 check(not unlisted, f"顶层帮助在行首列出每个子命令{'（缺 ' + '、'.join(unlisted) + '）' if unlisted else ''}")
 for cmd in ["status", "stats", "list", "search", "show", "copy", "export", "add", "edit", "transform", "pin", "unpin", "delete",
@@ -123,6 +123,30 @@ else:
 code, login, _ = run("settings", "set", "launchAtLogin", "true", "--json")
 check(code == 4 and login["error"] == "system_setting" and run("settings", "set", "launchAtLogin", "true", "--dry-run")[0] == 0,
       "开机自启：隔离运行退出 4，--dry-run 只报告")
+# 检查更新 through the shared command layer: an isolated run reads only a test feed, never the user's iCloud Drive.
+if v["edition"] == "icloud":
+    code, none, _ = run("update", "check", "--json")
+    check(code == 1 and none["ok"] is False and none["error"] == "check_incomplete" and none["command"] == "update check"
+          and none["current"]["build"] == v["build"], "update check：隔离运行没有发行记录时退出 1、check_incomplete，仍给出当前版本")
+    feed_root = os.path.join(work, "update-feed")
+    feed = os.path.join(feed_root, "TianliApps/Updates/cyou.tianli.clipbook/cloud")
+    os.makedirs(feed)
+    def published(version, build):
+        with open(os.path.join(feed, "release.json"), "w") as f:
+            json.dump({"version": version, "build": build, "bundle_id": "cyou.tianli.clipbook", "channel": "cloud",
+                       "filename": f"Clip-{version}.zip", "sha256": "a" * 64, "size_bytes": 10}, f)
+        p = subprocess.run([clip, "update", "check", "--json"], env=dict(env, APP_LIFECYCLE_CLOUD_DIR=feed_root), capture_output=True, text=True, timeout=60)
+        return p.returncode, json.loads(p.stdout)
+    code, new = published("99.0", "1")
+    check(code == 0 and new["ok"] and new["update_available"] and new["state"] == "update_available" and new["latest"]["version"] == "99.0"
+          and new["current"] == {"version": v["version"], "build": v["build"]} and "配置与更新" in new["upgrade"]["how"],
+          "update check：读到此渠道的新版，给出升级办法")
+    code, same = published(v["version"], v["build"])
+    check(code == 0 and same["state"] == "up_to_date" and same["update_available"] is False and os.listdir(feed) == ["release.json"],
+          "update check：已是最新；不下载、不安装")
+code, bad, _ = run("update", "check", "--definitely-not-a-flag", "--json")
+check(code == 2 and bad["ok"] is False and bad["error"] == "usage" and bad["command"] == "update check" and run("update", "--help")[0] == 0,
+      "update check 参数错误退出 2；update --help 退出 0")
 check(general() == before_pb, "用户的通用剪贴板未被改动")
 print(f"clip CLI 真实入口：{passed} 项通过" + (f"，失败 {len(failures)}：{'; '.join(failures)}" if failures else ""))
 sys.exit(1 if failures else 0)

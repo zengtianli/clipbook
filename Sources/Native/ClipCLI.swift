@@ -16,6 +16,8 @@ enum ClipCLI {
         let exit: Exit
         let code: String
         let message: String
+        /// Further JSON fields for the failure (the shared update check reports what it did read).
+        var extra: [String: Any] = [:]
         static func usage(_ m: String) -> Failure { Failure(exit: .usage, code: "usage", message: m) }
         static func notFound(_ m: String) -> Failure { Failure(exit: .notFound, code: "not_found", message: m) }
         static func invalid(_ m: String) -> Failure { Failure(exit: .usage, code: "invalid", message: m) }
@@ -57,7 +59,7 @@ enum ClipCLI {
 
     static let commandNames: [String] = ["status", "stats", "list", "search", "show", "copy", "export", "add", "edit", "transform",
                                          "pin", "unpin", "delete", "merge", "clear", "collections", "collection", "settings", "ignore",
-                                         "pause", "resume", "import-deck", "cloud", "shortcut", "config", "help", "version"]
+                                         "pause", "resume", "import-deck", "cloud", "shortcut", "config", "update", "help", "version"]
 
     /// True when the process was started as `clip` (the in-bundle link) or with a CLI verb / --help / --version.
     /// LaunchServices launches (-psn_…, -NS…) and the test flags never match.
@@ -97,6 +99,7 @@ enum ClipCLI {
         case "ignore": return "ignore \(sub ?? "list")"
         case "shortcut": return "shortcut \(sub ?? "list")"
         case "config": return "config \(sub ?? "status")"
+        case "update": return sub.map { "update \($0)" } ?? verb
         case "--version": return "version"
         default: return verb
         }
@@ -152,6 +155,7 @@ enum ClipCLI {
             case "cloud": try cloud(args, c)
             case "shortcut": try shortcut(args, c)
             case "config": try config(args, c)
+            case "update": try update(args, c)
             default: throw Failure.usage("未知命令 \(verb)；用 clip --help 查看")
             }
             return Exit.ok.rawValue
@@ -174,7 +178,7 @@ enum ClipCLI {
 
     private static func fail(_ c: Context, _ f: Failure, json: Bool) -> Int32 {
         if json {
-            emitJSON(c, ["error": f.code, "message": f.message, "exit_code": Int(f.exit.rawValue)], ok: false)
+            emitJSON(c, f.extra.merging(["error": f.code, "message": f.message, "exit_code": Int(f.exit.rawValue)]) { _, own in own }, ok: false)
         } else {
             c.err("clip \(c.command): \(f.message)")
         }
@@ -200,6 +204,7 @@ enum ClipCLI {
           shortcut list              每个动作的快捷键、作用范围与状态（全局键是否注册成功由运行中的 Clip 报告）
           config status              「使用 iCloud 记住配置」开关与可迁移的偏好键
           config export -o <file>    导出配置（--force 覆盖；只写你指定的文件）
+        \(AppLifecycleCLI.helpUpdate)
           cloud status               iCloud 归档开关、账户是否绑定、同步状态与错误（Clip 运行时）、归档计数与本机缓存统计
           cloud list [筛选]           本机归档缓存里 iPhone / iPad 可见的历史（与手机列表同一规则；local_id = Mac 库里的同一条）
           cloud show <key>           归档里一条的全文、来源、日期；-o <file> 导出图片（只写你指定的文件）
@@ -235,7 +240,7 @@ enum ClipCLI {
           成功  {"ok": true,  "command": "<完整命令路径>", …该命令的字段}
           失败  {"ok": false, "command": "<完整命令路径>", "error": "<稳定短码>", "message": "<原因>", "exit_code": N}
           短码：usage · invalid · confirmation_required · not_found · busy · store · app_not_running · system_setting ·
-                not_installed · unsupported_edition · sync_enabled · error
+                not_installed · unsupported_edition · sync_enabled · check_incomplete · error
 
         退出码:
           0  成功（查无结果也算成功）
@@ -246,16 +251,19 @@ enum ClipCLI {
           5  库或导入正被占用
 
         环境：CLIPBOOK_HOME（数据目录）· CLIPBOOK_PREFERENCES_SUITE（偏好域）· CLIPBOOK_BACKGROUND=1（配合前两者时改用隔离剪贴板）
-        只有运行中的 Clip 知道的三样，由它写进数据目录的 runtime-state.json，命令照读：辅助功能是否已授权（status 的
-          permissions.accessibility，带时间；App 没在运行时是上次的值）、全局快捷键是否注册成功（shortcut list 的 registration：
-          registered | failed | app_not_running | unknown）、iCloud 实时同步状态与错误（cloud status 的 live）。
         仅在窗口中（要真人，或只在窗口里有意义）：
           粘贴到前一个 App（切回它并合成 ⌘V）· 录制快捷键（要真人按键）· 辅助功能「去授权…」（系统授权弹窗）· 试听音效 ·
           网格里的选择（单击、⌘/⇧ 多选、方向键、全选、取消）· 显示 / 隐藏主窗口 · 打开设置窗口与「配置与更新…」窗口 ·
           聚焦搜索 · 编辑菜单（撤销、重做、剪切、粘贴、全选）· 在 Finder 中显示 · 在浏览器打开 · 打开数据目录 ·
           关于 / 隐藏 / 最小化 / 关闭窗口 / 退出。
+        仅在 iPhone / iPad 上（手机端要真人，或只在手机里有意义）：
+          前往 App Store · 使用方式与隐私支持页 · 链接入口与外接键盘方向键选取 · 打开设置页与「配置与更新」页。
         暂无命令（窗口里看得到，命令还读不到或做不了）：
-          检查更新 · 升级到新版（共享的「配置与更新」模块还没有命令入口）。
+          升级到新版 / 下载新版：命令不做静默安装；update check 给出新版、按钮名、安装包地址与步骤，替换并重启仍在
+            「配置与更新…」窗口里确认。
+          只有运行中的 Clip 知道的三样：辅助功能是否已授权（status 的 permissions.accessibility）、全局快捷键是否注册成功
+            （shortcut list 的 registration）、iCloud 实时同步状态与错误（cloud status 的 live）。App 把它们写进数据目录的
+            runtime-state.json、命令照读的通道已做好，但还没在运行中的 Clip 上核过，没核过之前读到的是 null / app_not_running。
         命令不弹窗、不抢焦点、不申请权限、不合成按键。
         """
     }
@@ -322,7 +330,6 @@ enum ClipCLI {
             scope：改已录制组合键的作用范围，沿用窗口里的校验（保留组合、重复绑定会被拒绝，退出码 2）。
             clear：清除一个动作的绑定；--all =「清除所有快捷键」。
             组合键本身要真人按下，只在窗口里录制；默认不绑定任何键，命令也不会替你新增组合键。
-            全局键由运行中的 Clip 注册，是否注册成功显示在窗口的快捷键页。
             """,
         "config": """
             usage: clip config [status] [--json]
@@ -335,7 +342,18 @@ enum ClipCLI {
             import：与「导入配置…」相同：先备份原配置再覆盖，必须 --yes；运行中的 Clip 随后重新读取。
                     「使用 iCloud 记住配置」开着时退出码 4（同步由运行中的 App 负责：在窗口里导入，或先 sync off）。
             sync：请运行中的 Clip 拨动「使用 iCloud 记住配置」；必须 --yes，Clip 未运行时退出码 4，结果用 config status 回读。
-            检查更新与升级到新版暂无命令（共享的「配置与更新」模块还没有命令入口）。
+            检查更新见 clip update check；升级到新版仍在窗口里确认。
+            """,
+        "update": """
+            usage: clip update check [--json]
+            「配置与更新」窗口的「检查更新」，走共享的命令层（与窗口同一个发行渠道、同一套版本比较）。只读，不下载、不安装。
+            --json：current{version, build}、source{kind, …}、latest{version, build, channel, download_url, release_url, sha256, size_bytes}、
+                    update_available、state（update_available | up_to_date | ahead_of_channel）、message（窗口里那句话）、
+                    upgrade{in_app, button, how, download_url}。
+            读不到发行记录时退出码 1、短码 check_incomplete（JSON 仍带 current 与 source）。
+            iCloud 版读本人 iCloud Drive 里的发行记录：启动它的终端没有 iCloud Drive 访问权限时，系统可能向那个终端询问一次；
+            公开本地版联网读 GitHub 发行记录。隔离运行（CLIPBOOK_HOME / CLIPBOOK_PREFERENCES_SUITE）不读本人的 iCloud Drive。
+            升级到新版 / 下载新版没有命令：upgrade.how 给出步骤，替换并重启 App 仍要在窗口里确认。
             """,
         "ignore": "usage: clip ignore [list] | clip ignore add <bundle-id> | clip ignore remove <bundle-id> [--json]\n「忽略这些 app 的复制」名单。",
         "pause": "usage: clip pause [--json]\n暂停记录（= clip settings set paused true）。",
@@ -1228,6 +1246,35 @@ enum ClipCLI {
             if p.json { emitJSON(c, body) } else { c.out("已请 Clip \(target ? "打开" : "关闭")「使用 iCloud 记住配置」；用 clip config status 查看结果") }
         default: throw Failure.usage(syntax)
         }
+    }
+
+    // MARK: - 检查更新 (the shared command layer behind the window's 检查更新 button)
+
+    /// `clip update check` runs AppLifecycleCLI with the window's own update source and re-wraps its answer in clip's
+    /// envelope (flat "error" code plus "exit_code"), so every clip command answers in one shape.
+    @MainActor static func update(_ args: [String], _ c: Context) throws {
+        // An isolated run never reads the user's iCloud Drive: the shared layer then accepts only a test feed (APP_LIFECYCLE_CLOUD_DIR).
+        let key = "APP_LIFECYCLE_SUPPORT_DIR"
+        let redirect = c.isolated && (ProcessInfo.processInfo.environment[key] ?? "").isEmpty
+        if redirect { setenv(key, c.home.appendingPathComponent("Configuration", isDirectory: true).path, 1) }
+        defer { if redirect { unsetenv(key) } }
+        let json = args.contains("--json")
+        var printed: [String] = [], complaints: [String] = []
+        var product = AppLifecycleCLI.Product(command: "clip", name: hostInfo().name, configuration: nil, updateSource: ClipUpdates.source)
+        product.out = { printed.append($0) }
+        product.err = { complaints.append($0) }
+        product.runningApp = c.runningApp
+        let code = AppLifecycleCLI.run(["update"] + args.filter { $0 != "--json" } + ["--json"], product: product)
+        var body = (try? JSONSerialization.jsonObject(with: Data(printed.joined(separator: "\n").utf8))) as? [String: Any] ?? [:]
+        body.removeValue(forKey: "ok"); body.removeValue(forKey: "command")
+        if code == 0 {
+            if json { emitJSON(c, body) }
+            else { c.out([body["message"] as? String, body["update_available"] as? Bool == true ? (body["upgrade"] as? [String: Any])?["how"] as? String : nil].compactMap { $0 }.joined(separator: "\n")) }
+            return
+        }
+        let error = body.removeValue(forKey: "error") as? [String: Any]
+        throw Failure(exit: code == 2 ? .usage : .failure, code: error?["code"] as? String ?? "error",
+                      message: error?["message"] as? String ?? complaints.joined(separator: " "), extra: body)
     }
 
     // MARK: - Deck

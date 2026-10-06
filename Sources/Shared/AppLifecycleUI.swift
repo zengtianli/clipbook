@@ -5,15 +5,21 @@ import CryptoKit
 
 final class AppLifecycleUI: NSObject {
     static let shared = AppLifecycleUI()
+    static let formWidth: CGFloat = 520
+    /// A product's own settings groups (built with `group` and `row`), shown above the update group. Set before the
+    /// window is first opened. `willShow` runs each time it opens, so the product can refresh its controls.
+    var productGroups: (() -> [NSView])?
+    var willShow: (() -> Void)?
     private var productName = "App"
     private var configuration: AppConfiguration?
     private var source: AppUpdateSource = .privateCloud(channel: "private")
     private var controller: NSWindowController?
-    private var status = NSTextField(wrappingLabelWithString: "")
-    private var syncStatus = NSTextField(wrappingLabelWithString: "")
-    private var cloudToggle = NSButton(checkboxWithTitle: "使用 iCloud 记住配置", target: nil, action: nil)
+    private var status = AppLifecycleUI.detailLabel()
+    private var syncStatus = AppLifecycleUI.detailLabel()
+    private var cloudToggle = NSSwitch()
     private var updateButton = NSButton(title: "检查更新", target: nil, action: nil)
     private var installButton = NSButton(title: "升级到新版…", target: nil, action: nil)
+    private var spinner = NSProgressIndicator()
     private var release: AppRelease?
     private var observers: [NSObjectProtocol] = []
     private var working = false
@@ -59,8 +65,81 @@ final class AppLifecycleUI: NSObject {
     func show() {
         makeWindow()
         refreshConfiguration()
+        willShow?()
+        // A menu-bar (accessory) app is not active after its status menu closes; without this the window opens behind.
+        if !NSApp.isActive { NSApp.activate(ignoringOtherApps: true) }
         controller?.showWindow(nil)
         controller?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    // MARK: Grouped form — the look of System Settings: a caption, then a rounded card of rows with hairlines between.
+
+    private final class Card: NSView {
+        override func draw(_ dirtyRect: NSRect) {
+            let path = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), xRadius: 8, yRadius: 8)
+            NSColor.labelColor.withAlphaComponent(0.04).setFill(); path.fill()
+            NSColor.labelColor.withAlphaComponent(0.09).setStroke(); path.lineWidth = 1; path.stroke()
+        }
+    }
+    private final class Hairline: NSView {
+        override var intrinsicContentSize: NSSize { NSSize(width: NSView.noIntrinsicMetric, height: 1) }
+        override func draw(_ dirtyRect: NSRect) {
+            NSColor.labelColor.withAlphaComponent(0.09).setFill()
+            NSRect(x: 14, y: 0, width: max(0, bounds.width - 14), height: 1).fill()
+        }
+    }
+
+    /// The small grey explanation under a row title; keep a reference to change its text later.
+    static func detailLabel(_ text: String = "") -> NSTextField {
+        let field = NSTextField(wrappingLabelWithString: text)
+        field.font = .systemFont(ofSize: 11); field.textColor = .secondaryLabelColor
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        field.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
+        return field
+    }
+
+    /// One row: title and optional explanation on the left, its control (switch, pop-up, buttons) on the right.
+    static func row(_ title: String, detail: NSTextField? = nil, accessory: NSView? = nil) -> NSView {
+        let name = NSTextField(labelWithString: title)
+        name.font = .systemFont(ofSize: 13); name.lineBreakMode = .byTruncatingTail
+        name.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let text = NSStackView(views: [name] + (detail.map { [$0] } ?? []))
+        text.orientation = .vertical; text.alignment = .leading; text.spacing = 2
+        text.setHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
+        let row = NSStackView(views: [text] + (accessory.map { [$0] } ?? []))
+        row.orientation = .horizontal; row.alignment = .centerY; row.spacing = 16; row.distribution = .fill
+        row.edgeInsets = NSEdgeInsets(top: 10, left: 14, bottom: 12, right: 14)
+        detail?.widthAnchor.constraint(equalTo: text.widthAnchor).isActive = true
+        accessory?.setContentHuggingPriority(.required, for: .horizontal)
+        if let controls = accessory as? NSStackView {
+            controls.setHuggingPriority(.required, for: .horizontal)
+            controls.arrangedSubviews.forEach { $0.setContentHuggingPriority(.required, for: .horizontal) }
+        }
+        accessory?.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return row
+    }
+
+    /// A card of rows under an optional caption.
+    static func group(_ caption: String?, rows: [NSView]) -> NSView {
+        let card = Card()
+        var views: [NSView] = []
+        for (index, row) in rows.enumerated() { views += index > 0 ? [Hairline(), row] : [row] }
+        let stack = NSStackView(views: views)
+        stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 0
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor), stack.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 2), stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -2)
+        ] + views.map { $0.widthAnchor.constraint(equalTo: stack.widthAnchor) })
+        guard let caption else { return card }
+        let label = NSTextField(labelWithString: caption)
+        label.font = .systemFont(ofSize: 12, weight: .semibold); label.textColor = .secondaryLabelColor
+        let heading = NSStackView(views: [label]); heading.edgeInsets = NSEdgeInsets(top: 0, left: 14, bottom: 0, right: 0)
+        let outer = NSStackView(views: [heading, card])
+        outer.orientation = .vertical; outer.alignment = .leading; outer.spacing = 6
+        card.widthAnchor.constraint(equalTo: outer.widthAnchor).isActive = true
+        return outer
     }
 
     func checkForUpdates() {
@@ -70,12 +149,14 @@ final class AppLifecycleUI: NSObject {
         release = nil
         installButton.isHidden = true
         updateButton.isEnabled = false
+        spinner.startAnimation(nil)
         status.stringValue = "正在检查发行版本…"
         AppUpdateChecker.check(source: source, bundleID: Bundle.main.bundleIdentifier ?? "", version: currentVersion, build: currentBuild) { [weak self] result in
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.working = false
                 self.updateButton.isEnabled = true
+                self.spinner.stopAnimation(nil)
                 switch result {
                 case .failure(let error): self.status.stringValue = "检查未完成：" + error.localizedDescription
                 case .success(let release):
@@ -94,43 +175,53 @@ final class AppLifecycleUI: NSObject {
 
     private func makeWindow() {
         guard controller == nil else { return }
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 510, height: configuration?.hasSettings == true ? 355 : 230),
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: Self.formWidth + 40, height: 240),
                               styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: true)
-        window.title = "\(productName) · 配置与更新"
+        window.title = "\(productName) 设置"
         window.isReleasedWhenClosed = false
-        let title = NSTextField(labelWithString: productName + "  " + currentVersion + " (" + currentBuild + ")")
-        title.font = .systemFont(ofSize: 18, weight: .semibold)
-        status.stringValue = "按需检查新版，不增加后台轮询。"
-        status.font = .systemFont(ofSize: 12)
+        let icon = NSImageView(image: NSApp.applicationIconImage)
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        let name = NSTextField(labelWithString: productName)
+        name.font = .systemFont(ofSize: 17, weight: .semibold)
+        let version = NSTextField(labelWithString: "版本 \(currentVersion) (\(currentBuild))")
+        version.font = .systemFont(ofSize: 12); version.textColor = .secondaryLabelColor
+        let titles = NSStackView(views: [name, version])
+        titles.orientation = .vertical; titles.alignment = .leading; titles.spacing = 2
+        let header = NSStackView(views: [icon, titles])
+        header.spacing = 12; header.alignment = .centerY; header.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 2, right: 0)
+        status.stringValue = "按需检查新版，不在后台轮询。"
         updateButton.target = self; updateButton.action = #selector(checkUpdates)
         installButton.target = self; installButton.action = #selector(upgrade)
-        installButton.isHidden = true
-        var views: [NSView] = [title]
+        installButton.isHidden = true; installButton.keyEquivalent = "\r"
+        spinner.style = .spinning; spinner.controlSize = .small; spinner.isDisplayedWhenStopped = false
+        var groups: [NSView] = productGroups?() ?? []
         if configuration?.hasSettings == true {
             cloudToggle.target = self; cloudToggle.action = #selector(toggleCloud)
-            syncStatus.font = .systemFont(ofSize: 12)
-            syncStatus.textColor = .secondaryLabelColor
-            let note = NSTextField(wrappingLabelWithString: "沿用系统 Apple ID；开启后自动记住设置，换机时恢复。权限和凭证保留在本机。")
-            note.font = .systemFont(ofSize: 12); note.textColor = .secondaryLabelColor
             let export = NSButton(title: "导出配置…", target: self, action: #selector(exportConfiguration))
             let `import` = NSButton(title: "导入配置…", target: self, action: #selector(importConfiguration))
-            let transfers = NSStackView(views: [export, `import`])
-            transfers.spacing = 10
-            views += [cloudToggle, note, syncStatus, transfers]
+            let transfers = NSStackView(views: [export, `import`]); transfers.spacing = 8
+            groups.append(Self.group("配置", rows: [
+                Self.row("使用 iCloud 记住配置", detail: Self.detailLabel("沿用系统 Apple ID；开启后自动记住设置，换机时恢复。权限和凭证保留在本机。"), accessory: cloudToggle),
+                Self.row("导入与导出", detail: syncStatus, accessory: transfers)]))
         }
-        let actions = NSStackView(views: [updateButton, installButton]); actions.spacing = 10
-        views += [status, actions]
-        let stack = NSStackView(views: views)
-        stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 14
+        let actions = NSStackView(views: [spinner, updateButton, installButton]); actions.spacing = 8
+        groups.append(Self.group("软件更新", rows: [Self.row("当前版本 \(currentVersion) (\(currentBuild))", detail: status, accessory: actions)]))
+        let stack = NSStackView(views: [header] + groups)
+        stack.orientation = .vertical; stack.alignment = .leading; stack.spacing = 18
         stack.translatesAutoresizingMaskIntoConstraints = false
-        window.contentView!.addSubview(stack)
+        let content = window.contentView!
+        content.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: window.contentView!.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: window.contentView!.trailingAnchor, constant: -24),
-            stack.topAnchor.constraint(equalTo: window.contentView!.topAnchor, constant: 24),
-            stack.bottomAnchor.constraint(lessThanOrEqualTo: window.contentView!.bottomAnchor, constant: -24)
-        ])
-        for view in views where view is NSTextField { view.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true }
+            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
+            stack.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -20),
+            stack.widthAnchor.constraint(equalToConstant: Self.formWidth),
+            icon.widthAnchor.constraint(equalToConstant: 48), icon.heightAnchor.constraint(equalToConstant: 48)
+        ] + groups.map { $0.widthAnchor.constraint(equalTo: stack.widthAnchor) })
+        content.layoutSubtreeIfNeeded()
+        window.setContentSize(content.fittingSize)
+        window.center()
         controller = NSWindowController(window: window)
         refreshConfiguration()
     }
@@ -141,13 +232,24 @@ final class AppLifecycleUI: NSObject {
     }
 
     /// Same window construction as the user-facing action; never orders a window in.
-    func offscreenSnapshot(to url: URL) throws -> [String: Bool] {
+    func offscreenSnapshot(to url: URL, appearance: NSAppearance.Name = .aqua) throws -> [String: Bool] {
         guard NSApp.activationPolicy() == .prohibited else { throw AppUpdateError("离屏验收必须禁止显示窗口和 Dock 图标。") }
         makeWindow()
+        willShow?()
         guard let window = controller?.window, let view = window.contentView else { throw AppUpdateError("窗口构造失败。") }
-        window.appearance = NSAppearance(named: .aqua)
+        window.appearance = NSAppearance(named: appearance)
         view.layoutSubtreeIfNeeded()
-        guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { throw AppUpdateError("无法渲染设置窗口。") }
+        window.setContentSize(view.fittingSize)
+        view.layoutSubtreeIfNeeded()
+        // Retina-sized, on the window background the real window has (the content view itself draws none).
+        guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(view.bounds.width * 2), pixelsHigh: Int(view.bounds.height * 2),
+                                            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { throw AppUpdateError("无法渲染设置窗口。") }
+        bitmap.size = view.bounds.size
+        guard let context = NSGraphicsContext(bitmapImageRep: bitmap) else { throw AppUpdateError("无法渲染设置窗口。") }
+        NSGraphicsContext.saveGraphicsState(); NSGraphicsContext.current = context
+        window.effectiveAppearance.performAsCurrentDrawingAppearance { NSColor.windowBackgroundColor.setFill(); view.bounds.fill() }
+        NSGraphicsContext.restoreGraphicsState()
         view.cacheDisplay(in: view.bounds, to: bitmap)
         guard let data = bitmap.representation(using: .png, properties: [:]) else { throw AppUpdateError("无法导出窗口截图。") }
         try data.write(to: url, options: .atomic)
@@ -194,12 +296,14 @@ final class AppLifecycleUI: NSObject {
         alert.beginSheetModal(for: controller!.window!) { answer in
             guard answer == .alertFirstButtonReturn else { return }
             self.working = true; self.updateButton.isEnabled = false; self.installButton.isEnabled = false
+            self.spinner.startAnimation(nil)
             self.status.stringValue = "正在下载并验证新版…"
             AppUpgradeInstaller.prepare(release: release, currentBundle: Bundle.main.bundleURL) { result in
                 DispatchQueue.main.async {
                     switch result {
                     case .failure(let error):
                         self.working = false; self.updateButton.isEnabled = true; self.installButton.isEnabled = true
+                        self.spinner.stopAnimation(nil)
                         self.status.stringValue = "升级未完成，当前 App 已保留：" + error.localizedDescription
                     case .success(let prepared):
                         do {
@@ -208,6 +312,7 @@ final class AppLifecycleUI: NSObject {
                             NSApp.terminate(nil)
                         } catch {
                             self.working = false; self.updateButton.isEnabled = true; self.installButton.isEnabled = true
+                            self.spinner.stopAnimation(nil)
                             self.status.stringValue = "无法替换 App，当前 App 已保留：" + error.localizedDescription
                         }
                     }
