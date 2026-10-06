@@ -65,6 +65,9 @@ clip export 1234 -o ~/Desktop/shot.png     # original image
 clip cloud status --json · clip cloud list --favorites --json   # iCloud state and this Mac's archive cache (read-only, the phone's list rule)
 clip cloud push --dry-run --json           # how many records "补充最近历史" would archive; --yes asks the running Clip to do it
 clip cloud on --yes · clip cloud off --yes # ask the running Clip to flip the "iCloud 历史归档" switch
+clip shortcut list --json · clip shortcut scope search global · clip shortcut clear search   # view, re-scope or clear shortcuts; chords are still recorded in the window by you
+clip config status --json · clip config export -o clip-config.json · clip config import clip-config.json --yes   # export / import of the "配置与更新" window
+clip config sync on --yes                  # ask the running Clip to turn on "使用 iCloud 记住配置"
 clip copy 1234                             # replaces the system clipboard: use only when the user asks for it
 ```
 

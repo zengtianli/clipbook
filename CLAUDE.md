@@ -62,6 +62,7 @@ iOS 客户端在 `/Users/tianli/Apps/clip/ios`。容器 `iCloud.cyou.tianli.clip
 - iCloud 写动作（`cloud push|on|off`）命令行只发请求：必须 `--yes`，Clip 未运行退出码 4，运行中的 App 调 `MacClipSync.pushRequested()` / `enable(_:)`（与设置页按钮、开关同一代码），结果用 `cloud status` 回读。开机自启 `settings set launchAtLogin` 调 `AppSettings.setLaunchAtLogin`，隔离运行（`CLIPBOOK_HOME`/`CLIPBOOK_PREFERENCES_SUITE`）或不在 Applications 的副本一律退出码 4——测试只走 `--dry-run` 与拒绝路径。
 - 写命令后发 `ClipSignal`（DistributedNotification，object = 库路径 / 偏好域，不带数据），运行中的 App reload，iCloud 开着时再 `storeChangedExternally()` 把最新 50 条按捕获规则归档（标记幂等）；`Paster.write` 带 `org.nspasteboard.source = cyou.tianli.clipbook`，Watcher 见到就跳过（不记录、不响）。Deck 导入有跨进程 flock。
 - JSON `command` 是 run() 一次算出的完整命令路径，成功失败相同。`edit` 先校验再写、只写变化的部分（正文不变不降级富文本）。退出码 0/1/2/3/4/5（成功/运行错误/参数或缺 --yes/不存在/需运行中或已安装的 App/被占用）；删除、清空、删收藏夹要 `--yes`；`copy` 改写用户剪贴板，验证只在 `CLIPBOOK_BACKGROUND=1` + 隔离 home/suite 的命名剪贴板上做。
+- 快捷键与「配置与更新」（2026-10-06）：`clip shortcut list|scope|clear` 走 `ClipShortcuts`（命令行进程用不注册的后端，只校验和保存；真正的全局键由运行中的 App 收到 `preferencesChanged` 后 `shortcuts.reload()` 注册）。**命令不新增组合键**——录制要真人按键，只在窗口里。`clip config status|export|import|sync` 走共享的 `AppConfiguration`，键清单只有 `ClipPortableConfiguration.keys` 一份（窗口与命令共用）；隔离运行时备份落在 `CLIPBOOK_HOME/Configuration`；`config sync` 只发请求给运行中的 App；「使用 iCloud 记住配置」开着时 `config import` 退出码 4。界面功能 ↔ 命令对照登记在 `project.yaml` 的 `sop.agent_cli`，加界面功能时同步补一行。
 - 验证：生产 `--selftest` 含 `CLISelfTest`（隔离库/偏好/剪贴板）；`bash tests/test-cli.sh <App>` 走包内真实入口并核对通用剪贴板未变（功能验收已接入）。安装由 `scripts/install-cli.py` 建 `~/.local/bin/clip`，build.sh 装机后自动调用。
 
 ## 自动化入口

@@ -14,6 +14,155 @@ sop:
   cli:
     commands: [clip]
     app: cyou.tianli.clipbook
+  # 界面功能 ↔ 命令对照（写法见 app 技能 references/agent-cli.md）。功能从 Sources/Native/*View.swift、
+  # Settings.swift、Shortcuts.swift、ClipbookApp.swift 与共享的「配置与更新」窗口逐项列出。
+  agent_cli:
+    readback: clip status
+    features:
+    # 主窗口 · 左栏
+    - name: 侧栏计数（全部、置顶、类型、来源、收藏夹）
+      command: clip stats
+    - name: 按全部 / 置顶 / 类型 / 来源 / 收藏夹筛选
+      command: clip list
+    - name: 新建收藏夹（名字、图标、颜色）
+      command: clip collection create
+    - name: 收藏夹 · 编辑…
+      command: clip collection edit
+    - name: 收藏夹 · 上移 / 下移
+      command: clip collection move
+    - name: 收藏夹 · 删除收藏夹
+      command: clip collection delete
+    - name: 收藏夹列表与条数
+      command: clip collections
+    # 主窗口 · 中栏
+    - name: 记录网格（来源、时间、标题、预览、类型、大小、置顶）
+      command: clip list
+    - name: 搜索正文、标题、来源
+      command: clip search
+    - name: 翻页与总条数
+      command: clip list
+    - name: 单击选中、⌘/⇧ 多选、方向键移动、全选本页、取消选择
+      human: 窗口里的选择状态，只在窗口里有意义；命令直接传记录 id
+    - name: 双击卡片复制
+      command: clip copy
+    - name: 批量 · 复制所选（含 ⌘C）
+      command: clip copy
+    - name: 批量 · 加入收藏夹
+      command: clip collection add
+    - name: 批量 · 合并成一条
+      command: clip merge
+    - name: 删除记录（单条或所选，带确认）
+      command: clip delete
+    - name: 粘贴到前一个 app
+      human: 要切回别的 App 并合成 ⌘V，命令不合成按键；clip copy 写入剪贴板后由本人粘贴
+    - name: 置顶
+      command: clip pin
+    - name: 取消置顶
+      command: clip unpin
+    - name: 在 Finder 中显示（文件记录、详情按钮）
+      human: 在访达中显示，只在窗口里有意义；路径见 clip show
+    - name: 在浏览器打开（链接记录、详情「打开」）
+      human: 打开浏览器窗口，只在窗口里有意义；链接见 clip show
+    # 主窗口 · 右栏
+    - name: 详情（来源、时间、类型、大小、全文、图片、文件路径、富文本、链接标题、所在收藏夹）
+      command: clip show
+    - name: 改标题
+      command: clip edit
+    - name: 改正文并保存（富文本保存后变纯文本）
+      command: clip edit
+    - name: 另存
+      command: clip add
+    - name: 转换（纯文本、去空白、大小写、单行、JSON）
+      command: clip transform
+    - name: 导出…（图片）
+      command: clip export
+    - name: 复制
+      command: clip copy
+    - name: 加入收藏夹（详情菜单）
+      command: clip collection add
+    - name: 移出收藏夹
+      command: clip collection remove
+    # 工具栏、菜单栏图标与菜单
+    - name: 「已暂停记录」提示与记录条数
+      command: clip status
+    - name: 暂停记录
+      command: clip pause
+    - name: 恢复记录
+      command: clip resume
+    - name: 显示 / 隐藏主窗口（菜单栏图标、Dock、clipbook:// 链接、「打开 Clip」）
+      human: 窗口显示，只在窗口里有意义
+    - name: 打开设置窗口、「配置与更新…」窗口
+      human: 窗口显示，只在窗口里有意义；设置项各有命令
+    - name: 聚焦搜索
+      human: 窗口里的输入焦点，只在窗口里有意义；搜索用 clip search
+    - name: 编辑菜单（撤销、重做、剪切、粘贴、全选）
+      human: 文本框里的系统编辑命令，只在窗口里有意义
+    - name: 关于、隐藏、最小化、关闭窗口、退出
+      human: 应用与窗口本身的操作，只在窗口里有意义；停止记录用 clip pause
+    # 设置 · 通用
+    - name: 记录偏好与全部设置（读）
+      command: clip settings
+    - name: 纯文本模式
+      command: clip settings set
+    - name: 自动获取链接标题
+      command: clip settings set
+    - name: 最多保留 N 条
+      command: clip settings set
+    - name: 保留时长
+      command: clip settings set
+    - name: 忽略名单（查看）
+      command: clip ignore list
+    - name: 忽略名单 · 从来源里选 / 选择 app…
+      command: clip ignore add
+    - name: 忽略名单 · 移出
+      command: clip ignore remove
+    - name: 导入 Deck 历史
+      command: clip import-deck
+    - name: 复制时播放声音、音效、音量
+      command: clip settings set
+    - name: 试听
+      human: 要真人听声音
+    - name: 开机自启
+      command: clip settings set
+    - name: 自动粘贴（辅助功能）授权状态与「去授权…」
+      human: 系统授权弹窗，要真人在系统设置里允许
+    - name: 打开数据目录
+      human: 在访达中显示，只在窗口里有意义；路径见 clip status
+    - name: 清空历史（保留置顶与收藏夹）…
+      command: clip clear
+    # 设置 · iCloud
+    - name: iCloud 历史归档 · 打开
+      command: clip cloud on
+    - name: iCloud 历史归档 · 关闭
+      command: clip cloud off
+    - name: iCloud 同步状态与归档内容
+      command: clip cloud status
+    - name: 补充最近历史
+      command: clip cloud push
+    # 设置 · 快捷键
+    - name: 各动作的快捷键、作用范围与状态
+      command: clip shortcut list
+    - name: 录制快捷键
+      human: 要真人按键；默认不绑定任何键，命令也不新增组合键
+    - name: 作用范围（仅 Clip 内 / 全局）
+      command: clip shortcut scope
+    - name: 清除绑定、清除所有快捷键
+      command: clip shortcut clear
+    # 配置与更新
+    - name: 当前版本
+      command: clip version
+    - name: 使用 iCloud 记住配置（状态）
+      command: clip config status
+    - name: 使用 iCloud 记住配置（开关）
+      command: clip config sync
+    - name: 导出配置…
+      command: clip config export
+    - name: 导入配置…
+      command: clip config import
+    - name: 检查更新
+      missing: 没有检查更新命令。私有渠道的发行记录在 iCloud Drive 里，命令行进程读取可能触发系统的文件访问授权，未验证，没有补
+    - name: 升级到新版… / 下载新版…
+      missing: 没有升级命令。窗口里确认后由 App 下载、校验并替换自身再重开；本机装机走 ./build.sh
   account:
     mode: none
     rationale: 本地剪贴板工具，没有产品账号、注册或登录；可选的 iCloud 历史归档与配置同步使用本机已登录的 Apple 账户（系统管理的 CloudKit 私有库与 iCloud Drive），不由本产品创建或管理账号。

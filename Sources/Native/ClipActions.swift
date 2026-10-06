@@ -107,6 +107,17 @@ enum ClipRules {
     }
 }
 
+/// The preferences the 「配置与更新」 window exports, imports and optionally keeps in iCloud.
+/// One definition for the window (AppDelegate) and `clip config`.
+enum ClipPortableConfiguration {
+    static let productID = "cyou.tianli.clipbook"
+    static let keys = ["ignoredBundles", "maxItems", "retentionDays", "plainTextOnly", "fetchLinkTitles",
+                       "copySound", "copySoundName", "copySoundVolume", "shortcuts.v1"]
+    static func make(defaults: UserDefaults) -> AppConfiguration {
+        AppConfiguration(productID: productID, defaultsKeys: keys, defaults: defaults)
+    }
+}
+
 /// Cross-process requests from `clip` to a running Clip. They carry no data: they ask the app to re-read state it
 /// already owns (the store / its preferences) or to run one of its own iCloud actions (the same code the Settings
 /// buttons call). The CLI itself never opens a sync container.
@@ -118,6 +129,9 @@ enum ClipSignal {
     /// 设置 → iCloud 「iCloud 历史归档」开关 (the app runs its account checks as for the toggle).
     static let cloudEnableRequested = Notification.Name("cyou.tianli.clipbook.cloudEnableRequested")
     static let cloudDisableRequested = Notification.Name("cyou.tianli.clipbook.cloudDisableRequested")
+    /// 配置与更新 → 「使用 iCloud 记住配置」开关 (scope = the preferences domain; the app owns the sync).
+    static let configSyncEnableRequested = Notification.Name("cyou.tianli.clipbook.configSyncEnableRequested")
+    static let configSyncDisableRequested = Notification.Name("cyou.tianli.clipbook.configSyncDisableRequested")
 
     static func post(_ name: Notification.Name, scope: String) {
         DistributedNotificationCenter.default().postNotificationName(name, object: scope, userInfo: nil, deliverImmediately: true)

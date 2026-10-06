@@ -163,7 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
             if !ProductIdentity.backgroundPreview {
-                let config = AppConfiguration(productID: "cyou.tianli.clipbook", defaultsKeys: ["ignoredBundles", "maxItems", "retentionDays", "plainTextOnly", "fetchLinkTitles", "copySound", "copySoundName", "copySoundVolume", "shortcuts.v1"], defaults: AppPreferences.defaults)
+                let config = ClipPortableConfiguration.make(defaults: AppPreferences.defaults)
                 config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
                 configuration = config
                 #if CLIP_LOCAL_DISTRIBUTION
@@ -186,7 +186,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
             ClipSignal.observe(ClipSignal.preferencesChanged, scope: AppPreferences.domain) {
                 AppSettings.shared.reload(); AppModel.shared.applySettings()
+                AppDelegate.shared.shortcuts.reload()   // `clip shortcut scope|clear`, `clip config import`
             }
+            // `clip config sync on|off`: the 配置与更新 window's 「使用 iCloud 记住配置」 checkbox, run by this app.
+            ClipSignal.observe(ClipSignal.configSyncEnableRequested, scope: AppPreferences.domain) { AppDelegate.shared.configuration?.setEnabled(true) }
+            ClipSignal.observe(ClipSignal.configSyncDisableRequested, scope: AppPreferences.domain) { AppDelegate.shared.configuration?.setEnabled(false) }
             // `clip cloud push|on|off`: the Settings → iCloud button and toggle, run by this app.
             if ProductIdentity.cloudSupported {
                 ClipSignal.observe(ClipSignal.cloudPushRequested, scope: home) { Task { await AppModel.shared.cloud.pushRequested() } }

@@ -49,7 +49,7 @@ code, v, _ = run("--version", "--json")
 check(code == 0 and v["ok"] and v["name"] == "Clip" and v["build"] not in ("", "unknown"), f"经链接重入真实可执行：{v and v['name']} {v and v['version']} ({v and v['build']})")
 code, _, p = run("frobnicate"); check(code == 2 and "未知命令" in p.stderr, "未知命令退出 2")
 for cmd in ["status", "stats", "list", "search", "show", "copy", "export", "add", "edit", "transform", "pin", "unpin", "delete",
-            "merge", "clear", "collections", "collection", "settings", "ignore", "pause", "resume", "import-deck", "cloud"]:
+            "merge", "clear", "collections", "collection", "settings", "ignore", "pause", "resume", "import-deck", "cloud", "shortcut", "config"]:
     if run(cmd, "--help")[0] != 0: failures.append(f"{cmd} --help")
 check(not [f for f in failures if f.endswith("--help")], "每个命令 --help 退出 0")
 
@@ -71,6 +71,24 @@ check(run("delete", str(m["id"]))[0] == 2 and run("delete", str(m["id"]), "--yes
 code, c, _ = run("collection", "create", "agent", "--json"); check(code == 0 and run("collection", "add", "agent", str(a["id"]))[0] == 0, "收藏夹新建与加入")
 check(run("settings", "set", "maxItems", "50")[0] == 2 and run("settings", "set", "maxItems", "800")[0] == 0, "设置范围校验与写入")
 code, st, _ = run("settings", "--json"); check(st["settings"]["maxItems"] == 800 and st["settings"]["domain"] == os.environ["SUITE"], "设置写入隔离偏好域")
+# 设置 → 快捷键 与「配置与更新」：默认没有任何绑定，命令不新增组合键；配置备份留在隔离目录。不发任何同步请求。
+code, sc, _ = run("shortcut", "list", "--json")
+check(code == 0 and sc["command"] == "shortcut list" and len(sc["shortcuts"]) == 12 and all(r["keys"] is None for r in sc["shortcuts"]),
+      "shortcut list：十二个动作，默认没有任何绑定")
+code, e, _ = run("shortcut", "scope", "search", "global", "--json")
+check(code == 2 and e["ok"] is False and e["error"] == "invalid" and run("shortcut", "clear", "--all")[0] == 0
+      and run("settings", "--json")[1]["settings"]["shortcuts"] == [], "shortcut scope 不新增组合键（退出 2）；clear --all 空操作")
+cfg = os.path.join(work, "config.json")
+code, ex, _ = run("config", "export", "-o", cfg, "--json")
+check(code == 0 and ex["bytes"] == os.path.getsize(cfg) > 0 and run("config", "export", "-o", cfg)[0] == 2, "config export 写出文件；已存在要 --force")
+run("settings", "set", "maxItems", "900")
+code, e, _ = run("config", "import", cfg, "--json")
+code2, im, _ = run("config", "import", cfg, "--yes", "--json")
+check(code == 2 and e["error"] == "confirmation_required" and code2 == 0 and im["settings"]["maxItems"] == 800
+      and os.path.isdir(os.path.join(os.environ["HOME_DIR"], "Configuration")), "config import 要 --yes；恢复导出时的值，备份留在隔离目录")
+code, cs, _ = run("config", "status", "--json"); code2, dry, _ = run("config", "sync", "on", "--dry-run", "--json")
+check(code == 0 and cs["sync_enabled"] is False and code2 == 0 and dry["would_change"] is True and dry["dry_run"] is True
+      and run("config", "sync", "on")[0] == 2, "config status 只读；config sync 没有 --yes 不发请求")
 check(run("pause")[0] == 0 and run("status", "--json")[1]["recording"]["paused"] is True and run("resume")[0] == 0, "pause / resume")
 check(run("clear")[0] == 2 and run("clear", "--yes", "--json")[1]["kept"] == 1, "clear 需 --yes，保留收藏夹里的")
 code, bad, _ = run("collection", "create", "x", "--icon", "nosuch", "--json")

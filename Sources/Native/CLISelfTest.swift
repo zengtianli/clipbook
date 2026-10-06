@@ -177,6 +177,55 @@ enum CLISelfTest {
         let sj = clip("settings", "--json").json["settings"] as? [String: Any]
         check(sj?["maxItems"] as? Int == 700 && (sj?["shortcuts"] as? [Any])?.isEmpty == true, "settings --json 回读；快捷键只读列出（默认无绑定）")
 
+        // 设置 → 快捷键: scope and clear go through ClipShortcuts; a chord is never invented by the command line.
+        func storedBindings() -> [String: ClipBinding] {
+            defaults.data(forKey: ClipShortcuts.storageKey).flatMap { try? JSONDecoder().decode([String: ClipBinding].self, from: $0) } ?? [:]
+        }
+        let keyList = clip("shortcut", "--json")
+        let keyRows = keyList.json["shortcuts"] as? [[String: Any]] ?? []
+        check(keyList.code == 0 && keyList.json["command"] as? String == "shortcut list" && keyRows.count == ClipAction.allCases.count
+              && keyRows.allSatisfy { $0["keys"] is NSNull } && storedBindings().isEmpty, "shortcut list：每个动作一行，默认没有任何绑定")
+        let keyUnbound = clip("shortcut", "scope", "search", "global", "--json")
+        check(keyUnbound.code == 2 && keyUnbound.json["error"] as? String == "invalid" && storedBindings().isEmpty
+              && clip("shortcut", "scope", "nope", "global").code == 2 && clip("shortcut", "scope", "search", "everywhere").code == 2,
+              "shortcut scope 不替你新增组合键：未录制的动作、未知动作、未知范围都退出 2")
+        // A keyRecorded ⌥⌘F for 聚焦搜索, as the Settings window stores it (cmdKey 256 | optionKey 2048).
+        let keyRecorded = ["search": ClipBinding(chord: ClipKey(code: 3, modifiers: 256 | 2048, key: "F"), scope: .application)]
+        defaults.set(try? JSONEncoder().encode(keyRecorded), forKey: ClipShortcuts.storageKey)
+        let keyWidened = clip("shortcut", "scope", "search", "global", "--json")
+        check(keyWidened.code == 0 && keyWidened.json["changed"] as? Bool == true && storedBindings()["search"]?.scope == .global
+              && storedBindings()["search"]?.chord == keyRecorded["search"]?.chord, "shortcut scope 只改作用范围，组合键不变")
+        let scopeAgain = clip("shortcut", "scope", "search", "global", "--json")
+        check(scopeAgain.code == 0 && scopeAgain.json["changed"] as? Bool == false, "shortcut scope 重复执行不再写入")
+        check(clip("shortcut", "clear", "search", "--json").json["changed"] as? Bool == true && storedBindings().isEmpty
+              && clip("shortcut", "clear", "--all", "--json").json["changed"] as? Bool == false, "shortcut clear 清除绑定；已空时 clear --all 不变")
+
+        // 配置与更新: export / import through the shared AppConfiguration; an isolated run keeps its configBackups in its own home.
+        let configFile = tmp.appendingPathComponent("cli-config.json")
+        let configState = clip("config", "--json")
+        check(configState.code == 0 && configState.json["command"] as? String == "config status" && configState.json["sync_enabled"] as? Bool == false
+              && configState.json["keys"] as? [String] == ClipPortableConfiguration.keys, "config status 只读报告开关与可迁移的偏好键")
+        check(clip("config", "export", "-o", configFile.path, "--json").code == 0 && FileManager.default.fileExists(atPath: configFile.path)
+              && clip("config", "export", "-o", configFile.path).code == 2 && clip("config", "export", "-o", configFile.path, "--force").code == 0,
+              "config export 写出配置文件；已存在时要 --force")
+        _ = clip("settings", "set", "maxItems", "900")
+        let configUnconfirmed = clip("config", "import", configFile.path, "--json")
+        check(configUnconfirmed.code == 2 && configUnconfirmed.json["error"] as? String == "confirmation_required" && defaults.integer(forKey: "maxItems") == 900
+              && clip("config", "import", tmp.appendingPathComponent("no-such.json").path, "--yes").code == 3,
+              "config import 没有 --yes 不动配置；文件不存在退出 3")
+        let configImported = clip("config", "import", configFile.path, "--yes", "--json")
+        let configBackups = home.appendingPathComponent("Configuration/\(ClipPortableConfiguration.productID)/Backups")
+        check(configImported.code == 0 && defaults.integer(forKey: "maxItems") == 700
+              && ((try? FileManager.default.contentsOfDirectory(atPath: configBackups.path))?.count ?? 0) == 1,
+              "config import 恢复导出时的配置，原配置备份在隔离数据目录里")
+        try? Data("not a configuration".utf8).write(to: configFile)
+        check(clip("config", "import", configFile.path, "--yes").code == 2 && defaults.integer(forKey: "maxItems") == 700, "config import 拒绝无法识别的文件，配置不变")
+        let configSyncDry = clip("config", "sync", "on", "--dry-run", "--json")
+        let configSyncStopped = clip("config", "sync", "on", "--yes", "--json")
+        check(configSyncDry.code == 0 && configSyncDry.json["would_change"] as? Bool == true && clip("config", "sync", "on").code == 2
+              && configSyncStopped.code == 4 && configSyncStopped.json["error"] as? String == "app_not_running"
+              && !defaults.bool(forKey: "appLifecycle.configuration.enabled"), "config sync 要 --yes 与运行中的 Clip；命令行自己不拨开关")
+
         // Deck import through the production importer, with the cross-process lock.
         let deck = tmp.appendingPathComponent("cli-deck", isDirectory: true)
         try? FileManager.default.createDirectory(at: deck, withIntermediateDirectories: true)
