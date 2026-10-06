@@ -124,9 +124,12 @@ sop:
       human: 要真人听声音
     - name: 开机自启
       command: clip settings set
-    # 下面带「运行中的 Clip 报告」的三项：App 把只有它知道的状态写进数据目录的 runtime-state.json，命令照读。
+    # 只有运行中的 Clip 知道的三项（辅助功能授权、全局键注册结果、iCloud 实时状态）：1.2.1 (89) 起 App 把它们写进数据目录的
+    # runtime-state.json，clip status / shortcut list / cloud status 照读，自检通过、已装机。真实 App 还没运行过这一版，
+    # 没有实机看到它写出文件，所以先记 missing；本人下次打开 Clip 后跑 clip status --json，permissions.accessibility.trusted
+    # 有值（且 shortcut list 的 registration 为 registered / failed、cloud status 的 live 不为 null）就改回 command。
     - name: 自动粘贴（辅助功能）是否已授权
-      command: clip status   # permissions.accessibility，运行中的 Clip 报告；没在运行时是上次的值，带时间
+      missing: 读取（clip status 的 permissions.accessibility）与 App 端发布已实现并通过自检，还没在运行中的真实 App 上核过；现在读到的是 null
     - name: 自动粘贴（辅助功能）「去授权…」
       human: 系统授权弹窗，要真人在系统设置里允许
     - name: 打开数据目录
@@ -141,14 +144,14 @@ sop:
     - name: iCloud 历史归档开关状态
       command: clip cloud status
     - name: iCloud 同步状态文字与错误提示
-      command: clip cloud status   # live，运行中的 Clip 报告；没在运行时为 null（没有同步在进行）
+      missing: 读取（clip cloud status 的 live）与 App 端发布已实现并通过自检，还没在运行中的真实 App 上核过；Clip 未运行时如实报 null
     - name: 补充最近历史
       command: clip cloud push
     # 设置 · 快捷键
     - name: 各动作的快捷键与作用范围
       command: clip shortcut list
     - name: 快捷键状态（全局键是否注册成功、系统拒绝注册的提示）
-      command: clip shortcut list   # registration：registered | failed（运行中的 Clip 报告）| app_not_running | unknown
+      missing: 读取（clip shortcut list 的 registration）与 App 端发布已实现并通过自检，还没在运行中的真实 App 上核过；Clip 未运行时如实报 app_not_running
     - name: 录制快捷键
       human: 要真人按键；默认不绑定任何键，命令也不新增组合键
     - name: 作用范围（仅 Clip 内 / 全局）
