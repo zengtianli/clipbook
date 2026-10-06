@@ -64,6 +64,30 @@
       "reviewed_at": "2026-10-01",
       "reason": "1.2.0 相对 1.1.2 新增 agent 命令行 clip（同一可执行文件的命令模式，argv 分流在 NSApplication 之前）与跨进程刷新信号；窗口里的规则改为与命令行共用（转换菜单选项、合并按钮可用条件、收藏夹图标/颜色白名单、设置页保留条数范围），取值与显示和 1.1.2 相同。主窗口、搜索、编辑、收藏流程与可见界面未变；云功能在本地版编译关闭。",
       "source_diff": "git diff 3a9f0aa..HEAD -- Sources: ClipCLI/ClipActions/CLISelfTest/CloudArchiveReader 新文件；DetailView/GridView/SidebarView/SettingsView 各 1-2 行改为引用 Transform.options、ClipRules.mergeRefusal、CollectionStyle、RecordingLimits（同值）；ClipbookApp.swift 加 CLI 分流与 ClipSignal 观察者，无新视图。"
+    },
+    "1.2.1": {
+      "reviewed_at": "2026-10-05",
+      "reason": "1.2.1 相对 1.2.0 新增应用菜单与菜单栏的「配置与更新…」入口及其独立窗口（配置导出/导入、可选 iCloud 配置同步、检查更新）。录像展示的主窗口搜索、编辑保存、收藏复制流程与可见界面未变；新窗口不在录像范围内，按历史参考沿用（本人 2026-10-05 决定推广素材沿用仍可用的既有成果，不重录）。",
+      "source_diff": "git diff 3626411..HEAD -- sop.ui 范围：只有 ClipbookApp.swift（+28：AppLifecycleUI 菜单项与配置对象接线、本地版更新源自检）和 Shortcuts.swift（+9：配置导入后 reload 绑定）；MainView/GridView/DetailView/SidebarView/SettingsView 无改动。新界面在 Sources/Shared/AppLifecycleUI.swift（独立窗口）。reviewed_media_sha256 所列 12 个文件当前 SHA256 逐一相同。",
+      "not_covered": [
+        "配置与更新窗口",
+        "配置导出与导入",
+        "真实跨设备 iCloud 配置同步",
+        "GitHub 新版下载与手动安装"
+      ],
+      "site_history_proof": {
+        "archive_sha256": "0257b371e5da46adf85111d687643a50f2605ad9e9485c2d7d962f6f7c147d47",
+        "source_sha256": "da2ca1fd9ab5257d3399f25fefe76a4496c77b6cdb9bc73c3c332a678596bb70",
+        "source_commit": "37dae7a7daf323c0579ebb0a1b946ad93acad067",
+        "checked_at": "2026-10-03T19:03:03.565878+00:00",
+        "tests": [
+          "original production --selftest",
+          "actual local UI update source is GitHub zengtianli/clipbook"
+        ]
+      },
+      "decided_by": "owner",
+      "decision": "本人 2026-10-05：「录频就用原来都好了」。教程短片与主录像同一批素材，沿用同一条 1.2.1 复核说明，不重录。",
+      "mirrors": "docs/demo/recording.json reused_for[\"1.2.1\"]"
     }
   }
 }
