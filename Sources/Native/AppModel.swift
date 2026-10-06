@@ -20,7 +20,15 @@ final class AppModel: ObservableObject {
 
     let store: ClipStore
     let settings: AppSettings
-    lazy var cloud = MacClipSync(model: self)
+    lazy var cloud: MacClipSync = {
+        let sync = MacClipSync(model: self)
+        cloudIfLoaded = sync
+        onCloudLoaded?()
+        return sync
+    }()
+    /// The iCloud archive only once something has opened it; reading this never opens it.
+    private(set) var cloudIfLoaded: MacClipSync?
+    var onCloudLoaded: (() -> Void)?
     private var settingsSubscriptions: Set<AnyCancellable> = []
     private(set) var watcher: PasteboardWatcher!
 

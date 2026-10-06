@@ -218,13 +218,56 @@ enum CLISelfTest {
         check(keyWidened.code == 0 && keyWidened.json["changed"] as? Bool == true && storedBindings()["search"]?.scope == .global
               && storedBindings()["search"]?.chord == keyRecorded["search"]?.chord, "shortcut scope 只改作用范围，组合键不变")
         let widenedRow = (keyWidened.json["shortcuts"] as? [[String: Any]])?.first { $0["action"] as? String == "search" }
-        check(widenedRow?["registration"] as? String == "unknown" && (widenedRow?["status"] as? String)?.hasPrefix("已保存") == true
+        check(widenedRow?["registration"] as? String == "app_not_running" && (widenedRow?["status"] as? String)?.hasPrefix("已保存") == true
               && (widenedRow?["status"] as? String)?.contains("已启用") == false,
-              "shortcut list 不替运行中的 App 声称全局键已启用：registration 为 unknown，status 写「已保存」")
+              "shortcut list 不替 App 声称全局键已启用：Clip 未运行时 registration 为 app_not_running，status 写「已保存」")
         let scopeAgain = clip("shortcut", "scope", "search", "global", "--json")
         check(scopeAgain.code == 0 && scopeAgain.json["changed"] as? Bool == false, "shortcut scope 重复执行不再写入")
         check(clip("shortcut", "clear", "search", "--json").json["changed"] as? Bool == true && storedBindings().isEmpty
               && clip("shortcut", "clear", "--all", "--json").json["changed"] as? Bool == false, "shortcut clear 清除绑定；已空时 clear --all 不变")
+
+        // What only the running app knows reaches the command line through ClipRuntimeState: the app-side publisher runs
+        // here over a shortcut centre whose key backend refuses ⌥⌘G, with an injected Accessibility answer.
+        let me = ProcessInfo.processInfo.processIdentifier
+        let globalKeys = ["search": ClipBinding(chord: ClipKey(code: 3, modifiers: 256 | 2048, key: "F"), scope: .global),
+                          "pause": ClipBinding(chord: ClipKey(code: 5, modifiers: 256 | 2048, key: "G"), scope: .global)]
+        defaults.set(try? JSONEncoder().encode(globalKeys), forKey: ClipShortcuts.storageKey)
+        let appCenter = ClipShortcuts(defaults: defaults, backend: RefusingKeys(refusedCode: 5), monitorsEnabled: false) { _ in }
+        var granted = true
+        let publisher = ClipRuntimePublisher(home: home, shortcuts: appCenter, trusted: { granted })
+        func keyRow(_ action: String) -> [String: Any]? {
+            (clip("shortcut", "list", "--json").json["shortcuts"] as? [[String: Any]])?.first { $0["action"] as? String == action }
+        }
+        func grant() -> [String: Any]? { (clip("status", "--json").json["permissions"] as? [String: Any])?["accessibility"] as? [String: Any] }
+        appPIDs = [me]
+        let failedRow = keyRow("pause")
+        check(keyRow("search")?["registration"] as? String == "registered" && keyRow("search")?["status"] as? String == "已启用 · 全局"
+              && failedRow?["registration"] as? String == "failed" && (failedRow?["status"] as? String)?.contains("系统拒绝注册") == true,
+              "shortcut list 读到运行中的 App 报告的注册结果：registered / failed，status 是窗口里那句话")
+        let grantLive = grant()
+        granted = false; publisher.publish()
+        let grantRevoked = grant()
+        check(grantLive?["trusted"] as? Bool == true && grantLive?["live"] as? Bool == true && grantRevoked?["trusted"] as? Bool == false,
+              "status 的 permissions.accessibility 来自运行中的 App；授权变了随之变")
+        var withCloud = publisher.snapshot()
+        withCloud.cloud = .init(syncStatus: "最近同步 12:00", archiveStatus: "已整理最近 3 条，iCloud 将增量同步", error: "账户需要重新登录", busy: false)
+        withCloud.write(home: home)
+        let cloudLive = clip("cloud", "status", "--json")
+        let liveBody = cloudLive.json["live"] as? [String: Any]
+        check(cloudLive.json["live_status"] as? String == "最近同步 12:00" && liveBody?["archive_status"] as? String == "已整理最近 3 条，iCloud 将增量同步"
+              && liveBody?["error"] as? String == "账户需要重新登录" && liveBody?["busy"] as? Bool == false,
+              "cloud status 的 live 读到 App 报告的同步状态、整理状态与错误")
+        appPIDs = []
+        let cloudStopped = clip("cloud", "status", "--json")
+        let grantStale = grant()
+        check(keyRow("search")?["registration"] as? String == "app_not_running" && cloudStopped.json["live"] is NSNull
+              && (cloudStopped.json["live_status"] as? String)?.contains("未运行") == true
+              && grantStale?["trusted"] as? Bool == false && grantStale?["live"] as? Bool == false && grantStale?["as_of"] is String,
+              "Clip 未运行：全局键 app_not_running、iCloud live 为 null；辅助功能给出上次的值并标明不是实时")
+        try? FileManager.default.removeItem(at: ClipRuntimeState.url(home: home))
+        check(grant()?["trusted"] is NSNull && grant()?["as_of"] is NSNull, "没有 App 报告时 permissions.accessibility.trusted 为 null（不猜）")
+        withExtendedLifetime(publisher) {}
+        defaults.removeObject(forKey: ClipShortcuts.storageKey)
 
         // 配置与更新: export / import through the shared AppConfiguration; an isolated run keeps its configBackups in its own home.
         let configFile = tmp.appendingPathComponent("cli-config.json")
@@ -361,4 +404,13 @@ enum CLISelfTest {
                                    hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
         return rep.representation(using: .png, properties: [:])!
     }
+}
+
+/// A key backend that registers nothing and refuses one key code, to stand in for the system refusing a global key.
+@MainActor private final class RefusingKeys: ClipKeyRegistration {
+    var onPress: ((UInt32) -> Void)?
+    let refusedCode: UInt32
+    init(refusedCode: UInt32) { self.refusedCode = refusedCode }
+    func register(_ chord: ClipKey, id: UInt32) -> OSStatus { chord.code == refusedCode ? -9878 : noErr }
+    func unregister(_ id: UInt32) {}
 }

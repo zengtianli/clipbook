@@ -188,7 +188,7 @@ enum ClipCLI {
         usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据、同一份设置）
 
         读（只读打开库，不写入任何状态）:
-          status                     版本、运行状态、数据目录、记录数、记录偏好、Deck、iCloud 开关（读回入口）
+          status                     版本、运行状态、数据目录、记录数、记录偏好、Deck、iCloud 开关、辅助功能授权（读回入口）
           stats                      侧栏计数：全部 / 置顶 / 类型 / 来源 app / 收藏夹
           list [筛选]                 与网格相同的顺序（置顶在前、新的在上）与分页
           search <文本> [筛选]        list --query <文本>
@@ -197,10 +197,10 @@ enum ClipCLI {
           collections                收藏夹及条数
           settings                   记录偏好、复制声音、忽略的 app、已录制的快捷键
           ignore list                忽略名单
-          shortcut list              每个动作已保存的快捷键与作用范围
+          shortcut list              每个动作的快捷键、作用范围与状态（全局键是否注册成功由运行中的 Clip 报告）
           config status              「使用 iCloud 记住配置」开关与可迁移的偏好键
           config export -o <file>    导出配置（--force 覆盖；只写你指定的文件）
-          cloud status               iCloud 归档开关、账户是否绑定、归档计数与本机归档缓存统计
+          cloud status               iCloud 归档开关、账户是否绑定、同步状态与错误（Clip 运行时）、归档计数与本机缓存统计
           cloud list [筛选]           本机归档缓存里 iPhone / iPad 可见的历史（与手机列表同一规则；local_id = Mac 库里的同一条）
           cloud show <key>           归档里一条的全文、来源、日期；-o <file> 导出图片（只写你指定的文件）
           version                    版本
@@ -246,13 +246,16 @@ enum ClipCLI {
           5  库或导入正被占用
 
         环境：CLIPBOOK_HOME（数据目录）· CLIPBOOK_PREFERENCES_SUITE（偏好域）· CLIPBOOK_BACKGROUND=1（配合前两者时改用隔离剪贴板）
+        只有运行中的 Clip 知道的三样，由它写进数据目录的 runtime-state.json，命令照读：辅助功能是否已授权（status 的
+          permissions.accessibility，带时间；App 没在运行时是上次的值）、全局快捷键是否注册成功（shortcut list 的 registration：
+          registered | failed | app_not_running | unknown）、iCloud 实时同步状态与错误（cloud status 的 live）。
         仅在窗口中（要真人，或只在窗口里有意义）：
           粘贴到前一个 App（切回它并合成 ⌘V）· 录制快捷键（要真人按键）· 辅助功能「去授权…」（系统授权弹窗）· 试听音效 ·
           网格里的选择（单击、⌘/⇧ 多选、方向键、全选、取消）· 显示 / 隐藏主窗口 · 打开设置窗口与「配置与更新…」窗口 ·
           聚焦搜索 · 编辑菜单（撤销、重做、剪切、粘贴、全选）· 在 Finder 中显示 · 在浏览器打开 · 打开数据目录 ·
           关于 / 隐藏 / 最小化 / 关闭窗口 / 退出。
         暂无命令（窗口里看得到，命令还读不到或做不了）：
-          辅助功能是否已授权 · 全局快捷键是否注册成功 · iCloud 实时同步状态与错误 · 检查更新 · 升级到新版。
+          检查更新 · 升级到新版（共享的「配置与更新」模块还没有命令入口）。
         命令不弹窗、不抢焦点、不申请权限、不合成按键。
         """
     }
@@ -269,7 +272,7 @@ enum ClipCLI {
         """
 
     static let help: [String: String] = [
-        "status": "usage: clip status [--json]\n版本、App 是否在运行、数据目录与库大小、记录数、最近记录时间、记录偏好、开机自启状态、Deck 导入、iCloud 开关。只读。",
+        "status": "usage: clip status [--json]\n版本、App 是否在运行、数据目录与库大小、记录数、最近记录时间、记录偏好、开机自启状态、Deck 导入、iCloud 开关。只读。\npermissions.accessibility：Clip.app 的辅助功能授权（只用于窗口里的自动粘贴），由运行中的 App 报告；trusted 为 true | false | null（这一版还没运行过），live = 报告它的 App 仍在运行，as_of = 报告时间。",
         "stats": "usage: clip stats [--json]\n与左栏一致的计数：全部、置顶、各类型、来源 app（全部，按条数）、各收藏夹。只读。",
         "list": "usage: clip list [选项]\n与网格相同的排序与筛选。只读。\n" + filterHelp,
         "search": "usage: clip search <文本> [选项]\n等同 clip list --query <文本>。只读。\n" + filterHelp,
@@ -314,7 +317,8 @@ enum ClipCLI {
                    clip shortcut clear --all [--json]
             设置 → 快捷键。动作：\(ClipAction.allCases.map(\.rawValue).joined(separator: " "))
             list：每个动作已保存的组合键与作用范围（application = 仅 Clip 内，global = 全局）。只读。
-                  全局键由运行中的 Clip 注册，命令读不到注册结果：registration 为 unknown，status 写「已保存」而不是「已启用」。
+                  全局键由运行中的 Clip 注册并报告结果：registration 为 registered | failed（status 是窗口里那句话）；
+                  Clip 未运行为 app_not_running，还没报告为 unknown，这两种 status 写「已保存」而不是「已启用」；仅 Clip 内的键为 not_needed。
             scope：改已录制组合键的作用范围，沿用窗口里的校验（保留组合、重复绑定会被拒绝，退出码 2）。
             clear：清除一个动作的绑定；--all =「清除所有快捷键」。
             组合键本身要真人按下，只在窗口里录制；默认不绑定任何键，命令也不会替你新增组合键。
@@ -344,7 +348,7 @@ enum ClipCLI {
                    clip cloud push --yes [--dry-run] [--json]
                    clip cloud on|off --yes [--dry-run] [--json]
             status：iCloud 历史归档开关、是否已绑定账户（只给是否）、归档标记计数、最近 500 条里待归档条数、来自 iPhone 的记录数、本机归档缓存统计。
-            status 读的是这台 Mac 的开关与归档缓存；同步状态文字与错误只在运行中的 App 内存里（live_status 字段写明读不到），手机那一侧的开关与状态也读不到。
+            status 读的是这台 Mac 的开关与归档缓存；live 是运行中的 Clip 报告的同步状态文字、整理状态与错误（Clip 未运行或还没打开归档时为 null，live_status 写明原因）。手机那一侧的开关与状态读不到。
             list：本机归档缓存里 iPhone/iPad 可见的历史。只读打开，列表规则就是手机端 ClipLibrary.list（同一份代码：每个内容取最新一行、删除标记隐藏、新的在上），新鲜度取决于 App 上次同步。
                   JSON 每条带 local_id：Mac 库里对应的记录 id（没有或已清理为 null），可接 clip copy / clip show。
             show：手机详情页的内容——全文、标题、来源、日期、是否收藏；图片给出字节数，-o <file> 导出原图（已存在要 --force）。key 可只给前缀（唯一即可）。只读。
@@ -537,6 +541,13 @@ enum ClipCLI {
             }
         }()
         let deckAt = fm.fileExists(atPath: dbURL.path) ? (try? readStore(c).meta("deck_imported")) ?? nil : nil
+        // Accessibility is granted to Clip.app, and only the app can ask the system about its own grant (this process
+        // would be answered for its terminal). It reports what the running app last published, with the time.
+        let runtime = ClipRuntimeState.read(home: c.home)
+        let live = runtime.map { pids.contains($0.pid) } ?? false
+        let accessibility: [String: Any] = ["trusted": runtime.map { $0.accessibilityTrusted as Any } ?? NSNull(), "as_of": iso(runtime?.updatedAt),
+                                            "live": live, "reported_by": "running_app",
+                                            "used_for": "窗口里的「粘贴到前一个 app」；clip 的命令本身不需要任何系统权限"]
         let body: [String: Any] = [
             "app": ["name": info.name, "version": info.version, "build": info.build, "bundle_id": info.bundleID,
                     "path": info.path, "edition": info.edition],
@@ -550,13 +561,15 @@ enum ClipCLI {
             "icloud": ["supported": ProductIdentity.cloudSupported,
                        "enabled": ProductIdentity.cloudSupported && c.defaults.bool(forKey: "cloudEnabled")],
             "preferences_domain": c.domain,
+            "permissions": ["accessibility": accessibility],
         ]
         if p.json { emitJSON(c, body); return }
+        let grant = runtime.map { "\($0.accessibilityTrusted ? "已授权" : "未授权")（\(live ? "运行中的 App 报告" : "App 上次运行时报告")）" } ?? "未知（这一版 Clip 还没运行过）"
         c.out("""
         \(info.name) \(info.version) (\(info.build)) · \(info.edition == "icloud" ? "iCloud 版" : "本地版") · App \(pids.isEmpty ? "未运行" : "运行中 pid \(pids.map(String.init).joined(separator: ","))")
         数据：\(c.home.path)（\(total) 条，\(bytes / 1024) KB）
         记录：\(s.paused ? "已暂停" : "记录中") · 纯文本 \(s.plainTextOnly ? "开" : "关") · 链接标题 \(s.fetchLinkTitles ? "开" : "关") · 最多保留 \(s.maxItems) 条 · 保留时长 \(s.retentionDays == 0 ? "不限" : "\(s.retentionDays) 天") · 忽略 \(s.ignoredBundles.count) 个 app
-        开机自启：\(login) · Deck：\(DeckImporter.available(at: c.deckHome) ? "可导入" : "未发现")\(deckAt.map { "（上次导入 \($0)）" } ?? "") · iCloud 归档：\(ProductIdentity.cloudSupported ? (c.defaults.bool(forKey: "cloudEnabled") ? "开" : "关") : "本版本不含")
+        开机自启：\(login) · Deck：\(DeckImporter.available(at: c.deckHome) ? "可导入" : "未发现")\(deckAt.map { "（上次导入 \($0)）" } ?? "") · iCloud 归档：\(ProductIdentity.cloudSupported ? (c.defaults.bool(forKey: "cloudEnabled") ? "开" : "关") : "本版本不含") · 辅助功能（自动粘贴）：\(grant)
         """)
     }
 
@@ -1126,16 +1139,27 @@ enum ClipCLI {
         }
         // This process registers nothing (StoredOnlyKeys): whether a global key is live is known only to the running
         // app and shown in its 快捷键 page. Say "saved", not "enabled", and mark the registration unknown.
+        // registered / failed come from the running app (ClipRuntimeState, same pid, same chord); without it, or right
+        // after this command changed a binding (the app is still re-reading), the answer is app_not_running / unknown.
+        let pids = c.runningApp()
+        let runtime = changed ? nil : ClipRuntimeState.read(home: c.home).flatMap { pids.contains($0.pid) ? $0 : nil }
         let rows: [[String: Any]] = ClipAction.allCases.map { a in
             let b = center.binding(a)
-            let global = b?.scope == .global
-            let registration: Any = b == nil ? NSNull() : (global ? "unknown" : "not_needed")
+            var registration: Any = NSNull()
+            var status = center.status(a)
+            if let b, b.scope == .global, center.errors[a.rawValue] == nil {
+                if let known = runtime?.shortcuts[a.rawValue], known.keys == b.chord.label {
+                    registration = known.registered ? "registered" : "failed"; status = known.status
+                } else if pids.isEmpty {
+                    registration = "app_not_running"; status = "已保存 · 全局（Clip 未运行，全局键未注册）"
+                } else {
+                    registration = "unknown"; status = "已保存 · 全局（运行中的 Clip 还没报告注册结果）"
+                }
+            } else if b != nil { registration = "not_needed" }
             return ["action": a.rawValue, "title": a.title, "keys": b.map { $0.chord.label as Any } ?? NSNull(),
-                    "scope": b.map { $0.scope.rawValue as Any } ?? NSNull(),
-                    "status": global && center.errors[a.rawValue] == nil ? "已保存 · 全局（是否注册成功只显示在窗口的快捷键页）" : center.status(a),
-                    "registration": registration]
+                    "scope": b.map { $0.scope.rawValue as Any } ?? NSNull(), "status": status, "registration": registration]
         }
-        if p.json { emitJSON(c, ["shortcuts": rows, "changed": changed, "app_running": !c.runningApp().isEmpty]); return }
+        if p.json { emitJSON(c, ["shortcuts": rows, "changed": changed, "app_running": !pids.isEmpty]); return }
         c.out(rows.map { "\($0["action"] ?? "")\t\(($0["keys"] as? String) ?? "-")\t\(($0["scope"] as? String) ?? "-")\t\($0["status"] ?? "")" }.joined(separator: "\n"))
     }
 
@@ -1233,8 +1257,18 @@ enum ClipCLI {
             let production = MacClipSync.production
             var body: [String: Any] = ["supported": ProductIdentity.cloudSupported, "environment": production ? "Production" : "Development",
                                        "enabled": ProductIdentity.cloudSupported && c.defaults.bool(forKey: "cloudEnabled"),
-                                       "account_bound": c.defaults.string(forKey: MacClipSync.accountKey) != nil,
-                                       "live_status": "只在 App 的 设置 → iCloud 里显示（同步状态与错误不落盘）"]
+                                       "account_bound": c.defaults.string(forKey: MacClipSync.accountKey) != nil]
+            // 设置 → iCloud 的状态文字与错误：运行中的 App 发布（ClipRuntimeState），App 未运行就没有同步在进行。
+            let pids = c.runningApp()
+            let archive = ClipRuntimeState.read(home: c.home).flatMap { pids.contains($0.pid) ? $0 : nil }
+            if let archive, let state = archive.cloud {
+                body["live_status"] = state.syncStatus
+                body["live"] = ["sync_status": state.syncStatus, "archive_status": state.archiveStatus, "error": state.error as Any? ?? NSNull(),
+                                "busy": state.busy, "as_of": iso(archive.updatedAt)]
+            } else {
+                body["live_status"] = pids.isEmpty ? "Clip 未运行，没有同步在进行" : "运行中的 Clip 还没打开 iCloud 归档（归档未开启，或还没报告）"
+                body["live"] = NSNull()
+            }
             if FileManager.default.fileExists(atPath: ClipStore.databaseURL(home: c.home).path) {
                 let store = try readStore(c)
                 var markers: [String: Any] = [:]

@@ -89,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var pendingURLs: [URL] = []
     private var pendingActions: [ClipAction] = []
     private(set) var shortcuts: ClipShortcuts!
+    private var runtimeState: ClipRuntimePublisher?
     private var configuration: AppConfiguration?
 
     override init() {
@@ -197,6 +198,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 ClipSignal.observe(ClipSignal.cloudEnableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(true) } }
                 ClipSignal.observe(ClipSignal.cloudDisableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(false) } }
             }
+            // What only this process knows (Accessibility grant, global-key registration, live iCloud status) for `clip` to read.
+            let runtime = ClipRuntimePublisher(home: AppModel.shared.store.home, shortcuts: shortcuts, cloud: { AppModel.shared.cloudIfLoaded })
+            AppModel.shared.onCloudLoaded = { [weak runtime] in DispatchQueue.main.async { MainActor.assumeIsolated { runtime?.publish() } } }
+            runtimeState = runtime
             if CommandLine.arguments.contains("--background") {
                 AppModel.shared.suspendInterface()
             } else {

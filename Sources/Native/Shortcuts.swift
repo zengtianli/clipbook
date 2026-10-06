@@ -138,6 +138,8 @@ final class ClipShortcuts: ObservableObject {
     }
 
     func binding(_ action: ClipAction) -> ClipBinding? { bindings[action.rawValue] }
+    /// A global key the system accepted and that is live right now (not suspended for recording).
+    func isRegistered(_ action: ClipAction) -> Bool { live[action.rawValue] != nil }
     func reload() {
         let restored: [String: ClipBinding]
         if let data = defaults.data(forKey: Self.storageKey) {
