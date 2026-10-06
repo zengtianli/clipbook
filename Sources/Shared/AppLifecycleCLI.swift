@@ -55,7 +55,9 @@ enum AppLifecycleCLI {
         """
     }
     /// One line for the product's「仅在窗口中」list.
-    static let helpWindowOnly = "升级到新版（替换并重启 App，要本人在「配置与更新…」窗口确认；update check 给出新版与升级办法）· 打开「配置与更新…」窗口"
+    static let helpWindowOnly = "打开「配置与更新…」窗口"
+    /// One line for the product's「暂无命令」list; register the feature as missing with this reason.
+    static let helpNoCommand = "升级到新版 / 下载新版（命令不做静默安装：update check 给出新版、按钮名、安装包地址与步骤，替换并重启 App 仍在「配置与更新…」窗口确认）"
 
     static func help(_ command: String) -> String {
         """
@@ -78,6 +80,7 @@ enum AppLifecycleCLI {
                            state（update_available | up_to_date | ahead_of_channel）, message, upgrade{in_app, button, how, download_url}
         退出码：0 成功 · 1 操作未完成（文件不存在、导入被拒、同步未完成、检查未完成、没有可迁移配置）· 2 用法错误（含缺 --yes / --force）
         仅在窗口中：\(helpWindowOnly)
+        暂无命令：\(helpNoCommand)
         同步状态那句话由运行中的 App 持有：config sync on 会回报它自己这次同步的结果，之后的实时状态看窗口。
         命令不弹窗、不抢焦点、不申请权限、不做静默安装。
         """
