@@ -54,7 +54,7 @@ sop:
     - name: 删除记录（单条或所选，带确认）
       command: clip delete
     - name: 粘贴到前一个 app
-      human: 要切回别的 App 并合成 ⌘V，命令不合成按键；clip copy 写入剪贴板后由本人粘贴
+      human: 只在窗口里有意义：「前一个 app」是打开 Clip 窗口之前的前台应用，粘贴要切回它并合成 ⌘V；命令不抢焦点、不合成按键，clip copy 写入剪贴板后由本人粘贴
     - name: 置顶
       command: clip pin
     - name: 取消置顶
@@ -124,7 +124,9 @@ sop:
       human: 要真人听声音
     - name: 开机自启
       command: clip settings set
-    - name: 自动粘贴（辅助功能）授权状态与「去授权…」
+    - name: 自动粘贴（辅助功能）是否已授权
+      missing: clip status 没有权限字段。命令行进程查到的是启动它的终端的辅助功能授权，不是 Clip 的；要由运行中的 App 把结果报出来，还没做
+    - name: 自动粘贴（辅助功能）「去授权…」
       human: 系统授权弹窗，要真人在系统设置里允许
     - name: 打开数据目录
       human: 在访达中显示，只在窗口里有意义；路径见 clip status
@@ -135,13 +137,17 @@ sop:
       command: clip cloud on
     - name: iCloud 历史归档 · 关闭
       command: clip cloud off
-    - name: iCloud 同步状态与归档内容
+    - name: iCloud 历史归档开关状态
       command: clip cloud status
+    - name: iCloud 同步状态文字与错误提示
+      missing: 同步状态与错误只在运行中的 App 内存里，不落盘；clip cloud status 只读得到开关、账户是否绑定和归档计数（live_status 字段写明读不到）
     - name: 补充最近历史
       command: clip cloud push
     # 设置 · 快捷键
-    - name: 各动作的快捷键、作用范围与状态
+    - name: 各动作的快捷键与作用范围
       command: clip shortcut list
+    - name: 快捷键状态（全局键是否注册成功、系统拒绝注册的提示）
+      missing: 全局键由运行中的 App 注册，结果只在 App 内存里；clip shortcut list 的 registration 为 unknown，只读得到已保存的绑定
     - name: 录制快捷键
       human: 要真人按键；默认不绑定任何键，命令也不新增组合键
     - name: 作用范围（仅 Clip 内 / 全局）
@@ -160,9 +166,9 @@ sop:
     - name: 导入配置…
       command: clip config import
     - name: 检查更新
-      missing: 没有检查更新命令。私有渠道的发行记录在 iCloud Drive 里，命令行进程读取可能触发系统的文件访问授权，未验证，没有补
+      missing: 共享生命周期模块暂无命令入口
     - name: 升级到新版… / 下载新版…
-      missing: 没有升级命令。窗口里确认后由 App 下载、校验并替换自身再重开；本机装机走 ./build.sh
+      missing: 共享生命周期模块暂无命令入口
   account:
     mode: none
     rationale: 本地剪贴板工具，没有产品账号、注册或登录；可选的 iCloud 历史归档与配置同步使用本机已登录的 Apple 账户（系统管理的 CloudKit 私有库与 iCloud Drive），不由本产品创建或管理账号。

@@ -48,6 +48,12 @@ check(code == 0 and "usage: clip" in p.stdout and dt < 5, f"clip --help 退出 0
 code, v, _ = run("--version", "--json")
 check(code == 0 and v["ok"] and v["name"] == "Clip" and v["build"] not in ("", "unknown"), f"经链接重入真实可执行：{v and v['name']} {v and v['version']} ({v and v['build']})")
 code, _, p = run("frobnicate"); check(code == 2 and "未知命令" in p.stderr, "未知命令退出 2")
+code, bad, _ = run("version", "--definitely-not-a-flag", "--json")
+check(code == 2 and bad["ok"] is False and bad["error"] == "usage" and bad["command"] == "version", "version 多余的参数退出 2")
+help_lines = [l.strip() for l in run("--help")[2].stdout.splitlines()]
+unlisted = [c for c in ["unpin", "pause", "resume", "ignore add", "ignore remove", "shortcut scope", "shortcut clear", "cloud show", "cloud list", "config import"]
+            if not any(l == c or l.startswith(c + " ") for l in help_lines)]
+check(not unlisted, f"顶层帮助在行首列出每个子命令{'（缺 ' + '、'.join(unlisted) + '）' if unlisted else ''}")
 for cmd in ["status", "stats", "list", "search", "show", "copy", "export", "add", "edit", "transform", "pin", "unpin", "delete",
             "merge", "clear", "collections", "collection", "settings", "ignore", "pause", "resume", "import-deck", "cloud", "shortcut", "config"]:
     if run(cmd, "--help")[0] != 0: failures.append(f"{cmd} --help")
@@ -75,6 +81,7 @@ code, st, _ = run("settings", "--json"); check(st["settings"]["maxItems"] == 800
 code, sc, _ = run("shortcut", "list", "--json")
 check(code == 0 and sc["command"] == "shortcut list" and len(sc["shortcuts"]) == 12 and all(r["keys"] is None for r in sc["shortcuts"]),
       "shortcut list：十二个动作，默认没有任何绑定")
+check(all(r["registration"] is None and r["status"] for r in sc["shortcuts"]), "shortcut list：没有绑定时 registration 为 null")
 code, e, _ = run("shortcut", "scope", "search", "global", "--json")
 check(code == 2 and e["ok"] is False and e["error"] == "invalid" and run("shortcut", "clear", "--all")[0] == 0
       and run("settings", "--json")[1]["settings"]["shortcuts"] == [], "shortcut scope 不新增组合键（退出 2）；clear --all 空操作")
@@ -101,7 +108,7 @@ code, dup, _ = run("add", "--text", "HELLO FROM AGENT", "--json")
 check(code == 0 and dup["deduplicated"] is True and dup["previous_source"]["app_bundle"] == "cyou.tianli.clipbook.cli", "去重时给出原来源 previous_source")
 check(run("cloud", "frobnicate")[0] == 2, "cloud 未知子命令退出 2")
 if v["edition"] == "icloud":
-    check(run("cloud", "list")[0] == 3, "无归档缓存 cloud list 退出 3")
+    check(run("cloud", "list")[0] == 3 and run("cloud", "show", "abc")[0] == 3 and run("cloud", "show")[0] == 2, "无归档缓存 cloud list / cloud show 退出 3；cloud show 缺 key 退出 2")
     check(run("cloud", "push", "--yes")[0] == 2, "iCloud 归档未开时 cloud push 退出 2")
     code, dry, _ = run("cloud", "on", "--dry-run", "--json")
     check(code == 0 and dry["dry_run"] is True and dry["would_change"] is True and run("cloud", "on")[0] == 2, "cloud on 需 --yes；--dry-run 只报告")

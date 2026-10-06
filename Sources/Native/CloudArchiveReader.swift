@@ -42,6 +42,11 @@ struct CloudArchiveReader {
         try ClipLibrary.list(in: context, search: search, filter: filter, limit: limit)
     }
 
+    /// The archived original image of one listed item (the phone detail page reads the same attribute).
+    func imageData(_ item: PocketClip) throws -> Data? {
+        try context.existingObject(with: item.objectID).value(forKey: "image") as? Data
+    }
+
     /// Visible = everything the phone list shows (the shared rule, unfiltered); rows and tombstones are raw counts.
     func stats() throws -> Stats {
         let visible = try list(limit: .max)

@@ -114,6 +114,9 @@ enum ClipCLI {
             return Exit.ok.rawValue
         }
         if ["--version", "version"].contains(verb) {
+            let extra = args.dropFirst().filter { $0 != "--json" }
+            if extra.contains("--help") || extra.contains("-h") { c.out(help["version"] ?? usage()); return Exit.ok.rawValue }
+            if let bad = extra.first { return fail(c, .usage("version 不接受参数 \(bad)"), json: wantsJSON) }
             let info = hostInfo()
             if wantsJSON { emitJSON(c, ["name": info.name, "version": info.version, "build": info.build, "edition": info.edition]) }
             else { c.out("\(info.name) \(info.version) (\(info.build))") }
@@ -194,24 +197,32 @@ enum ClipCLI {
           collections                收藏夹及条数
           settings                   记录偏好、复制声音、忽略的 app、已录制的快捷键
           ignore list                忽略名单
-          shortcut list              每个动作的快捷键、作用范围与状态
+          shortcut list              每个动作已保存的快捷键与作用范围
           config status              「使用 iCloud 记住配置」开关与可迁移的偏好键
           config export -o <file>    导出配置（--force 覆盖；只写你指定的文件）
-          cloud status | cloud list  iCloud 归档状态与本机归档缓存（只读；与 iPhone / iPad 列表同一规则）
+          cloud status               iCloud 归档开关、账户是否绑定、归档计数与本机归档缓存统计
+          cloud list [筛选]           本机归档缓存里 iPhone / iPad 可见的历史（与手机列表同一规则；local_id = Mac 库里的同一条）
+          cloud show <key>           归档里一条的全文、来源、日期；-o <file> 导出图片（只写你指定的文件）
           version                    版本
 
         写（沿用窗口里的校验；运行中的 Clip 会重新读取）:
           add (--text <s> | --stdin | --image <file>) [--title <t>] [--from <id>] [--no-fetch-title]
           edit <id> [--text <s> | --stdin] [--title <t>]
           transform <id> <plain|trim|upper|lower|capitalize|one-line|json> [--copy]
-          pin <id> | unpin <id>
+          pin <id>                                   置顶
+          unpin <id>                                 取消置顶
           merge <id> <id> [<id>...]
           delete <id>... --yes [--dry-run]
           clear --yes [--dry-run]                    清空历史，保留置顶与收藏夹里的
           collection create|edit|move|delete|add|remove …
-          settings set <key> <value> | pause | resume | ignore add|remove <bundle-id>
+          settings set <key> <value>                 记录偏好与复制声音
           settings set launchAtLogin true|false [--dry-run]   系统登录项（只对已安装的 Clip，隔离运行时拒绝）
-          shortcut scope <动作> application|global | shortcut clear <动作>|--all
+          pause                                      暂停记录
+          resume                                     恢复记录
+          ignore add <bundle-id>                     加入忽略名单
+          ignore remove <bundle-id>                  移出忽略名单
+          shortcut scope <动作> application|global    改已录制组合键的作用范围
+          shortcut clear <动作>|--all                 清除绑定
           config import <file> --yes                 导入配置（原配置自动备份）
           import-deck [--deck-home <dir>]
 
@@ -235,9 +246,14 @@ enum ClipCLI {
           5  库或导入正被占用
 
         环境：CLIPBOOK_HOME（数据目录）· CLIPBOOK_PREFERENCES_SUITE（偏好域）· CLIPBOOK_BACKGROUND=1（配合前两者时改用隔离剪贴板）
-        仅在窗口中：粘贴到其他 App（合成 ⌘V）、录制快捷键（要真人按键）与全局键是否注册成功、辅助功能授权、试听音效、
-                    iCloud 实时同步状态、窗口的显示 / 隐藏 / 搜索聚焦 / 选择 / 预览、在 Finder 中显示、在浏览器打开、
-                    打开数据目录、检查更新与升级到新版、关于 / 退出。命令不弹窗、不抢焦点、不申请权限、不合成按键。
+        仅在窗口中（要真人，或只在窗口里有意义）：
+          粘贴到前一个 App（切回它并合成 ⌘V）· 录制快捷键（要真人按键）· 辅助功能「去授权…」（系统授权弹窗）· 试听音效 ·
+          网格里的选择（单击、⌘/⇧ 多选、方向键、全选、取消）· 显示 / 隐藏主窗口 · 打开设置窗口与「配置与更新…」窗口 ·
+          聚焦搜索 · 编辑菜单（撤销、重做、剪切、粘贴、全选）· 在 Finder 中显示 · 在浏览器打开 · 打开数据目录 ·
+          关于 / 隐藏 / 最小化 / 关闭窗口 / 退出。
+        暂无命令（窗口里看得到，命令还读不到或做不了）：
+          辅助功能是否已授权 · 全局快捷键是否注册成功 · iCloud 实时同步状态与错误 · 检查更新 · 升级到新版。
+        命令不弹窗、不抢焦点、不申请权限、不合成按键。
         """
     }
 
@@ -265,6 +281,7 @@ enum ClipCLI {
         "transform": "usage: clip transform <id> <plain|trim|upper|lower|capitalize|one-line|json> [--copy] [--json]\n「转换」菜单：结果保存到这条记录。plain 只用于富文本；图片、文件不能转换。默认不动剪贴板，--copy 同时写入剪贴板（窗口里的行为）。",
         "pin": "usage: clip pin <id> [--json]\n置顶（置顶的不会被淘汰或清空）。",
         "unpin": "usage: clip unpin <id> [--json]\n取消置顶。",
+        "version": "usage: clip version [--json]\n版本、构建号与版本类型（icloud / local）。只读，不接受其他参数。",
         "delete": "usage: clip delete <id>... --yes [--dry-run] [--json]\n删除记录及其图片/RTF 文件，不可撤销；必须带 --yes。--dry-run 只报告将删除的条数。不删除 iCloud 归档（与 App 相同）。",
         "merge": "usage: clip merge <id> <id> [<id>...] [--json]\n按给出的顺序以空行合并成一条新文本（原条目保留）。至少两条；图片、文件不能合并。",
         "clear": "usage: clip clear --yes [--dry-run] [--json]\n清空历史，保留置顶和收藏夹里的，不可撤销；必须带 --yes。--dry-run 只报告将删除的条数。",
@@ -296,7 +313,8 @@ enum ClipCLI {
                    clip shortcut clear <动作> [--json]
                    clip shortcut clear --all [--json]
             设置 → 快捷键。动作：\(ClipAction.allCases.map(\.rawValue).joined(separator: " "))
-            list：每个动作的组合键、作用范围（application = 仅 Clip 内，global = 全局）与状态。只读。
+            list：每个动作已保存的组合键与作用范围（application = 仅 Clip 内，global = 全局）。只读。
+                  全局键由运行中的 Clip 注册，命令读不到注册结果：registration 为 unknown，status 写「已保存」而不是「已启用」。
             scope：改已录制组合键的作用范围，沿用窗口里的校验（保留组合、重复绑定会被拒绝，退出码 2）。
             clear：清除一个动作的绑定；--all =「清除所有快捷键」。
             组合键本身要真人按下，只在窗口里录制；默认不绑定任何键，命令也不会替你新增组合键。
@@ -313,7 +331,7 @@ enum ClipCLI {
             import：与「导入配置…」相同：先备份原配置再覆盖，必须 --yes；运行中的 Clip 随后重新读取。
                     「使用 iCloud 记住配置」开着时退出码 4（同步由运行中的 App 负责：在窗口里导入，或先 sync off）。
             sync：请运行中的 Clip 拨动「使用 iCloud 记住配置」；必须 --yes，Clip 未运行时退出码 4，结果用 config status 回读。
-            检查更新与升级只在窗口里。
+            检查更新与升级到新版暂无命令（共享的「配置与更新」模块还没有命令入口）。
             """,
         "ignore": "usage: clip ignore [list] | clip ignore add <bundle-id> | clip ignore remove <bundle-id> [--json]\n「忽略这些 app 的复制」名单。",
         "pause": "usage: clip pause [--json]\n暂停记录（= clip settings set paused true）。",
@@ -322,10 +340,14 @@ enum ClipCLI {
         "cloud": """
             usage: clip cloud status [--json]
                    clip cloud list [--favorites | --kind text|link|image] [--query <文本>] [--limit N] [--no-text] [--json]
+                   clip cloud show <key> [-o <file>] [--force] [--no-text] [--json]
                    clip cloud push --yes [--dry-run] [--json]
                    clip cloud on|off --yes [--dry-run] [--json]
             status：iCloud 历史归档开关、是否已绑定账户（只给是否）、归档标记计数、最近 500 条里待归档条数、来自 iPhone 的记录数、本机归档缓存统计。
+            status 读的是这台 Mac 的开关与归档缓存；同步状态文字与错误只在运行中的 App 内存里（live_status 字段写明读不到），手机那一侧的开关与状态也读不到。
             list：本机归档缓存里 iPhone/iPad 可见的历史。只读打开，列表规则就是手机端 ClipLibrary.list（同一份代码：每个内容取最新一行、删除标记隐藏、新的在上），新鲜度取决于 App 上次同步。
+                  JSON 每条带 local_id：Mac 库里对应的记录 id（没有或已清理为 null），可接 clip copy / clip show。
+            show：手机详情页的内容——全文、标题、来源、日期、是否收藏；图片给出字节数，-o <file> 导出原图（已存在要 --force）。key 可只给前缀（唯一即可）。只读。
             push：请运行中的 Clip 执行 设置 → iCloud「补充最近历史」（归档未开时退出码 2）。
             on / off：请运行中的 Clip 拨动「iCloud 历史归档」开关（App 做账户检查）。
             push/on/off 会上传或停止同步你的 iCloud：必须 --yes；--dry-run 只报告；Clip 未运行时退出码 4；结果用 cloud status 回读。
@@ -1102,10 +1124,16 @@ enum ClipCLI {
             _ = c.defaults.synchronize()
             if c.notify { ClipSignal.post(ClipSignal.preferencesChanged, scope: c.domain) }
         }
+        // This process registers nothing (StoredOnlyKeys): whether a global key is live is known only to the running
+        // app and shown in its 快捷键 page. Say "saved", not "enabled", and mark the registration unknown.
         let rows: [[String: Any]] = ClipAction.allCases.map { a in
             let b = center.binding(a)
+            let global = b?.scope == .global
+            let registration: Any = b == nil ? NSNull() : (global ? "unknown" : "not_needed")
             return ["action": a.rawValue, "title": a.title, "keys": b.map { $0.chord.label as Any } ?? NSNull(),
-                    "scope": b.map { $0.scope.rawValue as Any } ?? NSNull(), "status": center.status(a)]
+                    "scope": b.map { $0.scope.rawValue as Any } ?? NSNull(),
+                    "status": global && center.errors[a.rawValue] == nil ? "已保存 · 全局（是否注册成功只显示在窗口的快捷键页）" : center.status(a),
+                    "registration": registration]
         }
         if p.json { emitJSON(c, ["shortcuts": rows, "changed": changed, "app_running": !c.runningApp().isEmpty]); return }
         c.out(rows.map { "\($0["action"] ?? "")\t\(($0["keys"] as? String) ?? "-")\t\(($0["scope"] as? String) ?? "-")\t\($0["status"] ?? "")" }.joined(separator: "\n"))
@@ -1239,10 +1267,11 @@ enum ClipCLI {
             let filter = p.has("favorites") ? "favorites" : p.options["kind"] ?? "all"
             let entries = try reader.list(search: p.options["query"] ?? "", filter: filter, limit: limit)
             let text = !p.has("no-text")
+            let local = localRecords(c)
             if p.json {
                 emitJSON(c, ["count": entries.count, "filter": filter, "items": entries.map { e -> [String: Any] in
                     var r: [String: Any] = ["key": e.id, "kind": e.kind, "created_at": iso(e.date == .distantPast ? nil : e.date),
-                                            "favorite": e.favorite, "chars": e.text.count]
+                                            "favorite": e.favorite, "chars": e.text.count, "local_id": local(e.id).map { $0 as Any } ?? NSNull()]
                     if text { r["title"] = e.title; r["display_title"] = e.displayTitle; r["preview"] = String(e.text.prefix(200)); r["source"] = e.source }
                     return r
                 }])
@@ -1252,10 +1281,51 @@ enum ClipCLI {
                     return "\(e.id.prefix(12))\t\(e.kind)\t\(when)\(e.favorite ? "\t★" : "")" + (text ? "\t\(e.displayTitle.prefix(80))" : "")
                 }.joined(separator: "\n"))
             }
+        case "show":
+            let p = try parse(rest, flags: ["no-text", "force"], options: ["output"], positionals: 1...1)
+            guard ProductIdentity.cloudSupported else { throw Failure(exit: .needsApp, code: "unsupported_edition", message: "本地版不含 iCloud 归档") }
+            let reader = try CloudArchiveReader(home: MacClipSync.archiveHome(store: c.home))
+            let wanted = p.positionals[0]
+            let matches = try reader.list(limit: .max).filter { $0.id == wanted || $0.id.hasPrefix(wanted) }
+            guard let e = matches.first(where: { $0.id == wanted }) ?? (matches.count == 1 ? matches[0] : nil) else {
+                throw matches.isEmpty ? Failure.notFound("归档里没有 key 为 \(wanted) 的可见记录（用 clip cloud list 查看）")
+                                      : Failure.usage("有 \(matches.count) 条记录的 key 以 \(wanted) 开头，请给更长的前缀")
+            }
+            let image = try (e.kind == "image" ? reader.imageData(e) : nil)
+            let text = !p.has("no-text")
+            var r: [String: Any] = ["key": e.id, "kind": e.kind, "created_at": iso(e.date == .distantPast ? nil : e.date),
+                                    "favorite": e.favorite, "chars": e.text.count, "image_bytes": image?.count ?? 0,
+                                    "local_id": localRecords(c)(e.id).map { $0 as Any } ?? NSNull()]
+            if text { r["title"] = e.title; r["display_title"] = e.displayTitle; r["text"] = e.text; r["source"] = e.source }
+            if let out = p.options["output"] {
+                guard let image else { throw Failure.invalid("这条归档记录是 \(e.kind)，没有图片可以导出") }
+                let dest = URL(fileURLWithPath: (out as NSString).expandingTildeInPath)
+                if FileManager.default.fileExists(atPath: dest.path) && !p.has("force") { throw Failure.invalid("目标已存在：\(dest.path)（--force 覆盖）") }
+                try image.write(to: dest, options: .atomic)
+                r["image_path"] = dest.path
+            }
+            if p.json { emitJSON(c, ["item": r]); return }
+            let when = e.date == .distantPast ? "-" : DateFormatter.localizedString(from: e.date, dateStyle: .short, timeStyle: .short)
+            var lines = ["\(e.id.prefix(12))\t\(e.kind)\t\(when)\(e.favorite ? "\t★" : "")" + (text ? "\t\(e.source)" : "")]
+            if text, !e.title.isEmpty { lines.append("标题：\(e.title)") }
+            if let image { lines.append("图片：\(image.count) 字节" + ((r["image_path"] as? String).map { "，已导出 \($0)" } ?? "（-o <file> 导出）")) }
+            if text, e.kind != "image" { lines.append(""); lines.append(e.text) }
+            c.out(lines.joined(separator: "\n"))
         case "push", "on", "off":
             try cloudRequest(sub, rest, c)
         default:
-            throw Failure.usage("未知子命令 \(sub)：status | list | push | on | off")
+            throw Failure.usage("未知子命令 \(sub)：status | list | show | push | on | off")
+        }
+    }
+
+    /// Archive key → the id of the same record in this Mac's library (MacClipSync writes `cloudReceived.<scope>.<key>`
+    /// for what it sent and what it received). nil when there is no library, no marker, or the record is gone.
+    @MainActor static func localRecords(_ c: Context) -> (String) -> Int64? {
+        guard FileManager.default.fileExists(atPath: ClipStore.databaseURL(home: c.home).path), let store = try? readStore(c) else { return { _ in nil } }
+        return { key in
+            guard let raw = try? store.meta("cloudReceived.\(MacClipSync.markerScope).\(key)"), let id = Int64(raw),
+                  (try? store.item(id: id)) != nil else { return nil }
+            return id
         }
     }
 

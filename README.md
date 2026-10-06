@@ -77,6 +77,7 @@ clip settings set launchAtLogin true --dry-run     # 开机自启（系统登录
 clip import-deck --json                    # =「导入 Deck 历史」，可重复执行
 clip export 1234 -o ~/Desktop/shot.png     # 图片原图
 clip cloud status --json · clip cloud list --favorites --json   # iCloud 状态与本机归档缓存（只读，与手机列表同一规则）
+clip cloud show <key> --json · clip cloud show <key> -o photo.png   # 归档里一条的全文与来源；导出图片（key 与 local_id 来自 cloud list）
 clip cloud push --dry-run --json           # 「补充最近历史」待归档条数；--yes 请运行中的 Clip 执行
 clip cloud on --yes · clip cloud off --yes # 请运行中的 Clip 拨「iCloud 历史归档」开关
 clip shortcut list --json · clip shortcut scope search global · clip shortcut clear search   # 快捷键的查看、作用范围、清除；组合键仍在窗口里由本人录制
@@ -89,7 +90,7 @@ clip copy 1234                             # 改写系统剪贴板：只在用�
 
 iCloud：同步由 App 进程持有，命令行从不打开同步库写入。`cloud status` / `cloud list` 只读打开本机归档缓存，列表直接调用手机端的 `ClipLibrary.list`（同一份代码：每个内容取最新一行、删除标记隐藏、新的在上、筛选与搜索相同），新鲜度取决于 App 上次同步。`cloud push`（=「补充最近历史」）与 `cloud on|off`（=「iCloud 历史归档」开关）会上传或停止同步你的 iCloud，必须 `--yes`，由运行中的 Clip 执行（App 做账户检查；Clip 未运行时退出码 4），结果用 `cloud status` 回读（`enabled`、`recent_pending`、归档标记计数）。iCloud 开着时，`clip add` / `edit` / 导入写入后运行中的 Clip 会像对待新复制一样把最新记录归档；Clip 没在运行时，下次启动补上。开机自启 `settings set launchAtLogin` 调用与设置页开关同一段代码（系统登录项），只对安装在 Applications 的 Clip 生效，隔离运行时退出码 4。
 
-只在 App 里：粘贴到其他 App（切回前台并合成 ⌘V）、快捷键录制、辅助功能授权、iCloud 实时同步状态与错误提示、打开数据目录/在 Finder 中显示/打开链接（`show --json` 已给出路径和 URL）、提示音试听、窗口显示、预览与拖放、检查更新与升级。手机端收藏/删除在 iPhone/iPad 上做。界面功能与命令的逐项对照登记在 `project.yaml` 的 `sop.agent_cli`。
+只在 App 里（要真人，或只在窗口里有意义）：粘贴到前一个 App（切回它并合成 ⌘V）、快捷键录制、辅助功能「去授权…」、提示音试听、网格里的选择、窗口的显示/隐藏与搜索聚焦、打开设置与「配置与更新…」窗口、编辑菜单、打开数据目录/在 Finder 中显示/打开链接（`show --json` 已给出路径和 URL）、关于/最小化/关闭/退出。暂无命令（窗口里看得到，命令还读不到或做不了）：辅助功能是否已授权、全局快捷键是否注册成功、iCloud 实时同步状态与错误提示、检查更新、升级到新版。手机端收藏/删除在 iPhone/iPad 上做。界面功能与命令的逐项对照登记在 `project.yaml` 的 `sop.agent_cli`。
 
 验证：`bash tests/test-cli.sh [Clip.app]` 经包内入口在隔离库上跑一遍（并核对用户的通用剪贴板未被改动）；生产 `--selftest` 另有一组 `clip` 断言。
 

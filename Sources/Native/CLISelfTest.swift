@@ -177,6 +177,28 @@ enum CLISelfTest {
         let sj = clip("settings", "--json").json["settings"] as? [String: Any]
         check(sj?["maxItems"] as? Int == 700 && (sj?["shortcuts"] as? [Any])?.isEmpty == true, "settings --json 回读；快捷键只读列出（默认无绑定）")
 
+        let badVersion = clip("version", "--definitely-not-a-flag", "--json")
+        check(clip("version", "--json").code == 0 && badVersion.code == 2 && badVersion.json["error"] as? String == "usage"
+              && badVersion.json["command"] as? String == "version" && clip("--version", "extra").code == 2, "version 校验参数：多余的参数退出 2")
+        // Every subcommand a feature is registered against is listed at the start of a line in the top-level help,
+        // and the help keeps 仅在窗口中 (a person, or the window) apart from 暂无命令 (not reachable yet).
+        let helpText: String = ClipCLI.usage()
+        let helpLines: [String] = helpText.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let helpCommands: [String] = ["status", "stats", "list", "search", "show", "export", "collections", "settings", "ignore list", "shortcut list",
+                                      "config status", "config export", "cloud status", "cloud list", "cloud show", "version", "add", "edit", "transform",
+                                      "pin", "unpin", "merge", "delete", "clear", "collection", "settings set", "pause", "resume", "ignore add",
+                                      "ignore remove", "shortcut scope", "shortcut clear", "config import", "import-deck", "copy", "cloud push", "config sync"]
+        func helpLists(_ name: String) -> Bool {
+            helpLines.contains { (line: String) -> Bool in line == name || line.hasPrefix(name + " ") || line.hasPrefix(name + "|") }
+        }
+        let unlisted: [String] = helpCommands.filter { !helpLists($0) }
+        let afterWindow: String = helpText.components(separatedBy: "仅在窗口中").last ?? ""
+        let windowOnly: String = afterWindow.components(separatedBy: "暂无命令").first ?? ""
+        let separated: Bool = helpText.contains("暂无命令") && !windowOnly.contains("检查更新") && !windowOnly.contains("同步状态")
+        let keepsHuman: Bool = windowOnly.contains("录制快捷键") && windowOnly.contains("试听")
+        let helpNote: String = unlisted.isEmpty ? "" : "（缺 " + unlisted.joined(separator: "、") + "）"
+        check(unlisted.isEmpty && separated && keepsHuman, "顶层帮助：每个子命令都在行首列出" + helpNote + "；「仅在窗口中」不混入暂无命令的项")
+
         // 设置 → 快捷键: scope and clear go through ClipShortcuts; a chord is never invented by the command line.
         func storedBindings() -> [String: ClipBinding] {
             defaults.data(forKey: ClipShortcuts.storageKey).flatMap { try? JSONDecoder().decode([String: ClipBinding].self, from: $0) } ?? [:]
@@ -195,6 +217,10 @@ enum CLISelfTest {
         let keyWidened = clip("shortcut", "scope", "search", "global", "--json")
         check(keyWidened.code == 0 && keyWidened.json["changed"] as? Bool == true && storedBindings()["search"]?.scope == .global
               && storedBindings()["search"]?.chord == keyRecorded["search"]?.chord, "shortcut scope 只改作用范围，组合键不变")
+        let widenedRow = (keyWidened.json["shortcuts"] as? [[String: Any]])?.first { $0["action"] as? String == "search" }
+        check(widenedRow?["registration"] as? String == "unknown" && (widenedRow?["status"] as? String)?.hasPrefix("已保存") == true
+              && (widenedRow?["status"] as? String)?.contains("已启用") == false,
+              "shortcut list 不替运行中的 App 声称全局键已启用：registration 为 unknown，status 写「已保存」")
         let scopeAgain = clip("shortcut", "scope", "search", "global", "--json")
         check(scopeAgain.code == 0 && scopeAgain.json["changed"] as? Bool == false, "shortcut scope 重复执行不再写入")
         check(clip("shortcut", "clear", "search", "--json").json["changed"] as? Bool == true && storedBindings().isEmpty
@@ -298,6 +324,29 @@ enum CLISelfTest {
             let cache = clip("cloud", "status", "--json").json["archive_cache"] as? [String: Any]
             check(cache?["visible"] as? Int == 2 && cache?["rows"] as? Int == 3 && cache?["tombstones"] as? Int == 1 && cache?["favorites"] as? Int == 1
                   && clip("cloud", "list", "--favorites", "--kind", "text").code == 2, "cloud status 归档缓存统计；--favorites 与 --kind 互斥")
+            // 手机详情页 = cloud show：全文、来源、收藏；图片导出只写指定的文件；local_id 指回 Mac 库里的同一条。
+            let long = String(repeating: "长文 ", count: 120)
+            let longKey = ready ? ((try? lib.save(text: long, title: "长文标题", source: "iPhone", at: Date(timeIntervalSince1970: 40))) ?? "") : ""
+            let picture = png()
+            let imageKey = ready ? ((try? lib.save(text: "", image: picture, at: Date(timeIntervalSince1970: 50))) ?? "") : ""
+            let shown = clip("cloud", "show", longKey, "--json").json["item"] as? [String: Any]
+            let listed = (clip("cloud", "list", "--json").json["items"] as? [[String: Any]])?.first { $0["key"] as? String == longKey }
+            check(!longKey.isEmpty && shown?["text"] as? String == long && shown?["title"] as? String == "长文标题" && shown?["source"] as? String == "iPhone"
+                  && (listed?["preview"] as? String)?.count == 200 && listed?["local_id"] is NSNull && shown?["local_id"] is NSNull,
+                  "cloud show 给出全文、标题与来源（cloud list 只有 200 字预览）；Mac 库里没有对应记录时 local_id 为 null")
+            let mirrored = id(clip("add", "--text", "mirrored on this Mac", "--json"))
+            try? ClipStore(home: home).setMeta("cloudReceived.\(MacClipSync.markerScope).\(longKey)", String(mirrored))
+            let prefixed = clip("cloud", "show", String(longKey.prefix(16)), "--json").json["item"] as? [String: Any]
+            check(mirrored > 0 && (prefixed?["local_id"] as? NSNumber)?.int64Value == mirrored && prefixed?["key"] as? String == longKey,
+                  "cloud show 接受唯一的 key 前缀；local_id 读 MacClipSync 写下的对应标记")
+            let imageOut = tmp.appendingPathComponent("cloud-show.png")
+            let exported = clip("cloud", "show", imageKey, "-o", imageOut.path, "--json")
+            check(!imageKey.isEmpty && exported.code == 0 && (exported.json["item"] as? [String: Any])?["image_bytes"] as? Int == picture.count
+                  && (try? Data(contentsOf: imageOut)) == picture && clip("cloud", "show", imageKey, "-o", imageOut.path).code == 2
+                  && clip("cloud", "show", longKey, "-o", tmp.appendingPathComponent("no.png").path).code == 2,
+                  "cloud show -o 导出归档原图；已存在要 --force；文本记录没有图片可导出")
+            check(clip("cloud", "show", "no-such-key", "--json").code == 3 && clip("cloud", "show", keys[2]).code == 3 && clip("cloud", "show").code == 2,
+                  "cloud show：不存在或已在手机上删除的记录退出 3；缺 key 退出 2")
         }
 
         // The read-only store refuses writes at the SQLite level.
