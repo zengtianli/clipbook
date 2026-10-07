@@ -1,0 +1,62 @@
+import Foundation
+
+// Probe of the shared AppConfiguration (read-only copy of swift-shared, isolated directories, throwaway suite).
+// Question: when a setting changes again while a sync of the previous change is still running, does a later sync
+// put the older value back? Only the production trigger is used (UserDefaults.didChangeNotification on the same
+// UserDefaults object the configuration was given); nothing calls reconcile() by hand.
+let root = FileManager.default.temporaryDirectory.appendingPathComponent("lifecycle-race-probe-\(getpid())", isDirectory: true)
+setenv("APP_LIFECYCLE_SUPPORT_DIR", root.appendingPathComponent("support").path, 1)
+setenv("APP_LIFECYCLE_CLOUD_DIR", root.appendingPathComponent("cloud").path, 1)
+let suite = "cyou.tianli.probe.reconcile-race.\(getpid())"
+let d = UserDefaults(suiteName: suite)!
+defer { d.removePersistentDomain(forName: suite); try? FileManager.default.removeItem(at: root) }
+let c = AppConfiguration(productID: "cyou.tianli.probe", defaultsKeys: ["n", "other"], defaults: d)
+func spin(_ seconds: TimeInterval) { RunLoop.current.run(until: Date(timeIntervalSinceNow: seconds)) }
+d.set(1, forKey: "n"); d.set(0, forKey: "other")
+c.setEnabled(true)
+spin(0.5)
+
+var olderCameBack = 0, somethingElse = 0
+func round(_ i: Int, gapMicroseconds: UInt32, laterSync: Bool = true) -> Bool {
+    let first = 100_000 + i, second = 200_000 + i
+    d.set(first, forKey: "n")            // a setting changes: the app starts syncing it
+    usleep(gapMicroseconds)
+    d.set(second, forKey: "n")           // and changes again
+    spin(0.25)                           // everything that change set off has finished
+    if laterSync { d.set(i, forKey: "other"); spin(0.25) }   // later, some other setting changes: the next sync
+    let now = d.integer(forKey: "n")
+    if now == first { olderCameBack += 1 } else if now != second { somethingElse += 1 }
+    return now == second
+}
+func cloudValue() -> Int? {
+    let url = root.appendingPathComponent("cloud/cyou.tianli.probe.json")
+    guard let data = try? Data(contentsOf: url), let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return nil }
+    return (o["values"] as? [String: Any])?["defaults.n"] as? Int
+}
+let rounds = Int(CommandLine.arguments.dropFirst().first ?? "") ?? 120
+func backups() -> Int { ((try? FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("support/cyou.tianli.probe/Backups").path)) ?? []).count }
+for gap: UInt32 in [0, 1000, 60_000] {
+    var reverted = 0
+    olderCameBack = 0; somethingElse = 0
+    let before = backups()
+    for i in 0..<rounds { if !round(Int(gap) * 1000 + i, gapMicroseconds: gap) { reverted += 1 } }
+    print("两次改动间隔 \(gap) 微秒：\(rounds) 轮，后一次的值没留住 \(reverted) 轮（其中变回前一次的值 \(olderCameBack) 轮，变成别的 \(somethingElse) 轮）；期间同步自己写回设置（留了备份）\(backups() - before) 次")
+}
+// Without any later change: where do the setting and the cloud copy stand 0.25 s after the second change?
+var alreadyBack = 0, localNewCloudOld = 0, bothNew = 0, otherState = 0
+for i in 0..<rounds {
+    _ = round(9_000_000 + i, gapMicroseconds: 1000, laterSync: false)
+    let local = d.integer(forKey: "n"), cloud = cloudValue()
+    let first = 100_000 + 9_000_000 + i, second = 200_000 + 9_000_000 + i
+    if local == first { alreadyBack += 1 }
+    else if local == second && cloud == first { localNewCloudOld += 1 }
+    else if local == second && cloud == second { bothNew += 1 }
+    else { otherState += 1 }
+    d.set(i + 500, forKey: "other"); spin(0.25)
+}
+print("间隔 1000 微秒、之后不再改任何设置，0.25 秒后：\(rounds) 轮里本机已经变回前一次的值 \(alreadyBack) 轮；本机是后一次的值而云端副本是前一次的值 \(localNewCloudOld) 轮；两边都是后一次的值 \(bothNew) 轮；其他 \(otherState) 轮")
+// Control: sync switched off, same two changes 1000 µs apart.
+c.setEnabled(false); spin(0.3)
+var controlReverted = 0
+for i in 0..<rounds { if !round(7_000_000 + i, gapMicroseconds: 1000) { controlReverted += 1 } }
+print("对照（同步关着，间隔 1000 微秒）：\(rounds) 轮，后一次的值没留住 \(controlReverted) 轮")
