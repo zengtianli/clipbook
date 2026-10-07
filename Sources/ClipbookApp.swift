@@ -343,7 +343,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.minSize = NSSize(width: 960, height: 520)
         window.isReleasedWhenClosed = false
         window.delegate = self
-        window.setFrameAutosaveName("ClipbookMain")
+        // An unattended instance never shows this window, and AppKit keeps window frames in the app's own standard
+        // domain whatever preferences suite the instance was given: saving one here would move the user's window.
+        if !ProductIdentity.unattended { window.setFrameAutosaveName("ClipbookMain") }
         window.contentView = nil
         window.center()
     }
