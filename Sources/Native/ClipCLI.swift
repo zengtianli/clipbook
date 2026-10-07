@@ -258,12 +258,13 @@ enum ClipCLI {
           关于 / 隐藏 / 最小化 / 关闭窗口 / 退出。
         仅在 iPhone / iPad 上（手机端要真人，或只在手机里有意义）：
           前往 App Store · 使用方式与隐私支持页 · 链接入口与外接键盘方向键选取 · 打开设置页与「配置与更新」页。
-        暂无命令（窗口里看得到，命令还读不到或做不了）：
+        暂无命令（窗口里看得到，命令做不了）：
           升级到新版 / 下载新版：命令不做静默安装；update check 给出新版、按钮名、安装包地址与步骤，替换并重启仍在
             「配置与更新…」窗口里确认。
-          只有运行中的 Clip 知道的三样：辅助功能是否已授权（status 的 permissions.accessibility）、全局快捷键是否注册成功
-            （shortcut list 的 registration）、iCloud 实时同步状态与错误（cloud status 的 live）。App 把它们写进数据目录的
-            runtime-state.json、命令照读的通道已做好，但还没在运行中的 Clip 上核过，没核过之前读到的是 null / app_not_running。
+        只有运行中的 Clip 知道的三样，由它写进数据目录的 runtime-state.json，命令照读：
+          辅助功能是否已授权    status 的 permissions.accessibility（Clip 退出后保留上次报告的值，live 为 false）
+          全局快捷键是否注册成功  shortcut list 的 registration（registered | failed；Clip 没在运行为 app_not_running）
+          iCloud 同步状态与错误  cloud status 的 live（Clip 没在运行、或还没打开归档时为 null，live_status 写明原因）
         命令不弹窗、不抢焦点、不申请权限、不合成按键。
         """
     }

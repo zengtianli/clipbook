@@ -61,6 +61,11 @@ enum Boot {
         if args.contains("--privacy-test") {
             exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return PrivacySelfTest.run() })
         }
+        // This process stands in for the running Clip (production wiring, nothing on screen) while the real `clip`
+        // command runs beside it as separate processes. Opt-in (tests/test-runtime.sh): it registers two test hot keys.
+        if args.contains("--runtime-self-test") {
+            exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return RuntimeSelfTest.run() })
+        }
         if CommandLine.arguments.contains("--selftest") {
             #if CLIP_LOCAL_DISTRIBUTION
             guard case .github(let repository) = ClipUpdates.source,
@@ -93,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var pendingActions: [ClipAction] = []
     private(set) var shortcuts: ClipShortcuts!
     private var runtimeState: ClipRuntimePublisher?
-    private var configuration: AppConfiguration?
+    private(set) var configuration: AppConfiguration?
 
     override init() {
         super.init()
@@ -166,41 +171,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
-            if !ProductIdentity.backgroundPreview {
-                let config = ClipPortableConfiguration.make(defaults: AppPreferences.defaults)
-                config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
-                configuration = config
-                AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipUpdates.source)
-            }
+            if !ProductIdentity.backgroundPreview { installLifecycle() }
             AppModel.shared.startWatching()
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             buildStatusItem()
             buildWindow()
-            // `clip` changed the library or the preferences from another process: re-read what this app owns,
-            // and archive new records as a capture would be when iCloud is on.
-            let home = AppModel.shared.store.home.path
-            let cloudOn = { ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") }
-            ClipSignal.observe(ClipSignal.storeChanged, scope: home) {
-                AppModel.shared.reload()
-                if cloudOn() { AppModel.shared.cloud.storeChangedExternally() }
-            }
-            ClipSignal.observe(ClipSignal.preferencesChanged, scope: AppPreferences.domain) {
-                AppSettings.shared.reload(); AppModel.shared.applySettings()
-                AppDelegate.shared.shortcuts.reload()   // `clip shortcut scope|clear`, `clip config import`
-            }
-            // `clip config sync on|off`: the 配置与更新 window's 「使用 iCloud 记住配置」 checkbox, run by this app.
-            ClipSignal.observe(ClipSignal.configSyncEnableRequested, scope: AppPreferences.domain) { AppDelegate.shared.configuration?.setEnabled(true) }
-            ClipSignal.observe(ClipSignal.configSyncDisableRequested, scope: AppPreferences.domain) { AppDelegate.shared.configuration?.setEnabled(false) }
-            // `clip cloud push|on|off`: the Settings → iCloud button and toggle, run by this app.
-            if ProductIdentity.cloudSupported {
-                ClipSignal.observe(ClipSignal.cloudPushRequested, scope: home) { Task { await AppModel.shared.cloud.pushRequested() } }
-                ClipSignal.observe(ClipSignal.cloudEnableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(true) } }
-                ClipSignal.observe(ClipSignal.cloudDisableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(false) } }
-            }
-            // What only this process knows (Accessibility grant, global-key registration, live iCloud status) for `clip` to read.
-            let runtime = ClipRuntimePublisher(home: AppModel.shared.store.home, shortcuts: shortcuts, cloud: { AppModel.shared.cloudIfLoaded })
-            AppModel.shared.onCloudLoaded = { [weak runtime] in DispatchQueue.main.async { MainActor.assumeIsolated { runtime?.publish() } } }
-            runtimeState = runtime
+            connectCommandLine()
             if CommandLine.arguments.contains("--background") {
                 AppModel.shared.suspendInterface()
             } else {
@@ -215,6 +191,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         urls.forEach { handleURL($0) }
         let actions = pendingActions; pendingActions = []
         actions.forEach { perform($0) }
+    }
+
+    /// The 「配置与更新」 window and the portable configuration behind it. Also called by `--runtime-self-test`
+    /// (on isolated directories), so the test exercises this wiring and not a copy of it.
+    func installLifecycle() {
+        let config = ClipPortableConfiguration.make(defaults: AppPreferences.defaults)
+        config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
+        configuration = config
+        AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipUpdates.source)
+    }
+
+    /// Everything `clip` asks of this running app and reads from it. Also called by `--runtime-self-test`.
+    func connectCommandLine() {
+        // `clip` changed the library or the preferences from another process: re-read what this app owns,
+        // and archive new records as a capture would be when iCloud is on.
+        let home = AppModel.shared.store.home.path
+        let cloudOn = { ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") }
+        ClipSignal.observe(ClipSignal.storeChanged, scope: home) {
+            AppModel.shared.reload()
+            if cloudOn() { AppModel.shared.cloud.storeChangedExternally() }
+        }
+        ClipSignal.observe(ClipSignal.preferencesChanged, scope: AppPreferences.domain) {
+            AppSettings.shared.reload(); AppModel.shared.applySettings()
+            AppDelegate.shared.shortcuts.reload()   // `clip shortcut scope|clear`, `clip config import`
+        }
+        // `clip config sync on|off`: the 配置与更新 window's 「使用 iCloud 记住配置」 checkbox, run by this app.
+        ClipSignal.observe(ClipSignal.configSyncEnableRequested, scope: AppPreferences.domain) { AppDelegate.shared.configuration?.setEnabled(true) }
+        ClipSignal.observe(ClipSignal.configSyncDisableRequested, scope: AppPreferences.domain) { AppDelegate.shared.configuration?.setEnabled(false) }
+        // `clip cloud push|on|off`: the Settings → iCloud button and toggle, run by this app.
+        if ProductIdentity.cloudSupported {
+            ClipSignal.observe(ClipSignal.cloudPushRequested, scope: home) { Task { await AppModel.shared.cloud.pushRequested() } }
+            ClipSignal.observe(ClipSignal.cloudEnableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(true) } }
+            ClipSignal.observe(ClipSignal.cloudDisableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(false) } }
+        }
+        // What only this process knows (Accessibility grant, global-key registration, live iCloud status) for `clip` to read.
+        let runtime = ClipRuntimePublisher(home: AppModel.shared.store.home, shortcuts: shortcuts, cloud: { AppModel.shared.cloudIfLoaded })
+        AppModel.shared.onCloudLoaded = { [weak runtime] in DispatchQueue.main.async { MainActor.assumeIsolated { runtime?.publish() } } }
+        runtimeState = runtime
     }
 
     // MARK: 菜单栏：左键开窗口，右键出菜单

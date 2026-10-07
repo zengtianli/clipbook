@@ -13,6 +13,8 @@ import AppKit
 ///
 /// `makeConfiguration()` and `updateSource` must be the ones handed to `AppLifecycleUI.install`.
 /// In the app, `AppLifecycleCLI.follow(configuration)` after `install` lets a running window follow command changes.
+/// A product whose menu opens this window under its own name (a menu-bar product's「设置…」) also passes
+/// `windowEntry: "设置…"` to `Product` and to `helpWindowOnly(windowEntry:)` / `helpNoCommand(windowEntry:)`.
 enum AppLifecycleCLI {
     struct Product {
         /// The installed command name, as typed: shown in usage and in `check_with`.
@@ -22,6 +24,8 @@ enum AppLifecycleCLI {
         /// nil, or no portable settings: the window hides the 配置 group and the commands say so.
         let configuration: AppConfiguration?
         let updateSource: AppUpdateSource
+        /// The menu item that opens the window, as this product shows it: named in `config --help` and in `update check`'s `upgrade.how`.
+        var windowEntry: String = AppLifecycleCLI.defaultWindowEntry
         /// The app bundle whose version, build and identifier the window shows. Pass the .app when the command is a separate binary.
         var bundle: Bundle = .main
         var out: (String) -> Void = { FileHandle.standardOutput.write(Data(($0 + "\n").utf8)) }
@@ -39,35 +43,45 @@ enum AppLifecycleCLI {
 
     // MARK: Help — splice these into the product's top-level --help so every subcommand is listed there.
 
+    /// What the menu calls the item that opens this window. `AppLifecycleUI` adds it under this name; a product that
+    /// opens the window from its own item passes that item's title instead, from one constant of its own.
+    static let defaultWindowEntry = "配置与更新…"
+
+    /// Read-only: neither line writes a file or any state, so they can sit under a product heading that promises that.
     static func helpRead(_ command: String) -> String {
         """
           config status              「使用 iCloud 记住配置」开关、当前可迁移的配置项、App 是否在运行（只读）
-          config export -o <file>    导出配置：与窗口「导出配置…」同一份文件（--force 覆盖；-o - 输出到标准输出；只写你指定的文件）
         \(helpUpdate)
         """
     }
     /// The update line alone, for a product that already lists its own `config` commands and wires only `update`.
     static let helpUpdate = "  update check               检查更新：当前版本、此渠道最新版本、有没有新版、怎么升级（只读；私有渠道读 iCloud Drive 里的发行记录，公开渠道联网读发行记录）"
+    /// `config export` is listed here, not under read: it changes no setting, but it does write the file named with -o.
     static func helpWrite(_ command: String) -> String {
         """
+          config export -o <file>        导出配置：与窗口「导出配置…」同一份文件；不改设置，只写你指定的那个文件（--force 覆盖；-o - 输出到标准输出，不写文件）
           config import <file> --yes     导入配置：先备份原配置再覆盖，与窗口「导入配置…」相同
           config sync on|off --yes       拨动「使用 iCloud 记住配置」（--dry-run 只看会不会变；用 \(command) config status 回读）
         """
     }
     /// One line for the product's「仅在窗口中」list.
-    static let helpWindowOnly = "打开「配置与更新…」窗口"
+    static let helpWindowOnly = helpWindowOnly(windowEntry: defaultWindowEntry)
+    static func helpWindowOnly(windowEntry: String) -> String { "打开「\(windowEntry)」窗口" }
     /// One line for the product's「暂无命令」list; register the feature as missing with this reason.
-    static let helpNoCommand = "升级到新版 / 下载新版（命令不做静默安装：update check 给出新版、按钮名、安装包地址与步骤，替换并重启 App 仍在「配置与更新…」窗口确认）"
+    static let helpNoCommand = helpNoCommand(windowEntry: defaultWindowEntry)
+    static func helpNoCommand(windowEntry: String) -> String {
+        "升级到新版 / 下载新版（命令不做静默安装：update check 给出新版、按钮名、安装包地址与步骤，替换并重启 App 仍在「\(windowEntry)」窗口确认）"
+    }
 
-    static func help(_ command: String) -> String {
+    static func help(_ command: String, windowEntry: String = defaultWindowEntry) -> String {
         """
         usage: \(command) config [status] [--json]
                \(command) config export -o <file.json> [--force] [--json]
                \(command) config import <file.json> --yes [--json]
                \(command) config sync on|off --yes [--dry-run] [--json]
                \(command) update check [--json]
-        「配置与更新」窗口里的五项，与窗口读写同一份设置。
-        读:
+        「\(windowEntry)」窗口里的五项，与窗口读写同一份设置。
+        读（不写任何文件或状态）:
         \(helpRead(command))
         写:
         \(helpWrite(command))
@@ -78,9 +92,13 @@ enum AppLifecycleCLI {
           config sync    → action, changed, sync_enabled, status, app_running, check_with；--dry-run 给 would_change
           update check   → current{version, build}, source{kind, …}, latest{version, build, …}, update_available,
                            state（update_available | up_to_date | ahead_of_channel）, message, upgrade{in_app, button, how, download_url}
-        退出码：0 成功 · 1 操作未完成（文件不存在、导入被拒、同步未完成、检查未完成、没有可迁移配置）· 2 用法错误（含缺 --yes / --force）
-        仅在窗口中：\(helpWindowOnly)
-        暂无命令：\(helpNoCommand)
+        退出码与 error.code：
+          0  成功
+          1  操作未完成：not_found（没有这个文件）· import_rejected（导入被拒，原配置保留）· export_failed（导出未完成）·
+             sync_incomplete（开关已打开，首次同步未完成）· check_incomplete（没读到发行记录）· no_settings（没有可迁移配置）· failed（其他）
+          2  用法错误或缺确认参数：usage（参数不对）· confirmation_required（import、sync 缺 --yes）· file_exists（导出目标已存在，缺 --force）
+        仅在窗口中：\(helpWindowOnly(windowEntry: windowEntry))
+        暂无命令：\(helpNoCommand(windowEntry: windowEntry))
         同步状态那句话由运行中的 App 持有：config sync on 会回报它自己这次同步的结果，之后的实时状态看窗口。
         命令不弹窗、不抢焦点、不申请权限、不做静默安装。
         """
@@ -97,7 +115,7 @@ enum AppLifecycleCLI {
             let p = try parse(Array(arguments.dropFirst()))
             let sub = p.positionals.first ?? (verb == "config" ? "status" : "")
             command = sub.isEmpty ? verb : verb + " " + sub
-            if p.flags.contains("--help") || p.flags.contains("-h") { product.out(help(product.command)); return 0 }
+            if p.flags.contains("--help") || p.flags.contains("-h") { product.out(help(product.command, windowEntry: product.windowEntry)); return 0 }
             let result: Output
             switch (verb, sub) {
             case ("config", "status"): result = try configStatus(p, product)
@@ -292,8 +310,8 @@ enum AppLifecycleCLI {
         let how: String
         if !newer { how = "不需要升级。" }
         else if release.downloadURL == nil { how = "此渠道没有给出安装包" + (release.releaseURL.map { "；到发行页获取：\($0.absoluteString)" } ?? "。") }
-        else if inApp { how = "打开 \(product.name)，在应用菜单选「配置与更新…」→「检查更新」→「升级到新版…」并确认：会验证发行包与签名、替换当前 App 并重新打开，配置保留，替换失败可回滚。命令不做静默安装。" }
-        else { how = "打开 \(product.name)，在「配置与更新…」里点「下载新版…」" + (link.map { "，或直接下载安装包：\($0)" } ?? "") + "；安装新版会保留支持目录中的配置。命令不做静默安装。" }
+        else if inApp { how = "打开 \(product.name)，在菜单里选「\(product.windowEntry)」→「检查更新」→「升级到新版…」并确认：会验证发行包与签名、替换当前 App 并重新打开，配置保留，替换失败可回滚。命令不做静默安装。" }
+        else { how = "打开 \(product.name)，在「\(product.windowEntry)」里点「下载新版…」" + (link.map { "，或直接下载安装包：\($0)" } ?? "") + "；安装新版会保留支持目录中的配置。命令不做静默安装。" }
         let latest: [String: Any] = ["version": release.version, "build": release.build, "channel": release.channel ?? NSNull(),
                                      "download_url": release.downloadURL?.absoluteString ?? NSNull(), "release_url": release.releaseURL?.absoluteString ?? NSNull(),
                                      "sha256": release.sha256 ?? NSNull(), "size_bytes": release.size ?? NSNull()]
