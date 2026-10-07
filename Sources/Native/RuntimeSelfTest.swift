@@ -104,7 +104,7 @@ enum RuntimeSelfTest {
         report.notCovered = [
             "本人日常运行的 Clip 实例（由系统启动，带窗口、Dock 与菜单栏图标）：这里是同一个可执行文件、同一套接线方法，但不上屏",
             "辅助功能授权归谁：从终端直接启动的进程，系统按启动它的那个 App 的授权回答；Clip 自己的授权要由系统启动的 Clip 报告",
-            "iCloud 历史归档开着时的状态文字（正在同步…、最近同步、同步错误）与「补充最近历史」：要真实 iCloud 账户，这里只验了关闭状态那一句",
+            "iCloud 历史归档开着时由真实同步产生的状态文字（正在同步…、最近同步、同步错误）：要真实 iCloud 账户；这里验的是关闭状态那一句，以及归档对象上的状态变了之后命令读到新值（变化是自检直接改的）",
             "「使用 iCloud 记住配置」写真实 iCloud Drive：这里的云端副本是隔离目录里的文件；另一台设备同时改了云端配置时的合并没有验",
             "配置同步开着时 App 改设置后的再同步：隔离偏好域下各处拿到的不是同一个 UserDefaults 对象，这个触发不会发生（结果里的 cloud_copy_followed_last_value 记下本次有没有发生），所以再同步与命令写入的交错没有覆盖",
             "设置窗口与「配置与更新…」窗口里控件的显示：没有构造窗口，核对的是窗口读的同一个对象上的状态文字",
@@ -319,6 +319,24 @@ enum RuntimeSelfTest {
                      "cloud off：运行中的 App 关闭归档，cloud status 的 live 读到设置页那句状态文字与整理状态",
                      "\(line ?? "nil") · \(liveCloud?["archive_status"] as? String ?? "nil")")
         evidence["cloud"] = ["sync_status": line ?? "", "archive_status": liveCloud?["archive_status"] as? String ?? ""]
+        // After the archive is open its lines change: the publisher follows the archive object and its library, the two
+        // objects the settings page observes. The changes below are made on those objects by this test (the 「补充最近历史」
+        // action on the empty local archive, then an error text), not by a real sync.
+        func liveLine(_ key: String) -> Any? { (clip("cloud", "status", "--json").json["live"] as? [String: Any])?[key] }
+        if let sync {
+            Task { await sync.sendRecent() }
+            let arranged = until { sync.status != "尚未启用" && liveLine("archive_status") as? String == sync.status }
+            let arrangedLine = sync.status
+            sync.library.error = "自检写入的错误提示"
+            let errorShown = until { liveLine("error") as? String == "自检写入的错误提示" }
+            sync.library.error = nil
+            let errorGone = until { liveLine("error") is NSNull }
+            report.check(arranged && errorShown && errorGone,
+                         "归档打开之后状态再变（整理状态、错误提示出现与消失）：运行中的 App 跟着重写，cloud status 的 live 读到新值", arrangedLine)
+            evidence["cloud_after_change"] = ["archive_status": arrangedLine]
+        } else {
+            report.check(false, "归档打开之后状态再变（整理状态、错误提示出现与消失）：运行中的 App 跟着重写，cloud status 的 live 读到新值", "归档没有打开")
+        }
 
         // Left for the wrapper to read after this process has exited: toggleWindow global, pause global (refused).
         report.check(registration("toggleWindow") == "registered" && registration("pause") == "failed" && paused() == false && syncEnabled() == false,
