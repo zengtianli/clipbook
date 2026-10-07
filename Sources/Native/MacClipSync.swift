@@ -110,6 +110,35 @@ final class MacClipSync: ObservableObject {
         do { for item in try model.store.list(pageSize: 50) { try send(item) } }
         catch { status = error.localizedDescription }
     }
+    /// `clip cloud favorite|unfavorite|delete`: what the phone's 收藏 / 取消收藏 / 删除 do, through the same
+    /// `ClipLibrary.mutate`. Only a record the phone's list shows can be changed. It changes the synced history alone:
+    /// this Mac's own library keeps its copy and its pin, as it does when the phone makes the change.
+    static func apply(_ change: ClipCloudChange, to library: ClipLibrary) -> ClipCloudChange.Answer {
+        guard library.ready else { return .init(ok: false, code: "store", message: library.error ?? "同步历史没有打开") }
+        do {
+            guard try library.list(limit: .max).contains(where: { $0.id == change.key }) else {
+                return .init(ok: false, code: "not_found", message: "同步历史里已经没有这条记录（可能刚在别的设备上删除）")
+            }
+            switch change.action {
+            case .favorite: try library.mutate(change.key, favorite: true)
+            case .unfavorite: try library.mutate(change.key, favorite: false)
+            case .delete: try library.mutate(change.key, remove: true)
+            }
+            return .init(ok: true)
+        } catch { return .init(ok: false, code: "store", message: error.localizedDescription) }
+    }
+    /// The changes `clip` left in the data dir, each answered. An archive that is not open yet is opened the way the
+    /// app opens it at launch: on this Mac, and with iCloud only if 「iCloud 历史归档」 is on. Nothing else is started
+    /// here: with the archive off this does not begin importing its records into this Mac's library.
+    func changesRequested() async {
+        let home = model.store.home
+        let changes = ClipCloudChange.pending(home: home)
+        guard !changes.isEmpty else { return }
+        if !library.ready { await library.start() }
+        var polls = 0   // a start already under way returns at once: give it a moment to finish loading
+        while !library.ready && polls < 100 { try? await Task.sleep(nanoseconds: 50_000_000); polls += 1 }
+        for change in changes { change.answer(Self.apply(change, to: library), home: home) }
+    }
     private func receive() {
         guard library.ready, !importing else { return }
         importing = true; defer { importing = false }

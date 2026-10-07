@@ -39,9 +39,45 @@ struct ClipKey: Codable, Equatable {
         if event.modifierFlags.contains(.control) { mods |= UInt32(controlKey) }
         if event.modifierFlags.contains(.option) { mods |= UInt32(optionKey) }
         if event.modifierFlags.contains(.shift) { mods |= UInt32(shiftKey) }
-        let special: [UInt16: String] = [49: "Space", 36: "Return", 48: "Tab", 51: "Delete", 53: "Esc", 123: "←", 124: "→", 125: "↓", 126: "↑"]
         self.init(code: UInt32(event.keyCode), modifiers: mods,
-                  key: special[event.keyCode] ?? (event.charactersIgnoringModifiers ?? "").uppercased())
+                  key: Self.named[UInt32(event.keyCode)] ?? (event.charactersIgnoringModifiers ?? "").uppercased())
+    }
+    /// Keys shown by name: one table for a recorded key's label and for a chord written out as text.
+    static let named: [UInt32: String] = [
+        49: "Space", 36: "Return", 48: "Tab", 51: "Delete", 53: "Esc", 123: "←", 124: "→", 125: "↓", 126: "↑",
+        122: "F1", 120: "F2", 99: "F3", 118: "F4", 96: "F5", 97: "F6", 98: "F7", 100: "F8", 101: "F9", 109: "F10",
+        103: "F11", 111: "F12", 105: "F13", 107: "F14", 113: "F15", 106: "F16", 64: "F17", 79: "F18", 80: "F19", 90: "F20"]
+    /// The printable keys by their position on the US layout (the key code is a position, not a character).
+    static let printable: [String: UInt32] = [
+        "A": 0, "S": 1, "D": 2, "F": 3, "H": 4, "G": 5, "Z": 6, "X": 7, "C": 8, "V": 9, "B": 11, "Q": 12, "W": 13, "E": 14, "R": 15,
+        "Y": 16, "T": 17, "1": 18, "2": 19, "3": 20, "4": 21, "6": 22, "5": 23, "=": 24, "9": 25, "7": 26, "-": 27, "8": 28, "0": 29,
+        "]": 30, "O": 31, "U": 32, "[": 33, "I": 34, "P": 35, "L": 37, "J": 38, "'": 39, "K": 40, ";": 41, "\\": 42, ",": 43, "/": 44,
+        "N": 45, "M": 46, ".": 47, "`": 50]
+    private static let modifierNames: [String: Int] = [
+        "⌘": cmdKey, "cmd": cmdKey, "command": cmdKey, "⌃": controlKey, "ctrl": controlKey, "control": controlKey,
+        "⌥": optionKey, "opt": optionKey, "option": optionKey, "alt": optionKey, "⇧": shiftKey, "shift": shiftKey]
+    private static let keyAliases: [String: String] = ["ENTER": "RETURN", "ESCAPE": "ESC", "BACKSPACE": "DELETE",
+                                                       "LEFT": "←", "RIGHT": "→", "DOWN": "↓", "UP": "↑"]
+    /// A chord written out, for a caller that names the keys instead of pressing them (`clip shortcut set`):
+    /// the label form `list` prints ("⌃⇧⌘V", "⌘,") or names joined by "+" ("ctrl+shift+cmd+v", "opt+cmd+space", "ctrl+f5").
+    /// nil for an unknown key or modifier name. What may be bound is still decided by `validationError`.
+    init?(parsing text: String) {
+        var rest = Substring(text.trimmingCharacters(in: .whitespaces))
+        var mods = 0
+        while let first = rest.first, let flag = Self.modifierNames[String(first)] { mods |= flag; rest = rest.dropFirst() }
+        if rest.count > 1, rest.first == "+" { rest = rest.dropFirst() }
+        var parts = rest.count > 1 ? rest.split(separator: "+", omittingEmptySubsequences: false).map(String.init) : [String(rest)]
+        guard let last = parts.popLast(), !last.isEmpty else { return nil }
+        for name in parts {
+            guard let flag = Self.modifierNames[name.lowercased()] else { return nil }
+            mods |= flag
+        }
+        let upper = last.uppercased(), wanted = Self.keyAliases[upper] ?? upper
+        if let code = Self.named.first(where: { $0.value.uppercased() == wanted })?.key {
+            self.init(code: code, modifiers: UInt32(mods), key: Self.named[code] ?? wanted)
+        } else if let code = Self.printable[wanted] {
+            self.init(code: code, modifiers: UInt32(mods), key: wanted)
+        } else { return nil }
     }
     var label: String {
         [(controlKey, "⌃"), (optionKey, "⌥"), (shiftKey, "⇧"), (cmdKey, "⌘")]
@@ -154,12 +190,15 @@ final class ClipShortcuts: ObservableObject {
         guard let b = binding(action) else { return action == .copy ? "标准拷贝：选中文字优先，否则复制所选记录" : "未设置" }
         return b.scope == .global ? "已启用 · 全局" : "已启用 · 仅 Clip 内"
     }
-    private func invalid(_ action: ClipAction, _ binding: ClipBinding) -> String? {
+    private func invalid(_ action: ClipAction, _ binding: ClipBinding) -> String? { refusal(action, binding)?.message }
+    /// Why `set` would refuse this binding, without storing or registering anything; `holder` is the action (raw value)
+    /// that already has the chord when that is the reason. The order is the window's: the chord itself, then duplicates.
+    func refusal(_ action: ClipAction, _ binding: ClipBinding) -> (message: String, holder: String?)? {
         if !(action == .copy && binding.scope == .application && binding.chord.isStandardCopy),
-           let error = binding.chord.validationError { return error }
-        if binding.scope == .global && !action.allowsGlobal { return "此操作只能在 Clip 窗口内使用。" }
+           let error = binding.chord.validationError { return (error, nil) }
+        if binding.scope == .global && !action.allowsGlobal { return ("此操作只能在 Clip 窗口内使用。", nil) }
         if let duplicate = bindings.first(where: { $0.key != action.rawValue && $0.value.chord.matches(binding.chord) }) {
-            return "已用于「\(ClipAction(rawValue: duplicate.key)?.title ?? duplicate.key)」，请先清除原绑定。"
+            return ("已用于「\(ClipAction(rawValue: duplicate.key)?.title ?? duplicate.key)」，请先清除原绑定。", duplicate.key)
         }
         return nil
     }

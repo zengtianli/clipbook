@@ -29,14 +29,26 @@ enum CLISelfTest {
         }
         var stdin = Data()
         var appPIDs: [Int32] = []   // what the running-Clip probe answers (never the real system)
+        // `clip start` / `clip quit` reach the system only through these two hooks; here they are recorded, never run.
+        let fakeApp = tmp.appendingPathComponent("Fake/Clip.app", isDirectory: true)
+        var launches: [(bundle: URL, arguments: [String], environment: [String: String])] = []
+        var quits: [Int32] = []
+        var onLaunch: () -> Void = {}, onQuit: (Int32) -> Void = { _ in }
+        // `clip cloud favorite|unfavorite|delete` hands its change to the running app through this hook: recorded, and
+        // answered by whatever stands in for the app at that point of the test.
+        var cloudChanges: [ClipCloudChange] = []
+        var cloudAnswer: (ClipCloudChange) -> ClipCloudChange.Answer? = { _ in nil }
         func clip(_ args: String...) -> Result { clipArgs(args) }
         func clipArgs(_ args: [String]) -> Result {
             var out = "", err = ""
             var ctx = ClipCLI.Context(home: home, defaults: defaults, domain: suite, pasteboard: { board }, stdin: { stdin },
                                       out: { out += $0 + "\n" }, err: { err += $0 + "\n" }, notify: false,
                                       deckHome: tmp.appendingPathComponent("no-deck"))
-            let pids = appPIDs
-            ctx.runningApp = { pids }
+            ctx.runningApp = { appPIDs }
+            ctx.appBundle = { fakeApp }
+            ctx.launchApp = { bundle, arguments, environment in launches.append((bundle, arguments, environment)); onLaunch() }
+            ctx.quitApp = { pid in quits.append(pid); onQuit(pid); return true }
+            ctx.cloudChange = { change, _, _ in cloudChanges.append(change); return cloudAnswer(change) }
             return Result(code: ClipCLI.run(args, context: ctx), out: out, err: err)
         }
         func id(_ r: Result) -> Int64 { (r.json["id"] as? NSNumber)?.int64Value ?? -1 }
@@ -187,17 +199,20 @@ enum CLISelfTest {
         let helpCommands: [String] = ["status", "stats", "list", "search", "show", "export", "collections", "settings", "ignore list", "shortcut list",
                                       "config status", "config export", "update check", "cloud status", "cloud list", "cloud show", "version", "add", "edit", "transform",
                                       "pin", "unpin", "merge", "delete", "clear", "collection", "settings set", "pause", "resume", "ignore add",
-                                      "ignore remove", "shortcut scope", "shortcut clear", "config import", "import-deck", "copy", "cloud push", "config sync"]
+                                      "ignore remove", "shortcut set", "shortcut scope", "shortcut clear", "config import", "import-deck", "copy", "cloud push",
+                                      "cloud favorite", "cloud unfavorite", "cloud delete", "config sync", "update install", "start", "quit"]
         func helpLists(_ name: String) -> Bool {
             helpLines.contains { (line: String) -> Bool in line == name || line.hasPrefix(name + " ") || line.hasPrefix(name + "|") }
         }
         let unlisted: [String] = helpCommands.filter { !helpLists($0) }
         let afterWindow: String = helpText.components(separatedBy: "仅在窗口中").last ?? ""
-        let windowOnly: String = afterWindow.components(separatedBy: "暂无命令").first ?? ""
-        let separated: Bool = helpText.contains("暂无命令") && !windowOnly.contains("检查更新") && !windowOnly.contains("同步状态") && !windowOnly.contains("升级到新版")
+        let windowOnly: String = afterWindow.components(separatedBy: "仅在 iPhone").first ?? ""
+        // Every item of the window has a command now: no 暂无命令 section, and nothing with a command is left under 仅在窗口中.
+        let separated: Bool = !helpText.contains("暂无命令") && !windowOnly.contains("检查更新") && !windowOnly.contains("同步状态")
+            && !windowOnly.contains("升级到新版") && !windowOnly.contains("退出")
         let keepsHuman: Bool = windowOnly.contains("录制快捷键") && windowOnly.contains("试听")
         let helpNote: String = unlisted.isEmpty ? "" : "（缺 " + unlisted.joined(separator: "、") + "）"
-        check(unlisted.isEmpty && separated && keepsHuman, "顶层帮助：每个子命令都在行首列出" + helpNote + "；「仅在窗口中」不混入暂无命令的项")
+        check(unlisted.isEmpty && separated && keepsHuman, "顶层帮助：每个子命令都在行首列出" + helpNote + "；没有「暂无命令」，「仅在窗口中」不混入已有命令的项")
 
         // 设置 → 快捷键: scope and clear go through ClipShortcuts; a chord is never invented by the command line.
         func storedBindings() -> [String: ClipBinding] {
@@ -225,6 +240,51 @@ enum CLISelfTest {
         check(scopeAgain.code == 0 && scopeAgain.json["changed"] as? Bool == false, "shortcut scope 重复执行不再写入")
         check(clip("shortcut", "clear", "search", "--json").json["changed"] as? Bool == true && storedBindings().isEmpty
               && clip("shortcut", "clear", "--all", "--json").json["changed"] as? Bool == false, "shortcut clear 清除绑定；已空时 clear --all 不变")
+
+        // shortcut set: a chord written out and an action named, saved through the window's own ClipShortcuts.set.
+        let cmd: UInt32 = 256, shift: UInt32 = 512, opt: UInt32 = 2048, ctrl: UInt32 = 4096
+        let keySet = clip("shortcut", "set", "search", "opt+cmd+f", "--json")
+        let keySetPlan = keySet.json["set"] as? [String: Any]
+        check(keySet.code == 0 && keySet.json["changed"] as? Bool == true && keySet.json["command"] as? String == "shortcut set"
+              && storedBindings() == ["search": ClipBinding(chord: ClipKey(code: 3, modifiers: cmd | opt, key: "F"), scope: .application)]
+              && keySetPlan?["keys"] as? String == "⌥⌘F" && keySetPlan?["scope"] as? String == "application" && keySetPlan?["previous"] is NSNull,
+              "shortcut set 把写出来的组合键存给动作（与录制同一个保存入口），不写 --scope 时只在 Clip 内")
+        let keySetGlobal = clip("shortcut", "set", "pause", "⌃⌥G", "--scope", "global", "--json")
+        let keySetRow = (keySetGlobal.json["shortcuts"] as? [[String: Any]])?.first { $0["action"] as? String == "pause" }
+        check(keySetGlobal.code == 0 && storedBindings()["pause"] == ClipBinding(chord: ClipKey(code: 5, modifiers: ctrl | opt, key: "G"), scope: .global)
+              && keySetRow?["registration"] as? String == "app_not_running" && (keySetRow?["status"] as? String)?.contains("已启用") == false,
+              "shortcut set 认 list 打印的写法；写明 --scope global 才是全局键，且不替 App 声称已启用")
+        let keyKept = clip("shortcut", "set", "pause", "ctrl+opt+h", "--json")
+        check(keyKept.code == 0 && storedBindings()["pause"]?.scope == .global && storedBindings()["pause"]?.chord.code == 4
+              && clip("shortcut", "set", "pause", "ctrl+opt+h", "--json").json["changed"] as? Bool == false,
+              "shortcut set 不写 --scope 时沿用这个动作现在的作用范围；重复执行不再写入")
+        let keyTaken = clip("shortcut", "set", "pin", "⌥⌘F", "--json")
+        let keyTakenBy = keyTaken.json["conflict"] as? [String: Any]
+        check(keyTaken.code == 2 && keyTaken.json["error"] as? String == "conflict" && keyTakenBy?["action"] as? String == "search"
+              && keyTakenBy?["title"] as? String == ClipAction.search.title && keyTakenBy?["keys"] as? String == "⌥⌘F"
+              && (keyTaken.json["message"] as? String)?.contains(ClipAction.search.title) == true && storedBindings()["pin"] == nil,
+              "shortcut set 遇到已被占用的组合键：退出 2、conflict，写明被哪个动作占用，什么都不写")
+        let bindingsBeforeRefusals = storedBindings()
+        let keyRefused: [[String]] = [["pin", "cmd+shift+v"], ["pin", "v"], ["pin", "cmd+a"], ["pin", "cmd+nosuchkey"], ["pin", "hyper+k"], ["pin", ""],
+                                      ["copy", "cmd+c", "--scope", "global"]]
+        let refusedCodes = keyRefused.map { clipArgs(["shortcut", "set"] + $0 + ["--json"]) }
+        check(refusedCodes.allSatisfy { $0.code == 2 && $0.json["error"] as? String == "invalid" } && storedBindings() == bindingsBeforeRefusals
+              && clip("shortcut", "set", "nope", "cmd+k").code == 2 && clip("shortcut", "set", "pin").code == 2
+              && clip("shortcut", "set", "pin", "cmd+k", "--scope", "everywhere").code == 2 && clip("shortcut", "list", "--dry-run").code == 2,
+              "shortcut set 沿用窗口的校验：⌘⇧V、没有修饰键、系统编辑组合、认不出的写法都退出 2，不写；未知动作、缺组合键、未知范围退出 2")
+        let keyDry = clip("shortcut", "set", "pin", "ctrl+f5", "--dry-run", "--json")
+        check(keyDry.code == 0 && keyDry.json["dry_run"] as? Bool == true && keyDry.json["would_change"] as? Bool == true
+              && keyDry.json["changed"] as? Bool == false && storedBindings() == bindingsBeforeRefusals, "shortcut set --dry-run 只校验并报告，不写")
+        check(clip("shortcut", "set", "copy", "cmd+c", "--json").code == 0 && storedBindings()["copy"]?.chord.isStandardCopy == true
+              && storedBindings()["copy"]?.scope == .application, "shortcut set 允许给「复制所选记录」设应用内 ⌘C（与窗口相同）")
+        let spelled: [(String, UInt32, UInt32, String)] = [("⌃⇧⌘V", 9, ctrl | shift | cmd, "V"), ("ctrl+shift+cmd+v", 9, ctrl | shift | cmd, "V"),
+            ("⌘,", 43, cmd, ","), ("cmd+,", 43, cmd, ","), ("opt+cmd+space", 49, opt | cmd, "Space"), ("⌃⌥⇧⌘F20", 90, ctrl | opt | shift | cmd, "F20"),
+            ("control+option+escape", 53, ctrl | opt, "Esc"), ("alt+left", 123, opt, "←"), ("⌘+W", 13, cmd, "W"), ("command+-", 27, cmd, "-")]
+        let misread = spelled.filter { ClipKey(parsing: $0.0) != ClipKey(code: $0.1, modifiers: $0.2, key: $0.3) }.map(\.0)
+        let roundTrip = storedBindings().values.allSatisfy { ClipKey(parsing: $0.chord.label) == $0.chord }
+        check(misread.isEmpty && roundTrip && ClipKey(parsing: "cmd++") == nil && ClipKey(parsing: "+") == nil && ClipKey(parsing: "  ") == nil,
+              "组合键写法解析：标签与名字两种写法得到同一个键" + (misread.isEmpty ? "" : "（错：" + misread.joined(separator: " ") + "）") + "，list 打印的标签能原样写回")
+        check(clip("shortcut", "clear", "--all", "--json").json["changed"] as? Bool == true && storedBindings().isEmpty, "shortcut clear --all 清掉 set 存下的全部绑定")
 
         // What only the running app knows reaches the command line through ClipRuntimeState: the app-side publisher runs
         // here over a shortcut centre whose key backend refuses ⌥⌘G, with an injected Accessibility answer.
@@ -274,6 +334,10 @@ enum CLISelfTest {
         let configState = clip("config", "--json")
         check(configState.code == 0 && configState.json["command"] as? String == "config status" && configState.json["sync_enabled"] as? Bool == false
               && configState.json["keys"] as? [String] == ClipPortableConfiguration.keys, "config status 只读报告开关与可迁移的偏好键")
+        let syncSentence = configState.json["sync_status"] as? [String: Any]
+        check(syncSentence?["text"] as? String == "iCloud 配置同步已关闭" && syncSentence?["from"] as? String == "derived"
+              && syncSentence?["live"] as? Bool == false && syncSentence?["at"] is NSNull
+              && clip("config", "status").out.contains("同步状态：iCloud 配置同步已关闭"), "config status 带开关下面那句同步状态（sync_status）")
         check(clip("config", "export", "-o", configFile.path, "--json").code == 0 && FileManager.default.fileExists(atPath: configFile.path)
               && clip("config", "export", "-o", configFile.path).code == 2 && clip("config", "export", "-o", configFile.path, "--force").code == 0,
               "config export 写出配置文件；已存在时要 --force")
@@ -304,13 +368,13 @@ enum CLISelfTest {
         let feedRoot = tmp.appendingPathComponent("cli-update-feed", isDirectory: true)
         let feed = feedRoot.appendingPathComponent("TianliApps/Updates/\(ClipCLI.appBundleID)/cloud", isDirectory: true)
         try? FileManager.default.createDirectory(at: feed, withIntermediateDirectories: true)
-        func publish(_ version: String, _ build: String) -> Result {
+        func publish(_ version: String, _ build: String, _ command: [String] = ["update", "check", "--json"]) -> Result {
             let release: [String: Any] = ["version": version, "build": build, "bundle_id": ClipCLI.appBundleID, "channel": "cloud",
                                           "filename": "Clip-\(version).zip", "sha256": String(repeating: "a", count: 64), "size_bytes": 10]
             try? JSONSerialization.data(withJSONObject: release).write(to: feed.appendingPathComponent("release.json"))
             setenv("APP_LIFECYCLE_CLOUD_DIR", feedRoot.path, 1)
             defer { unsetenv("APP_LIFECYCLE_CLOUD_DIR") }
-            return clip("update", "check", "--json")
+            return clipArgs(command)
         }
         let newer = publish("99.0", "1")
         let newerUpgrade = newer.json["upgrade"] as? [String: Any]
@@ -323,10 +387,76 @@ enum CLISelfTest {
         check(current.code == 0 && current.json["state"] as? String == "up_to_date" && current.json["update_available"] as? Bool == false
               && (current.json["upgrade"] as? [String: Any])?["button"] is NSNull, "update check 已是最新时如实报告")
         check(((try? FileManager.default.contentsOfDirectory(atPath: feed.path)) ?? []) == ["release.json"], "update check 不下载、不安装")
+        // 升级到新版: the shared layer's install, as far as an isolated run may go. Nothing here replaces a bundle.
+        let installDry = publish("99.0", "1", ["update", "install", "--dry-run", "--json"])
+        let installPlan = installDry.json["would_install"] as? [String: Any]
+        check(installDry.code == 0 && installDry.json["command"] as? String == "update install" && installDry.json["dry_run"] as? Bool == true
+              && installDry.json["installed"] as? Bool == false && (installPlan?["to"] as? [String: Any])?["version"] as? String == "99.0"
+              && (installPlan?["from"] as? [String: Any])?["build"] as? String == host.build && installDry.json["will_quit_app"] as? Bool == false
+              && installDry.json["app_running"] as? Bool == false, "update install --dry-run 报告会从哪版换到哪版，不替换")
+        let installUnconfirmed = publish("99.0", "1", ["update", "install", "--json"])
+        check(installUnconfirmed.code == 2 && installUnconfirmed.json["error"] as? String == "confirmation_required"
+              && installUnconfirmed.json["exit_code"] as? Int == 2, "update install 缺 --yes 退出 2、confirmation_required")
+        let bundleBefore = (try? FileManager.default.attributesOfItem(atPath: Bundle.main.executablePath ?? ""))?[.modificationDate] as? Date
+        let installIsolated = publish("99.0", "1", ["update", "install", "--yes", "--json"])
+        check(installIsolated.code == 4 && installIsolated.json["error"] as? String == "system_setting" && installIsolated.json["would_install"] != nil
+              && ((try? FileManager.default.attributesOfItem(atPath: Bundle.main.executablePath ?? ""))?[.modificationDate] as? Date) == bundleBefore
+              && ((try? FileManager.default.contentsOfDirectory(atPath: feed.path)) ?? []) == ["release.json"],
+              "update install --yes 在隔离运行里不替换 App：退出 4、system_setting")
+        let installCurrent = publish(host.version, host.build, ["update", "install", "--yes", "--json"])
+        check(installCurrent.code == 0 && installCurrent.json["ok"] as? Bool == true && installCurrent.json["installed"] as? Bool == false
+              && installCurrent.json["state"] as? String == "up_to_date" && (installCurrent.json["current"] as? [String: Any])?["build"] as? String == host.build,
+              "update install 没有新版时退出 0、installed 为 false")
+        try? FileManager.default.removeItem(at: feed.appendingPathComponent("release.json"))
+        let installNoFeed = publish("0", "0", ["update", "install", "--definitely-not-a-flag", "--json"])
+        check(installNoFeed.code == 2 && installNoFeed.json["error"] as? String == "usage" && installNoFeed.json["command"] as? String == "update install",
+              "update install 参数错误退出 2、usage")
         #endif
         let badUpdate = clip("update", "--json"), badUpdateFlag = clip("update", "check", "--definitely-not-a-flag", "--json")
         check(badUpdate.code == 2 && badUpdate.json["error"] as? String == "usage" && badUpdateFlag.code == 2
               && badUpdateFlag.json["command"] as? String == "update check" && clip("update", "--help").code == 0, "update 用法错误退出 2，--help 退出 0")
+
+        // Clip itself: start in the background, quit. The launch and the quit request are the two hooks above; the
+        // running-app probe answers from appPIDs, and "ready" is the report a started app writes into this data dir.
+        func report(_ pid: Int32) {
+            ClipRuntimeState(pid: pid, updatedAt: Date(), accessibilityTrusted: false, shortcuts: [:], cloud: nil).write(home: home)
+        }
+        appPIDs = []
+        let startDry = clip("start", "--dry-run", "--json")
+        check(startDry.code == 0 && startDry.json["would_start"] as? Bool == true && startDry.json["arguments"] as? [String] == ["--background"]
+              && startDry.json["app_path"] as? String == fakeApp.path && launches.isEmpty, "start --dry-run 只报告将启动哪个 App，不启动")
+        onLaunch = { appPIDs = [4242]; report(4242) }
+        let started = clip("start", "--json")
+        check(started.code == 0 && started.json["started"] as? Bool == true && started.json["already_running"] as? Bool == false
+              && started.json["ready"] as? Bool == true && started.json["pids"] as? [Int] == [4242] && launches.count == 1
+              && launches.first?.bundle == fakeApp && launches.first?.arguments == ["--background"],
+              "start 请系统在后台启动 clip 所在的 App（--background：不出主窗口），等到它运行并报告就绪")
+        let startedAgain = clip("start", "--json")
+        check(startedAgain.code == 0 && startedAgain.json["started"] as? Bool == false && startedAgain.json["already_running"] as? Bool == true
+              && launches.count == 1, "start 在 Clip 已运行时什么都不做")
+        let quitDry = clip("quit", "--dry-run", "--json")
+        check(quitDry.code == 0 && quitDry.json["would_quit"] as? Bool == true && quits.isEmpty, "quit --dry-run 只报告，不发退出请求")
+        onQuit = { _ in }
+        let quitBusy = clip("quit", "--wait", "1", "--json")
+        check(quitBusy.code == 1 && quitBusy.json["error"] as? String == "app_busy" && quitBusy.json["app_running"] as? Bool == true && quits == [4242],
+              "quit 发出请求后 Clip 没有退出：退出 1、app_busy，如实说仍在运行")
+        onQuit = { pid in appPIDs.removeAll { $0 == pid } }
+        let quitDone = clip("quit", "--json")
+        check(quitDone.code == 0 && quitDone.json["quit"] as? Bool == true && quitDone.json["was_running"] as? Bool == true
+              && quitDone.json["app_running"] as? Bool == false && quits == [4242, 4242], "quit 请使用这个数据目录的 Clip 退出，并等到它结束")
+        let quitIdle = clip("quit", "--json")
+        appPIDs = [777]   // some other Clip (the user's), which never reported into this isolated data dir
+        let quitOther = clip("quit", "--json")
+        check(quitIdle.code == 0 && quitIdle.json["was_running"] as? Bool == false && quitIdle.json["quit"] as? Bool == false
+              && quitOther.code == 0 && quitOther.json["quit"] as? Bool == false && quitOther.json["app_running"] as? Bool == true && quits.count == 2,
+              "quit 在没有 Clip 运行时退出 0；隔离运行不退出别的 Clip 实例")
+        appPIDs = []; onLaunch = {}
+        let startLost = clip("start", "--wait", "1", "--json")
+        check(startLost.code == 1 && startLost.json["error"] as? String == "launch_failed" && launches.count == 2
+              && clip("start", "extra").code == 2 && clip("quit", "--wait", "abc").code == 2 && clip("start", "--wait", "500").code == 2
+              && clip("start", "--help").code == 0 && clip("quit", "--help").code == 0,
+              "start 之后进程没有出现：退出 1、launch_failed；start / quit 参数错误退出 2")
+        try? FileManager.default.removeItem(at: ClipRuntimeState.url(home: home))
 
         // Deck import through the production importer, with the cross-process lock.
         let deck = tmp.appendingPathComponent("cli-deck", isDirectory: true)
@@ -423,6 +553,62 @@ enum CLISelfTest {
                   "cloud show -o 导出归档原图；已存在要 --force；文本记录没有图片可导出")
             check(clip("cloud", "show", "no-such-key", "--json").code == 3 && clip("cloud", "show", keys[2]).code == 3 && clip("cloud", "show").code == 2,
                   "cloud show：不存在或已在手机上删除的记录退出 3；缺 key 退出 2")
+
+            // 手机上的收藏 / 取消收藏 / 删除 = cloud favorite | unfavorite | delete. The command reads and asks; the
+            // running app writes. Here the app's side is the very function it runs (MacClipSync.apply) on the same library.
+            func favorite(_ key: String) -> Bool? { (clip("cloud", "show", key, "--json").json["item"] as? [String: Any])?["favorite"] as? Bool }
+            let favDry = clip("cloud", "favorite", keys[0], "--dry-run", "--json")
+            let favOffline = clip("cloud", "favorite", keys[0], "--json")
+            let favSame = clip("cloud", "favorite", keys[1], "--json")
+            let delUnconfirmed = clip("cloud", "delete", keys[0], "--json")
+            check(favDry.code == 0 && favDry.json["would_change"] as? Bool == true && favDry.json["command"] as? String == "cloud favorite"
+                  && favOffline.code == 4 && favOffline.json["error"] as? String == "app_not_running"
+                  && favSame.code == 0 && favSame.json["changed"] as? Bool == false
+                  && delUnconfirmed.code == 2 && delUnconfirmed.json["error"] as? String == "confirmation_required"
+                  && cloudChanges.isEmpty && favorite(keys[0]) == false,
+                  "cloud favorite / delete：--dry-run 只报告；Clip 未运行退出 4；已是收藏不发请求；delete 缺 --yes 退出 2——都没有发出请求")
+            appPIDs = [99999]
+            cloudAnswer = { MacClipSync.apply($0, to: lib) }
+            let faved = clip("cloud", "favorite", String(keys[0].prefix(16)), "--json")
+            check(faved.code == 0 && faved.json["changed"] as? Bool == true && faved.json["favorite"] as? Bool == true && faved.json["key"] as? String == keys[0]
+                  && cloudChanges.last?.action == .favorite && cloudChanges.last?.key == keys[0] && favorite(keys[0]) == true
+                  && phone("", "favorites").contains(keys[0]),
+                  "cloud favorite：运行中的 App 用手机端同一个 mutate 收藏，cloud show 与手机的收藏筛选都读到（key 可给唯一前缀）")
+            let unfaved = clip("cloud", "unfavorite", keys[0], "--json")
+            check(unfaved.code == 0 && unfaved.json["favorite"] as? Bool == false && favorite(keys[0]) == false && !phone("", "favorites").contains(keys[0])
+                  && clip("cloud", "unfavorite", keys[0], "--json").json["changed"] as? Bool == false, "cloud unfavorite 取消收藏；重复执行不再发请求")
+            let sent = cloudChanges.count
+            let deleted = clip("cloud", "delete", keys[0], "--yes", "--json")
+            check(deleted.code == 0 && deleted.json["deleted"] as? Bool == true && deleted.json["changed"] as? Bool == true && deleted.json["favorite"] == nil
+                  && clip("cloud", "show", keys[0]).code == 3 && !phone("", "all").contains(keys[0])
+                  && clip("cloud", "delete", keys[0], "--yes", "--json").code == 3 && cloudChanges.count == sent + 1,
+                  "cloud delete --yes：从同步历史删除（手机列表不再有它），再删退出 3、不发请求")
+            // The record went away between the command's read and the app's write (deleted on another device); the app
+            // did not answer; the app could not write.
+            cloudAnswer = { change in try? lib.mutate(change.key, remove: true); return MacClipSync.apply(change, to: lib) }
+            let raced = clip("cloud", "favorite", longKey, "--json")
+            cloudAnswer = { _ in nil }
+            let silent = clip("cloud", "favorite", imageKey, "--wait", "1", "--json")
+            cloudAnswer = { _ in .init(ok: false, code: "store", message: "写不进去") }
+            let unwritten = clip("cloud", "favorite", imageKey, "--json")
+            check(raced.code == 3 && raced.json["error"] as? String == "not_found" && silent.code == 1 && silent.json["error"] as? String == "app_busy"
+                  && unwritten.code == 1 && unwritten.json["error"] as? String == "store" && favorite(imageKey) == false
+                  && clip("cloud", "favorite", "no-such-key").code == 3 && clip("cloud", "favorite").code == 2
+                  && clip("cloud", "delete", imageKey, "--yes", "--wait", "0").code == 2,
+                  "cloud favorite：记录刚被别的设备删除退出 3；App 没按时回应退出 1（app_busy）；App 没能改写退出 1（store）；未知 key 退出 3，缺 key 退出 2")
+            appPIDs = []
+            // The request and the answer are two files in the data dir: each side removes what it read, and a request
+            // nobody took in time is dropped unread.
+            let asked1 = ClipCloudChange(id: "selftest-1", action: .favorite, key: imageKey, at: Date())
+            try? asked1.leave(home: home)
+            try? ClipCloudChange(id: "selftest-0", action: .delete, key: imageKey, at: Date(timeIntervalSinceNow: -120)).leave(home: home)
+            let taken = ClipCloudChange.pending(home: home)
+            taken.first?.answer(.init(ok: true), home: home)
+            let answered = asked1.takeAnswer(home: home)
+            let leftBehind = (try? FileManager.default.contentsOfDirectory(atPath: ClipCloudChange.directory(home: home).path)) ?? ["?"]
+            check(taken.map(\.id) == ["selftest-1"] && taken.first?.action == .favorite && taken.first?.key == imageKey && answered == .init(ok: true)
+                  && asked1.takeAnswer(home: home) == nil && leftBehind.isEmpty && ClipCloudChange.pending(home: home).isEmpty && favorite(imageKey) == false,
+                  "同步历史的改动请求：命令留下请求文件，App 取走并回应；过期的请求不执行；双方读完即清")
         }
 
         // The read-only store refuses writes at the SQLite level.

@@ -44,6 +44,14 @@ enum ClipCLI {
         var command = ""
         /// PIDs of a running Clip window app (the self-test injects a fixed answer).
         var runningApp: () -> [Int32] = { ClipCLI.runningApp() }
+        /// `clip start`: the app bundle this command belongs to, and how it is launched (the self-test injects both).
+        var appBundle: () -> URL = { Bundle.main.bundleURL }
+        var launchApp: (_ bundle: URL, _ arguments: [String], _ environment: [String: String]) throws -> Void = ClipCLI.launchApp
+        /// `clip quit`: asks one running Clip to quit, as its own 退出 does (the self-test injects it).
+        var quitApp: (Int32) -> Bool = ClipCLI.quitApp
+        /// `clip cloud favorite|unfavorite|delete`: hands one change to the running Clip and waits for its answer;
+        /// nil when it did not answer in time (the self-test injects the app's side).
+        var cloudChange: (_ change: ClipCloudChange, _ home: URL, _ seconds: TimeInterval) throws -> ClipCloudChange.Answer? = ClipCLI.askApp
 
         @MainActor static func process() -> Context {
             Context(home: ClipStore.defaultHome(), defaults: AppPreferences.defaults, domain: AppPreferences.domain,
@@ -59,7 +67,7 @@ enum ClipCLI {
 
     static let commandNames: [String] = ["status", "stats", "list", "search", "show", "copy", "export", "add", "edit", "transform",
                                          "pin", "unpin", "delete", "merge", "clear", "collections", "collection", "settings", "ignore",
-                                         "pause", "resume", "import-deck", "cloud", "shortcut", "config", "update", "help", "version"]
+                                         "pause", "resume", "import-deck", "cloud", "shortcut", "config", "update", "start", "quit", "help", "version"]
 
     /// True when the process was started as `clip` (the in-bundle link) or with a CLI verb / --help / --version.
     /// LaunchServices launches (-psn_…, -NS…) and the test flags never match.
@@ -156,6 +164,8 @@ enum ClipCLI {
             case "shortcut": try shortcut(args, c)
             case "config": try config(args, c)
             case "update": try update(args, c)
+            case "start": try start(args, c)
+            case "quit": try quit(args, c)
             default: throw Failure.usage("未知命令 \(verb)；用 clip --help 查看")
             }
             return Exit.ok.rawValue
@@ -202,7 +212,7 @@ enum ClipCLI {
           settings                   记录偏好、复制声音、忽略的 app、已录制的快捷键
           ignore list                忽略名单
           shortcut list              每个动作的快捷键、作用范围与状态（全局键是否注册成功由运行中的 Clip 报告）
-          config status              「使用 iCloud 记住配置」开关与可迁移的偏好键
+          config status              「使用 iCloud 记住配置」开关、开关下面那句同步状态、可迁移的偏好键
           config export -o <file>    导出配置（--force 覆盖；只写你指定的文件）
         \(AppLifecycleCLI.helpUpdate)
           cloud status               iCloud 归档开关、账户是否绑定、同步状态与错误（Clip 运行时）、归档计数与本机缓存统计
@@ -226,7 +236,8 @@ enum ClipCLI {
           resume                                     恢复记录
           ignore add <bundle-id>                     加入忽略名单
           ignore remove <bundle-id>                  移出忽略名单
-          shortcut scope <动作> application|global    改已录制组合键的作用范围
+          shortcut set <动作> <组合键> [--scope application|global] [--dry-run]   给动作设组合键（写出来的组合键，等同在窗口里录制并保存）
+          shortcut scope <动作> application|global    改已有组合键的作用范围
           shortcut clear <动作>|--all                 清除绑定
           config import <file> --yes                 导入配置（原配置自动备份）
           import-deck [--deck-home <dir>]
@@ -234,13 +245,22 @@ enum ClipCLI {
         外部动作（只在用户明确要求时用）:
           copy <id>... [--dry-run]                   改写系统剪贴板；单条同时顶到最上
           cloud push|on|off --yes [--dry-run]        请运行中的 Clip「补充最近历史」/ 开关 iCloud 历史归档（上传到你的 iCloud）
+          cloud favorite <key> [--dry-run]           收藏同步历史里的一条（iPhone / iPad 上的「收藏」；由运行中的 Clip 改写）
+          cloud unfavorite <key> [--dry-run]         取消收藏（iPhone / iPad 上的「取消收藏」）
+          cloud delete <key> --yes [--dry-run]       从同步历史里删除一条（iPhone / iPad 上的「删除」；不能恢复，Mac 自己的库不受影响）
           config sync on|off --yes [--dry-run]       请运行中的 Clip 开关「使用 iCloud 记住配置」
+        \(AppLifecycleCLI.helpInstall("clip"))
+
+        Clip 本身（上面写「请运行中的 Clip」的命令在它没运行时退出码 4）:
+          start [--wait <秒>] [--dry-run]            后台启动 Clip：不出主窗口、不抢焦点（Dock 与菜单栏图标照常出现）；已在运行则什么都不做
+          quit [--wait <秒>] [--dry-run]             退出 Clip（与菜单「退出 Clip」相同；停止记录剪贴板，直到再次启动）
 
         --json（每个命令都支持；另有 --help）:
           成功  {"ok": true,  "command": "<完整命令路径>", …该命令的字段}
           失败  {"ok": false, "command": "<完整命令路径>", "error": "<稳定短码>", "message": "<原因>", "exit_code": N}
-          短码：usage · invalid · confirmation_required · not_found · busy · store · app_not_running · system_setting ·
-                not_installed · unsupported_edition · sync_enabled · check_incomplete · error
+          短码：usage · invalid · conflict · confirmation_required · not_found · busy · store · app_not_running · system_setting ·
+                not_installed · unsupported_edition · sync_enabled · check_incomplete · launch_failed · app_busy · error；
+                update install 另有 manual_install · needs_product_installer · upgrade_failed · replace_failed · cleanup_failed
 
         退出码:
           0  成功（查无结果也算成功）
@@ -252,15 +272,12 @@ enum ClipCLI {
 
         环境：CLIPBOOK_HOME（数据目录）· CLIPBOOK_PREFERENCES_SUITE（偏好域）· CLIPBOOK_BACKGROUND=1（配合前两者时改用隔离剪贴板）
         仅在窗口中（要真人，或只在窗口里有意义）：
-          粘贴到前一个 App（切回它并合成 ⌘V）· 录制快捷键（要真人按键）· 辅助功能「去授权…」（系统授权弹窗）· 试听音效 ·
+          粘贴到前一个 App（切回它并合成 ⌘V）· 录制快捷键（按键捕获要真人按；写出来的组合键用 shortcut set）· 辅助功能「去授权…」（系统授权弹窗）· 试听音效 ·
           网格里的选择（单击、⌘/⇧ 多选、方向键、全选、取消）· 显示 / 隐藏主窗口 · 打开设置窗口与「配置与更新…」窗口 ·
           聚焦搜索 · 编辑菜单（撤销、重做、剪切、粘贴、全选）· 在 Finder 中显示 · 在浏览器打开 · 打开数据目录 ·
-          关于 / 隐藏 / 最小化 / 关闭窗口 / 退出。
+          关于 / 隐藏 / 最小化 / 关闭窗口。
         仅在 iPhone / iPad 上（手机端要真人，或只在手机里有意义）：
           前往 App Store · 使用方式与隐私支持页 · 链接入口与外接键盘方向键选取 · 打开设置页与「配置与更新」页。
-        暂无命令（窗口里看得到，命令做不了）：
-          升级到新版 / 下载新版：命令不做静默安装；update check 给出新版、按钮名、安装包地址与步骤，替换并重启仍在
-            「配置与更新…」窗口里确认。
         只有运行中的 Clip 知道的三样，由它写进数据目录的 runtime-state.json，命令照读：
           辅助功能是否已授权    status 的 permissions.accessibility（Clip 退出后保留上次报告的值，live 为 false）
           全局快捷键是否注册成功  shortcut list 的 registration（registered | failed；Clip 没在运行为 app_not_running）
@@ -317,10 +334,11 @@ enum ClipCLI {
                  copySoundName（/System/Library/Sounds 里的名字）| copySoundVolume（0–1）
                  launchAtLogin（true/false，[--dry-run]）：系统登录项，与设置页开关同一代码；只对安装在 Applications 的 Clip，
                  隔离运行（CLIPBOOK_HOME / CLIPBOOK_PREFERENCES_SUITE）时退出码 4
-            与设置页相同的取值范围；写入后通知运行中的 Clip 重新读取。快捷键只在 App 里录制（范围与清除见 clip shortcut）。
+            与设置页相同的取值范围；写入后通知运行中的 Clip 重新读取。快捷键见 clip shortcut（设组合键、范围、清除）。
             """,
         "shortcut": """
             usage: clip shortcut [list] [--json]
+                   clip shortcut set <动作> <组合键> [--scope application|global] [--dry-run] [--json]
                    clip shortcut scope <动作> application|global [--json]
                    clip shortcut clear <动作> [--json]
                    clip shortcut clear --all [--json]
@@ -328,9 +346,16 @@ enum ClipCLI {
             list：每个动作已保存的组合键与作用范围（application = 仅 Clip 内，global = 全局）。只读。
                   全局键由运行中的 Clip 注册并报告结果：registration 为 registered | failed（status 是窗口里那句话）；
                   Clip 未运行为 app_not_running，还没报告为 unknown，这两种 status 写「已保存」而不是「已启用」；仅 Clip 内的键为 not_needed。
-            scope：改已录制组合键的作用范围，沿用窗口里的校验（保留组合、重复绑定会被拒绝，退出码 2）。
+            set：把写出来的组合键存给一个动作，等同在窗口里点「点击录制」、按下它并保存——同一个保存入口、同一套校验。
+                 组合键写法：list 打印的样子（⌃⇧⌘V、⌘,）或用 + 连起来的名字（ctrl+shift+cmd+v、opt+cmd+space、ctrl+f5）。
+                   修饰键 cmd ctrl opt（alt）shift；键名 a–z 0–9 标点 space return tab delete esc left right up down f1–f20（字母、数字、标点按美式键位）。
+                 --scope 不给时沿用这个动作现在的作用范围，还没有绑定的按 application（仅 Clip 内）；只有写明 --scope global 才是全局键。
+                 被拒绝时退出码 2，什么都不写：invalid（认不出的写法、没有 ⌘/⌃/⌥、保留给系统编辑的组合、⌘⇧V）·
+                   conflict（已被 Clip 的另一个动作占用：conflict{action, title, keys, scope} 写明是谁，先 clear 它）。
+                 --dry-run 只校验并报告 would_change，不写。全局键是否被系统接受由运行中的 Clip 报告，用 shortcut list 的 registration 回读。
+            scope：改已有组合键的作用范围，沿用窗口里的校验（保留组合、重复绑定会被拒绝，退出码 2）；还没有组合键的动作先 set。
             clear：清除一个动作的绑定；--all =「清除所有快捷键」。
-            组合键本身要真人按下，只在窗口里录制；默认不绑定任何键，命令也不会替你新增组合键。
+            默认不绑定任何键：只有 set 明确给出动作和组合键时才写入，没有任何命令会替你挑一个键。窗口里的按键捕获（「点击录制」）仍要真人按。
             """,
         "config": """
             usage: clip config [status] [--json]
@@ -338,23 +363,55 @@ enum ClipCLI {
                    clip config import <file.json> --yes [--json]
                    clip config sync on|off --yes [--dry-run] [--json]
             「配置与更新」窗口。可迁移的偏好：\(ClipPortableConfiguration.keys.joined(separator: " "))
-            status：「使用 iCloud 记住配置」是否开启、可迁移的偏好键。只读。
+            status：「使用 iCloud 记住配置」是否开启、可迁移的偏好键，以及窗口开关下面那句同步状态 sync_status{text, at, from, live}：
+                    from 为 app（运行中的 Clip 此刻显示的，live 为 true）· record（Clip 没在运行，上一次同步留下的那句，at 是当时）·
+                    derived（没有可用的记录，按开关给窗口打开时的初值）。只读。
             export：与「导出配置…」相同的文件；目标已存在时需 --force。
             import：与「导入配置…」相同：先备份原配置再覆盖，必须 --yes；运行中的 Clip 随后重新读取。
                     「使用 iCloud 记住配置」开着时退出码 4（同步由运行中的 App 负责：在窗口里导入，或先 sync off）。
             sync：请运行中的 Clip 拨动「使用 iCloud 记住配置」；必须 --yes，Clip 未运行时退出码 4，结果用 config status 回读。
-            检查更新见 clip update check；升级到新版仍在窗口里确认。
+            检查更新见 clip update check，升级到新版见 clip update install。
             """,
         "update": """
             usage: clip update check [--json]
-            「配置与更新」窗口的「检查更新」，走共享的命令层（与窗口同一个发行渠道、同一套版本比较）。只读，不下载、不安装。
-            --json：current{version, build}、source{kind, …}、latest{version, build, channel, download_url, release_url, sha256, size_bytes}、
-                    update_available、state（update_available | up_to_date | ahead_of_channel）、message（窗口里那句话）、
-                    upgrade{in_app, button, how, download_url}。
-            读不到发行记录时退出码 1、短码 check_incomplete（JSON 仍带 current 与 source）。
+                   clip update install --yes [--dry-run] [--json]
+            「配置与更新」窗口的「检查更新」与「升级到新版…」，走共享的命令层（与窗口同一个发行渠道、同一套版本比较、同一个安装器）。
+            check：只读，不下载、不安装。
+              --json：current{version, build}、source{kind, …}、latest{version, build, channel, download_url, release_url, sha256, size_bytes}、
+                      update_available、state（update_available | up_to_date | ahead_of_channel）、message（窗口里那句话）、
+                      upgrade{in_app, button, how, download_url, command}。
+              读不到发行记录时退出码 1、短码 check_incomplete（JSON 仍带 current 与 source）。
+            install：验证发行包与签名、替换当前的 Clip.app；运行中的 Clip 先退出、换好再重开，配置保留，替换失败回滚，旧 App 移到废纸篓。必须 --yes。
+              结果都带 current、latest、source、app_running。没有新版：退出 0，installed 为 false、state（up_to_date | ahead_of_channel）。
+              --dry-run：退出 0，dry_run、would_install{from, to}、installation、will_quit_app、will_relaunch，什么都不换。
+              装上：退出 0，installed 为 true、state 为 installed、previous{version, build}、current、backup（成功为 null）、old_app_cleanup、relaunched。
+              缺 --yes 退出 2（confirmation_required）。退出 1 的短码：check_incomplete · manual_install（这个安装位置或渠道不能由命令替换，
+                窗口里是「下载新版…」，给出 download_url）· needs_product_installer · upgrade_failed（下载或验证未通过，当前 App 未动）·
+                app_busy（运行中的 Clip 没有退出，未替换）· replace_failed（替换未完成，旧版已保留或已回滚）· cleanup_failed（新版已验证，旧包清理失败并保留）。
+              隔离运行（CLIPBOOK_HOME / CLIPBOOK_PREFERENCES_SUITE）只到 --dry-run：真替换退出码 4（system_setting），不会换掉 clip 所在的 App。
             iCloud 版读本人 iCloud Drive 里的发行记录：启动它的终端没有 iCloud Drive 访问权限时，系统可能向那个终端询问一次；
-            公开本地版联网读 GitHub 发行记录。隔离运行（CLIPBOOK_HOME / CLIPBOOK_PREFERENCES_SUITE）不读本人的 iCloud Drive。
-            升级到新版 / 下载新版没有命令：upgrade.how 给出步骤，替换并重启 App 仍要在窗口里确认。
+            公开本地版联网读 GitHub 发行记录。隔离运行不读本人的 iCloud Drive。
+            """,
+        "start": """
+            usage: clip start [--wait <秒>] [--dry-run] [--json]
+            后台启动 Clip（clip 所在的这个 App）：不出主窗口、不抢焦点，Dock 与菜单栏图标照常出现，随即开始记录剪贴板。
+            已有 Clip 在运行时什么都不做（started 为 false、already_running 为 true，退出 0）。
+            启动后等它就绪——开始接收 clip 的请求并报告运行状态——最多 --wait 秒（默认 10，1–120）：
+              started、already_running、ready、pids、app_path、app_running。就绪前到时：ready 为 false，退出 0（进程已在运行）。
+              进程没有出现：退出 1、launch_failed。--dry-run 只报告 would_start，不启动。
+            需要运行中的 Clip 的命令（cloud push|on|off、cloud favorite|unfavorite|delete、config sync）在它没运行时退出码 4：先 clip start。
+            带着 CLIPBOOK_HOME / CLIPBOOK_PREFERENCES_SUITE / CLIPBOOK_BACKGROUND 运行时，启动的实例带同样的环境（同一个隔离数据目录与偏好域）；
+            三个都给齐（CLIPBOOK_BACKGROUND=1）的隔离实例不进 Dock、不出菜单栏图标，什么都不上屏——它是测试或沙盒的，不是你的 Clip。
+            要看到主窗口，点 Dock 或菜单栏图标；命令不显示窗口。
+            """,
+        "quit": """
+            usage: clip quit [--wait <秒>] [--dry-run] [--json]
+            退出运行中的 Clip，与菜单「退出 Clip」相同（停止记录剪贴板，直到再次启动；全局快捷键随之注销）。
+            没有 Clip 在运行时什么都不做（was_running 为 false，退出 0）。
+            发出退出请求后等进程结束，最多 --wait 秒（默认 10，1–120）：was_running、quit、pids、app_running。
+              到时还没退出（有打开的对话框等）：退出 1、app_busy，Clip 仍在运行。--dry-run 只报告 would_quit。
+            退出的是使用这个数据目录的那个 Clip（它在 runtime-state.json 里报告了自己的 pid）；隔离运行只退它自己启动的实例，
+            不会退掉你正在用的 Clip。重新启动用 clip start。
             """,
         "ignore": "usage: clip ignore [list] | clip ignore add <bundle-id> | clip ignore remove <bundle-id> [--json]\n「忽略这些 app 的复制」名单。",
         "pause": "usage: clip pause [--json]\n暂停记录（= clip settings set paused true）。",
@@ -366,6 +423,8 @@ enum ClipCLI {
                    clip cloud show <key> [-o <file>] [--force] [--no-text] [--json]
                    clip cloud push --yes [--dry-run] [--json]
                    clip cloud on|off --yes [--dry-run] [--json]
+                   clip cloud favorite|unfavorite <key> [--wait <秒>] [--dry-run] [--json]
+                   clip cloud delete <key> --yes [--wait <秒>] [--dry-run] [--json]
             status：iCloud 历史归档开关、是否已绑定账户（只给是否）、归档标记计数、最近 500 条里待归档条数、来自 iPhone 的记录数、本机归档缓存统计。
             status 读的是这台 Mac 的开关与归档缓存；live 是运行中的 Clip 报告的同步状态文字、整理状态与错误（Clip 未运行或还没打开归档时为 null，live_status 写明原因）。手机那一侧的开关与状态读不到。
             list：本机归档缓存里 iPhone/iPad 可见的历史。只读打开，列表规则就是手机端 ClipLibrary.list（同一份代码：每个内容取最新一行、删除标记隐藏、新的在上），新鲜度取决于 App 上次同步。
@@ -374,7 +433,13 @@ enum ClipCLI {
             push：请运行中的 Clip 执行 设置 → iCloud「补充最近历史」（归档未开时退出码 2）。
             on / off：请运行中的 Clip 拨动「iCloud 历史归档」开关（App 做账户检查）。
             push/on/off 会上传或停止同步你的 iCloud：必须 --yes；--dry-run 只报告；Clip 未运行时退出码 4；结果用 cloud status 回读。
-            手机端收藏/删除只在 iPhone/iPad 上做。
+            favorite / unfavorite / delete：iPhone / iPad 上的「收藏」「取消收藏」「删除」，改的是同一份同步历史（cloud list 列出的那些；key 可只给唯一前缀）。
+                  命令自己不打开同步库：把请求交给运行中的 Clip，由它调用手机端同一个 ClipLibrary.mutate，等它回应（最多 --wait 秒，默认 10，1–120），
+                  再只读读回。iCloud 历史归档开着时由 iCloud 带到手机；关着时只改这台 Mac 上的这份（icloud_enabled 写明是哪种）。
+                  只改同步历史：Mac 自己的库里对应的记录（local_id）与它的置顶不变，与在手机上操作时一样。
+                  --json：action、key、favorite（delete 为 deleted）、changed、icloud_enabled、app_running；--dry-run 只报告 would_change。
+                  已是目标状态：退出 0、changed 为 false，不发请求。delete 必须 --yes，删除后正文与图片清空、不能恢复。
+                  退出码：3 没有这条可见记录（或没有归档缓存）· 4 需要改动而 Clip 没在运行（先 clip start）· 1 app_busy（Clip 没有按时回应）/ store（它没能改写）。
             """,
     ]
 
@@ -1101,7 +1166,7 @@ enum ClipCLI {
         else { c.out(changedList ? "已\(action == "add" ? "加入" : "移出")忽略名单：\(bundle)" : "未变化：\(bundle)") }
     }
 
-    // MARK: - Shortcuts (设置 → 快捷键; recording needs a real key press and stays in the window)
+    // MARK: - Shortcuts (设置 → 快捷键; capturing a key press stays in the window, storing a chord written out is `set`)
 
     /// Registration belongs to the running app. This process validates and stores through ClipShortcuts only.
     @MainActor private final class StoredOnlyKeys: ClipKeyRegistration {
@@ -1111,8 +1176,9 @@ enum ClipCLI {
     }
 
     @MainActor static func shortcut(_ args: [String], _ c: Context) throws {
-        let p = try parse(args, flags: ["all"], positionals: 0...3)
-        let syntax = "用法：clip shortcut list | scope <动作> application|global | clear <动作> | clear --all"
+        let p = try parse(args, flags: ["all", "dry-run"], options: ["scope"], positionals: 0...3)
+        let syntax = "用法：clip shortcut list | set <动作> <组合键> [--scope application|global] [--dry-run] | scope <动作> application|global | clear <动作> | clear --all"
+        guard p.positionals.first == "set" || (!p.has("dry-run") && p.options["scope"] == nil) else { throw Failure.usage(syntax) }
         let center = ClipShortcuts(defaults: c.defaults, backend: StoredOnlyKeys(), monitorsEnabled: false) { _ in }
         func action(_ raw: String) throws -> ClipAction {
             guard let a = ClipAction.allCases.first(where: { $0.rawValue.lowercased() == raw.lowercased() }) else {
@@ -1120,18 +1186,46 @@ enum ClipCLI {
             }
             return a
         }
+        func range(_ raw: String) throws -> ClipBinding.Scope {
+            guard let scope = ClipBinding.Scope(rawValue: raw.lowercased()) else { throw Failure.usage("作用范围应为 application | global，收到 \(raw)") }
+            return scope
+        }
         var changed = false
+        var extra: [String: Any] = [:]
         switch p.positionals.first ?? "list" {
         case "list":
             guard p.positionals.count <= 1, !p.has("all") else { throw Failure.usage(syntax) }
+        case "set":
+            // The window's save: 「点击录制」 hands the pressed chord and the row's scope to ClipShortcuts.set. Here the
+            // chord is written out and the action named, so nothing is bound that the caller did not spell.
+            guard p.positionals.count == 3, !p.has("all") else { throw Failure.usage(syntax) }
+            let a = try action(p.positionals[1])
+            let wanted = try p.options["scope"].map(range) ?? center.binding(a)?.scope ?? .application
+            guard let chord = ClipKey(parsing: p.positionals[2]) else {
+                throw Failure.invalid("认不出组合键 \(p.positionals[2])：写成 ⌃⇧⌘V 或 ctrl+shift+cmd+v 这样（键名见 clip shortcut --help）")
+            }
+            let binding = ClipBinding(chord: chord, scope: wanted)
+            let before = center.binding(a)
+            if let refusal = center.refusal(a, binding) {
+                guard let holder = refusal.holder, let held = center.bindings[holder] else { throw Failure.invalid(refusal.message) }
+                let title = ClipAction(rawValue: holder)?.title ?? holder
+                throw Failure(exit: .usage, code: "conflict", message: "\(chord.label) 已用于「\(title)」（\(holder)）：先 clip shortcut clear \(holder)，或换一个组合键",
+                              extra: ["conflict": ["action": holder, "title": title, "keys": held.chord.label, "scope": held.scope.rawValue]])
+            }
+            extra["set"] = ["action": a.rawValue, "keys": chord.label, "scope": wanted.rawValue,
+                            "previous": before.map { ["keys": $0.chord.label, "scope": $0.scope.rawValue] as Any } ?? NSNull()] as [String: Any]
+            if p.has("dry-run") {
+                extra["dry_run"] = true; extra["would_change"] = before != binding
+            } else if before != binding {
+                guard center.set(a, to: binding) else { throw Failure.invalid(center.errors[a.rawValue] ?? "无法保存这个组合键") }
+                changed = true
+            }
         case "scope":
             guard p.positionals.count == 3, !p.has("all") else { throw Failure.usage(syntax) }
             let a = try action(p.positionals[1])
-            guard let scope = ClipBinding.Scope(rawValue: p.positionals[2].lowercased()) else {
-                throw Failure.usage("作用范围应为 application | global，收到 \(p.positionals[2])")
-            }
+            let scope = try range(p.positionals[2])
             guard let binding = center.binding(a) else {
-                throw Failure.invalid("「\(a.title)」还没有组合键：组合键要在 Clip 的 设置 → 快捷键 里由本人按下录制")
+                throw Failure.invalid("「\(a.title)」还没有组合键：先 clip shortcut set \(a.rawValue) <组合键>，或在 Clip 的 设置 → 快捷键 里录制")
             }
             if binding.scope != scope {
                 guard center.set(a, to: ClipBinding(chord: binding.chord, scope: scope)) else {
@@ -1178,7 +1272,11 @@ enum ClipCLI {
             return ["action": a.rawValue, "title": a.title, "keys": b.map { $0.chord.label as Any } ?? NSNull(),
                     "scope": b.map { $0.scope.rawValue as Any } ?? NSNull(), "status": status, "registration": registration]
         }
-        if p.json { emitJSON(c, ["shortcuts": rows, "changed": changed, "app_running": !pids.isEmpty]); return }
+        if p.json { emitJSON(c, extra.merging(["shortcuts": rows, "changed": changed, "app_running": !pids.isEmpty]) { _, own in own }); return }
+        if p.has("dry-run"), let plan = extra["set"] as? [String: Any] {
+            c.out("\(plan["action"] ?? "")\t\(plan["keys"] ?? "")\t\(plan["scope"] ?? "")\t\(extra["would_change"] as? Bool == true ? "将保存（未执行）" : "已是这个组合键，不会写入")")
+            return
+        }
         c.out(rows.map { "\($0["action"] ?? "")\t\(($0["keys"] as? String) ?? "-")\t\(($0["scope"] as? String) ?? "-")\t\($0["status"] ?? "")" }.joined(separator: "\n"))
     }
 
@@ -1202,8 +1300,13 @@ enum ClipCLI {
         switch p.positionals.first ?? "status" {
         case "status":
             guard p.positionals.count <= 1 else { throw Failure.usage(syntax) }
-            if p.json { emitJSON(c, ["sync_enabled": configuration.enabled, "keys": ClipPortableConfiguration.keys, "app_running": running]) }
-            else { c.out("使用 iCloud 记住配置：\(configuration.enabled ? "开" : "关") · 可迁移的偏好：\(ClipPortableConfiguration.keys.joined(separator: " "))") }
+            // The sentence under the window's switch, read as the shared command layer reads it (it writes nothing).
+            let sentence = AppLifecycleCLI.syncStatus(configuration, enabled: configuration.enabled, running: c.runningApp())
+            if p.json { emitJSON(c, ["sync_enabled": configuration.enabled, "sync_status": sentence, "keys": ClipPortableConfiguration.keys, "app_running": running]) }
+            else {
+                c.out("使用 iCloud 记住配置：\(configuration.enabled ? "开" : "关") · 可迁移的偏好：\(ClipPortableConfiguration.keys.joined(separator: " "))\n"
+                      + "同步状态：\(sentence["text"] ?? "")" + (sentence["live"] as? Bool == true ? "（运行中的 Clip 此刻显示）" : ""))
+            }
         case "export":
             guard p.positionals.count == 1, let raw = p.options["output"] else { throw Failure.usage(syntax) }
             let url = path(raw)
@@ -1249,10 +1352,10 @@ enum ClipCLI {
         }
     }
 
-    // MARK: - 检查更新 (the shared command layer behind the window's 检查更新 button)
+    // MARK: - 检查更新 / 升级到新版 (the shared command layer behind the window's two buttons)
 
-    /// `clip update check` runs AppLifecycleCLI with the window's own update source and re-wraps its answer in clip's
-    /// envelope (flat "error" code plus "exit_code"), so every clip command answers in one shape.
+    /// `clip update check|install` runs AppLifecycleCLI with the window's own update source and re-wraps its answer in
+    /// clip's envelope (flat "error" code plus "exit_code"), so every clip command answers in one shape.
     @MainActor static func update(_ args: [String], _ c: Context) throws {
         // An isolated run never reads the user's iCloud Drive: the shared layer then accepts only a test feed (APP_LIFECYCLE_CLOUD_DIR).
         let key = "APP_LIFECYCLE_SUPPORT_DIR"
@@ -1260,22 +1363,158 @@ enum ClipCLI {
         if redirect { setenv(key, c.home.appendingPathComponent("Configuration", isDirectory: true).path, 1) }
         defer { if redirect { unsetenv(key) } }
         let json = args.contains("--json")
+        var passed = args.filter { $0 != "--json" }
+        // `update install` replaces the app this command runs from. An isolated run (a test, a sandbox) goes as far as
+        // the shared layer's own dry run and stops there: it never swaps the bundle, whatever the test feed offers.
+        let guarded = c.isolated && passed.first == "install" && passed.contains("--yes") && !passed.contains("--dry-run")
+        if guarded { passed.append("--dry-run") }
         var printed: [String] = [], complaints: [String] = []
         var product = AppLifecycleCLI.Product(command: "clip", name: hostInfo().name, configuration: nil, updateSource: ClipUpdates.source)
         product.out = { printed.append($0) }
         product.err = { complaints.append($0) }
         product.runningApp = c.runningApp
-        let code = AppLifecycleCLI.run(["update"] + args.filter { $0 != "--json" } + ["--json"], product: product)
+        let code = AppLifecycleCLI.run(["update"] + passed + ["--json"], product: product)
         var body = (try? JSONSerialization.jsonObject(with: Data(printed.joined(separator: "\n").utf8))) as? [String: Any] ?? [:]
         body.removeValue(forKey: "ok"); body.removeValue(forKey: "command")
         if code == 0 {
-            if json { emitJSON(c, body) }
-            else { c.out([body["message"] as? String, body["update_available"] as? Bool == true ? (body["upgrade"] as? [String: Any])?["how"] as? String : nil].compactMap { $0 }.joined(separator: "\n")) }
+            if guarded, body["would_install"] != nil {
+                for name in ["dry_run", "installed", "state", "message"] { body.removeValue(forKey: name) }
+                throw Failure(exit: .needsApp, code: "system_setting", message: "升级会替换 clip 所在的这个 App：隔离运行（CLIPBOOK_HOME / CLIPBOOK_PREFERENCES_SUITE）只到 --dry-run，不替换", extra: body)
+            }
+            if json { emitJSON(c, body); return }
+            let installing = passed.first == "install"
+            var lines = [body["message"] as? String]
+            if body["dry_run"] as? Bool == true, let plan = body["would_install"] as? [String: Any],
+               let from = plan["from"] as? [String: Any], let to = plan["to"] as? [String: Any] {
+                lines = ["将从 \(from["version"] ?? "?") (\(from["build"] ?? "?")) 升级到 \(to["version"] ?? "?") (\(to["build"] ?? "?"))（未执行）"
+                         + (body["will_quit_app"] as? Bool == true ? "；运行中的 Clip 会先退出，换好后重新打开。" : "；Clip 没在运行，换好后不会打开它。")]
+            } else if installing, body["installed"] as? Bool == true {
+                lines.append("配置保留，旧 App 已移到废纸篓" + (body["relaunched"] as? Bool == true ? "；Clip 已重新打开。" : "。"))
+            } else if installing { lines.append("不需要升级。") }
+            else if body["update_available"] as? Bool == true { lines.append((body["upgrade"] as? [String: Any])?["how"] as? String) }
+            c.out(lines.compactMap { $0 }.joined(separator: "\n"))
             return
         }
         let error = body.removeValue(forKey: "error") as? [String: Any]
         throw Failure(exit: code == 2 ? .usage : .failure, code: error?["code"] as? String ?? "error",
                       message: error?["message"] as? String ?? complaints.joined(separator: " "), extra: body)
+    }
+
+    // MARK: - Clip itself: start in the background, quit
+
+    /// The running Clip this command talks to: the one that reported its pid into this data dir (runtime-state.json).
+    /// Without such a report every running Clip counts — except from an isolated run, which never reaches the user's app.
+    @MainActor static func instances(_ c: Context) -> (own: [Int32], running: [Int32]) {
+        let running = c.runningApp()
+        if let owner = ClipRuntimeState.read(home: c.home)?.pid, running.contains(owner) { return ([owner], running) }
+        return (c.isolated ? [] : running, running)
+    }
+
+    static func seconds(_ p: Parsed) throws -> TimeInterval {
+        guard let raw = p.options["wait"] else { return 10 }
+        guard let value = Double(raw), (1...120).contains(value) else { throw Failure.usage("--wait 应为 1–120 的秒数，收到 \(raw)") }
+        return value
+    }
+
+    /// Polls without a run loop source of its own: the answer comes from the system's list of running apps.
+    static func wait(_ seconds: TimeInterval, until done: () -> Bool) -> Bool {
+        let deadline = ProcessInfo.processInfo.systemUptime + seconds
+        while true {
+            if done() { return true }
+            guard ProcessInfo.processInfo.systemUptime < deadline else { return false }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
+
+    /// The isolation a started instance must share with the command that started it.
+    static let inheritedEnvironment = ["CLIPBOOK_HOME", "CLIPBOOK_PREFERENCES_SUITE", "CLIPBOOK_BACKGROUND",
+                                       "APP_LIFECYCLE_SUPPORT_DIR", "APP_LIFECYCLE_CLOUD_DIR", "APP_LIFECYCLE_FOLLOW_CHANNEL", "APP_LIFECYCLE_NO_RELAUNCH"]
+
+    /// LaunchServices starts the app as it would from the Dock, but in the background (-g) and hidden (-j);
+    /// `--background` is the app's own switch for "do not show the main window".
+    static func launchApp(_ bundle: URL, _ arguments: [String], _ environment: [String: String]) throws {
+        let process = Process(), complaint = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = ["-g", "-j"] + environment.sorted { $0.key < $1.key }.flatMap { ["--env", "\($0.key)=\($0.value)"] }
+            + [bundle.path, "--args"] + arguments
+        process.standardOutput = FileHandle.nullDevice; process.standardError = complaint
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            let said = String(decoding: complaint.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            throw Failure(exit: .failure, code: "launch_failed", message: "系统没有启动 \(bundle.path)：\(said.isEmpty ? "open 退出码 \(process.terminationStatus)" : said)")
+        }
+    }
+
+    /// The app's own 退出: a quit request it handles as it handles ⌘Q. A process the system does not list as an app gets SIGTERM.
+    static func quitApp(_ pid: Int32) -> Bool {
+        if let app = NSRunningApplication(processIdentifier: pid) { return app.terminate() }
+        return kill(pid, SIGTERM) == 0
+    }
+
+    @MainActor static func start(_ args: [String], _ c: Context) throws {
+        let p = try parse(args, flags: ["dry-run"], options: ["wait"], positionals: 0...0)
+        let limit = try seconds(p)
+        let bundle = c.appBundle()
+        let running = c.runningApp()
+        var body: [String: Any] = ["app_path": bundle.path, "already_running": !running.isEmpty, "check_with": "clip status"]
+        if !running.isEmpty {
+            body["started"] = false; body["pids"] = running; body["app_running"] = true
+            body["ready"] = instances(c).own.isEmpty ? NSNull() : true as Any
+            if p.has("dry-run") { body["dry_run"] = true; body["would_start"] = false }
+            if p.json { emitJSON(c, body) } else { c.out("Clip 已在运行（pid \(running.map(String.init).joined(separator: ","))），没有再启动") }
+            return
+        }
+        guard bundle.pathExtension == "app" else {
+            throw Failure(exit: .needsApp, code: "not_installed", message: "clip 不在 Clip.app 里运行（\(bundle.path)），没有可以启动的 App")
+        }
+        let environment = ProcessInfo.processInfo.environment.filter { inheritedEnvironment.contains($0.key) && !$0.value.isEmpty }
+        let arguments = ["--background"]
+        if p.has("dry-run") {
+            body["dry_run"] = true; body["would_start"] = true; body["arguments"] = arguments; body["isolated"] = c.isolated
+            if p.json { emitJSON(c, body) } else { c.out("将在后台启动 \(bundle.path)（未执行）") }
+            return
+        }
+        try c.launchApp(bundle, arguments, environment)
+        // Running: the system lists it. Ready: it has wired the requests `clip` sends and reported itself into this data dir.
+        var pids: [Int32] = []
+        let ready = wait(limit) { pids = c.runningApp(); return !instances(c).own.isEmpty && !pids.isEmpty }
+        if pids.isEmpty { pids = c.runningApp() }
+        guard !pids.isEmpty else {
+            throw Failure(exit: .failure, code: "launch_failed", message: "已请系统启动 Clip，但 \(Int(limit)) 秒内没有看到它在运行；用 clip status 再看", extra: body)
+        }
+        body["started"] = true; body["pids"] = pids; body["app_running"] = true; body["ready"] = ready
+        if p.json { emitJSON(c, body) }
+        else { c.out("Clip 已在后台启动（pid \(pids.map(String.init).joined(separator: ","))）" + (ready ? "" : "；还没报告就绪，稍后用 clip status 查看")) }
+    }
+
+    @MainActor static func quit(_ args: [String], _ c: Context) throws {
+        let p = try parse(args, flags: ["dry-run"], options: ["wait"], positionals: 0...0)
+        let limit = try seconds(p)
+        let found = instances(c)
+        var body: [String: Any] = ["was_running": !found.own.isEmpty, "pids": found.own, "check_with": "clip status"]
+        if p.has("dry-run") {
+            body["dry_run"] = true; body["would_quit"] = !found.own.isEmpty; body["app_running"] = !found.running.isEmpty
+            if p.json { emitJSON(c, body) } else { c.out(found.own.isEmpty ? "没有要退出的 Clip" : "将退出 Clip（pid \(found.own.map(String.init).joined(separator: ","))）（未执行）") }
+            return
+        }
+        guard !found.own.isEmpty else {
+            body["quit"] = false; body["app_running"] = !found.running.isEmpty
+            if p.json { emitJSON(c, body) }
+            else { c.out(found.running.isEmpty ? "Clip 没在运行" : "没有使用这个数据目录的 Clip 在运行（隔离运行不退出别的实例）") }
+            return
+        }
+        let asked = found.own.filter(c.quitApp)
+        let gone = wait(limit) { Set(c.runningApp()).isDisjoint(with: found.own) }
+        body["app_running"] = !c.runningApp().isEmpty
+        guard gone else {
+            body["quit"] = false
+            throw Failure(exit: .failure, code: "app_busy",
+                          message: asked.count < found.own.count ? "系统没有把退出请求送到 Clip（pid \(found.own.map(String.init).joined(separator: ","))），它仍在运行"
+                                                                 : "Clip 没有在 \(Int(limit)) 秒内退出（可能有打开的对话框），仍在运行", extra: body)
+        }
+        body["quit"] = true
+        if p.json { emitJSON(c, body) } else { c.out("Clip 已退出（pid \(found.own.map(String.init).joined(separator: ","))）；重新启动用 clip start") }
     }
 
     // MARK: - Deck
@@ -1367,12 +1606,7 @@ enum ClipCLI {
             let p = try parse(rest, flags: ["no-text", "force"], options: ["output"], positionals: 1...1)
             guard ProductIdentity.cloudSupported else { throw Failure(exit: .needsApp, code: "unsupported_edition", message: "本地版不含 iCloud 归档") }
             let reader = try CloudArchiveReader(home: MacClipSync.archiveHome(store: c.home))
-            let wanted = p.positionals[0]
-            let matches = try reader.list(limit: .max).filter { $0.id == wanted || $0.id.hasPrefix(wanted) }
-            guard let e = matches.first(where: { $0.id == wanted }) ?? (matches.count == 1 ? matches[0] : nil) else {
-                throw matches.isEmpty ? Failure.notFound("归档里没有 key 为 \(wanted) 的可见记录（用 clip cloud list 查看）")
-                                      : Failure.usage("有 \(matches.count) 条记录的 key 以 \(wanted) 开头，请给更长的前缀")
-            }
+            let e = try archived(reader, p.positionals[0])
             let image = try (e.kind == "image" ? reader.imageData(e) : nil)
             let text = !p.has("no-text")
             var r: [String: Any] = ["key": e.id, "kind": e.kind, "created_at": iso(e.date == .distantPast ? nil : e.date),
@@ -1395,9 +1629,90 @@ enum ClipCLI {
             c.out(lines.joined(separator: "\n"))
         case "push", "on", "off":
             try cloudRequest(sub, rest, c)
+        case "favorite", "unfavorite", "delete":
+            try cloudChange(sub, rest, c)
         default:
-            throw Failure.usage("未知子命令 \(sub)：status | list | show | push | on | off")
+            throw Failure.usage("未知子命令 \(sub)：status | list | show | push | on | off | favorite | unfavorite | delete")
         }
+    }
+
+    /// One visible record of the archive by its key or a unique prefix of it (the phone's list rule decides "visible").
+    @MainActor static func archived(_ reader: CloudArchiveReader, _ wanted: String) throws -> PocketClip {
+        let matches = try reader.list(limit: .max).filter { $0.id == wanted || $0.id.hasPrefix(wanted) }
+        guard let e = matches.first(where: { $0.id == wanted }) ?? (matches.count == 1 ? matches[0] : nil) else {
+            throw matches.isEmpty ? Failure.notFound("归档里没有 key 为 \(wanted) 的可见记录（用 clip cloud list 查看）")
+                                  : Failure.usage("有 \(matches.count) 条记录的 key 以 \(wanted) 开头，请给更长的前缀")
+        }
+        return e
+    }
+
+    /// Leaves the change for the running Clip, tells it, and waits for the answer file. nil = no answer in time; the
+    /// request is then withdrawn, so a Clip that wakes up later does not carry out what the caller was told failed.
+    static func askApp(_ change: ClipCloudChange, _ home: URL, _ seconds: TimeInterval) throws -> ClipCloudChange.Answer? {
+        try change.leave(home: home)
+        ClipSignal.post(ClipSignal.cloudChangeRequested, scope: home.path)
+        var answer: ClipCloudChange.Answer?
+        _ = wait(seconds) { answer = change.takeAnswer(home: home); return answer != nil }
+        if answer == nil { change.withdraw(home: home); answer = change.takeAnswer(home: home) }
+        return answer
+    }
+
+    /// `cloud favorite|unfavorite|delete <key>`: the phone's 收藏 / 取消收藏 / 删除 on the synced history. The command
+    /// reads (which record, what it is now, what it became) and the running Clip writes, through the phone's own
+    /// `ClipLibrary.mutate`: the command line never opens a second sync container.
+    @MainActor static func cloudChange(_ sub: String, _ args: [String], _ c: Context) throws {
+        let p = try parse(args, flags: ["yes", "dry-run"], options: ["wait"], positionals: 1...1)
+        guard ProductIdentity.cloudSupported, let action = ClipCloudChange.Action(rawValue: sub) else {
+            throw Failure(exit: .needsApp, code: "unsupported_edition", message: "本地版不含 iCloud 归档")
+        }
+        let limit = try seconds(p)
+        let archive = MacClipSync.archiveHome(store: c.home)
+        let e = try archived(try CloudArchiveReader(home: archive), p.positionals[0])
+        let needed = action == .delete || e.favorite != (action == .favorite)
+        let pids = c.runningApp()
+        let synced = c.defaults.bool(forKey: "cloudEnabled")
+        var body: [String: Any] = ["action": sub, "key": e.id, "favorite": e.favorite, "icloud_enabled": synced,
+                                   "app_running": !pids.isEmpty, "check_with": "clip cloud show"]
+        let what = action == .delete ? "从同步历史里删除" : action == .favorite ? "收藏" : "取消收藏"
+        if p.has("dry-run") {
+            body["dry_run"] = true; body["would_change"] = needed
+            if p.json { emitJSON(c, body) } else { c.out(needed ? "将请 Clip \(what) \(e.id.prefix(12))（未执行）" : "\(e.id.prefix(12)) 已是\(e.favorite ? "收藏" : "未收藏")，不会发请求") }
+            return
+        }
+        guard needed else {
+            body["changed"] = false
+            if p.json { emitJSON(c, body) } else { c.out("\(e.id.prefix(12)) 已是\(e.favorite ? "收藏" : "未收藏")") }
+            return
+        }
+        if action == .delete, !p.has("yes") {
+            throw Failure.confirm("会从同步历史里删除这一条，正文与图片清空、不能恢复" + (synced ? "，iPhone / iPad 上也随之消失" : "") + "：确认请加 --yes（或先 --dry-run）")
+        }
+        guard !pids.isEmpty else {
+            throw Failure(exit: .needsApp, code: "app_not_running", message: "同步历史由运行中的 Clip 改写：先 clip start 再重试", extra: body)
+        }
+        let change = ClipCloudChange(id: UUID().uuidString, action: action, key: e.id, at: Date())
+        guard let answer = try c.cloudChange(change, c.home, limit) else {
+            throw Failure(exit: .failure, code: "app_busy",
+                          message: "运行中的 Clip 没有在 \(Int(limit)) 秒内回应，请求已撤回；用 clip cloud show \(e.id.prefix(12)) 回读", extra: body)
+        }
+        guard answer.ok else {
+            if answer.code == "not_found" { throw Failure(exit: .notFound, code: "not_found", message: answer.message ?? "同步历史里已经没有这条记录", extra: body) }
+            throw Failure(exit: .failure, code: "store", message: "Clip 没能改写同步历史：\(answer.message ?? "没有给出原因")", extra: body)
+        }
+        // What every other reader now finds — the phone, once iCloud has carried it over.
+        let after = try CloudArchiveReader(home: archive).list(limit: .max).first { $0.id == e.id }
+        if action == .delete {
+            guard after == nil else { throw Failure(exit: .failure, code: "store", message: "Clip 回应已删除，但读回时这条记录仍在", extra: body) }
+            body.removeValue(forKey: "favorite"); body["deleted"] = true
+        } else {
+            guard let after, after.favorite == (action == .favorite) else {
+                throw Failure(exit: .failure, code: "store", message: "Clip 回应已完成，但读回的收藏状态没有变", extra: body)
+            }
+            body["favorite"] = after.favorite
+        }
+        body["changed"] = true
+        if p.json { emitJSON(c, body) }
+        else { c.out("已\(what) \(e.id.prefix(12))" + (synced ? "；iCloud 会把它带到 iPhone / iPad" : "（iCloud 历史归档关着：只改了这台 Mac 上的这份）")) }
     }
 
     /// Archive key → the id of the same record in this Mac's library (MacClipSync writes `cloudReceived.<scope>.<key>`

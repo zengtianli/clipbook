@@ -17,6 +17,13 @@ private final class ClipPreviewPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
+extension ProductIdentity {
+    /// An isolated instance started in the background (`clip start` from an isolated run: a test, a sandbox) is an
+    /// agent's, not the user's. It stays out of the Dock and the menu bar and nothing of it comes on screen; the
+    /// user's own Clip is never started this way (it has no isolated data dir).
+    static var unattended: Bool { backgroundPreview && CommandLine.arguments.contains("--background") }
+}
+
 /// Clipbook —— 自用剪贴板库（PastePal 形态）。菜单栏常驻，点图标开主窗口；左筛、中挑、右改。
 ///
 /// 全 Swift 原生。除「抓链接标题」外无网络。数据落 ~/Library/Application Support/Clipbook/。
@@ -79,7 +86,7 @@ enum Boot {
         }
         MainActor.assumeIsolated {
             let app = NSApplication.shared
-            app.setActivationPolicy(.regular)
+            app.setActivationPolicy(ProductIdentity.unattended ? .accessory : .regular)
             let delegate = AppDelegate()
             app.delegate = delegate
             app.run()
@@ -174,7 +181,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if !ProductIdentity.backgroundPreview { installLifecycle() }
             AppModel.shared.startWatching()
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
-            buildStatusItem()
+            if !ProductIdentity.unattended { buildStatusItem() }
             buildWindow()
             connectCommandLine()
             if CommandLine.arguments.contains("--background") {
@@ -224,6 +231,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             ClipSignal.observe(ClipSignal.cloudPushRequested, scope: home) { Task { await AppModel.shared.cloud.pushRequested() } }
             ClipSignal.observe(ClipSignal.cloudEnableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(true) } }
             ClipSignal.observe(ClipSignal.cloudDisableRequested, scope: home) { Task { await AppModel.shared.cloud.enable(false) } }
+            // `clip cloud favorite|unfavorite|delete`: the phone's 收藏 / 取消收藏 / 删除 on the synced history, run by this app.
+            ClipSignal.observe(ClipSignal.cloudChangeRequested, scope: home) { Task { await AppModel.shared.cloud.changesRequested() } }
         }
         // What only this process knows (Accessibility grant, global-key registration, live iCloud status) for `clip` to read.
         let runtime = ClipRuntimePublisher(home: AppModel.shared.store.home, shortcuts: shortcuts, cloud: { AppModel.shared.cloudIfLoaded })

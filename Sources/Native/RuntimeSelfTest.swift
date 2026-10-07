@@ -12,7 +12,7 @@ import Foundation
 /// It covers what only a running app can answer (Accessibility grant, global-key registration, the iCloud status
 /// line) and two commands sent back to back, where a running app that stored its own stale reading would undo the
 /// second one. Isolated data dir, preferences suite and 配置与更新 directories; the pasteboard watcher is never
-/// started and iCloud is never switched on. It registers two test hot keys (⌃⌥⇧⌘F20 / F19) for a few seconds,
+/// started and iCloud is never switched on. It registers test hot keys (⌃⌥⇧⌘F20 / F19 / F18) for a few seconds,
 /// which is why it is not part of `--selftest`.
 @MainActor
 enum RuntimeSelfTest {
@@ -109,6 +109,8 @@ enum RuntimeSelfTest {
             "配置同步开着时 App 改设置后的再同步：隔离偏好域下各处拿到的不是同一个 UserDefaults 对象，这个触发不会发生（结果里的 cloud_copy_followed_last_value 记下本次有没有发生），所以再同步与命令写入的交错没有覆盖",
             "设置窗口与「配置与更新…」窗口里控件的显示：没有构造窗口，核对的是窗口读的同一个对象上的状态文字",
             "App 被激活时重读授权（.prohibited 的进程不会被激活）",
+            "同步历史的收藏 / 取消收藏 / 删除经 iCloud 到达 iPhone / iPad：要真实 iCloud 账户；这里验的是这台 Mac 上那份归档被运行中的 App 改写、另起进程读回",
+            "clip start 真的启动、clip quit 真的退出：这个进程已经是运行中的 Clip，只验「已在运行不再启动」与 quit --dry-run；真实的启动与退出在 tests/test-start.sh",
         ]
         guard fm.fileExists(atPath: command.path) else {
             report.check(false, "包内有 clip 命令入口", command.path)
@@ -158,6 +160,14 @@ enum RuntimeSelfTest {
                      "status 的 permissions.accessibility 读到运行中的 App 向系统问到的结果",
                      "trusted=\(String(describing: live?["trusted"])) App 问到=\(asked)")
         evidence["accessibility"] = ["trusted": asked, "as_of": live?["as_of"] as? String ?? ""]
+        // `clip start` / `clip quit` against a Clip that is already running: start does nothing, quit names this process.
+        let again = clip("start", "--json")
+        let wouldQuit = clip("quit", "--dry-run", "--json")
+        report.check(again.code == 0 && again.json["started"] as? Bool == false && again.json["already_running"] as? Bool == true
+                     && again.json["ready"] as? Bool == true && ((again.json["pids"] as? [Int]) ?? []).contains(me),
+                     "start 在 Clip 已运行时不再启动，报告它已就绪", "pids=\(String(describing: again.json["pids"]))")
+        report.check(wouldQuit.code == 0 && wouldQuit.json["would_quit"] as? Bool == true && wouldQuit.json["pids"] as? [Int] == [me],
+                     "quit --dry-run 认出要退出的是使用这个数据目录的 Clip（本进程），不发退出请求", "pids=\(String(describing: wouldQuit.json["pids"]))")
 
         // 2. Global-key registration: the system accepts one combination and refuses the other.
         report.check(held == noErr, "测试前提：本进程先占住 \(takenKey.label)", "OSStatus \(held)")
@@ -181,6 +191,29 @@ enum RuntimeSelfTest {
                      "\(String(describing: failedRow?["registration"])) · \(failedSentence)")
         evidence["shortcuts"] = ["registered": ["keys": freeKey.label, "status": liveRow?["status"] as? String ?? ""],
                                  "failed": ["keys": takenKey.label, "status": failedSentence]]
+
+        // 2b. shortcut set: a chord written out and an action named. Another process stores it through the window's own
+        // save; this running app re-reads and registers it. Then the conflict refusal, and clear unregisters it.
+        let setKey = ClipKey(code: UInt32(kVK_F18), modifiers: all, key: "F18")
+        let set = clip("shortcut", "set", "pin", "ctrl+opt+shift+cmd+f18", "--scope", "global", "--json")
+        let setLive = until { registration("pin") == "registered" }
+        let setRow = row("pin")
+        report.check(set.code == 0 && set.json["changed"] as? Bool == true && setLive && setRow?["keys"] as? String == setKey.label
+                     && delegate.shortcuts.binding(.pin) == ClipBinding(chord: setKey, scope: .global) && delegate.shortcuts.isRegistered(.pin)
+                     && setRow?["status"] as? String == delegate.shortcuts.status(.pin),
+                     "shortcut set … --scope global：运行中的 App 读到写出来的组合键并向系统注册成功，shortcut list 读到 registered",
+                     "\(String(describing: setRow?["keys"])) · \(String(describing: setRow?["status"]))")
+        let clash = clip("shortcut", "set", "search", freeKey.label, "--json")
+        let clashWith = clash.json["conflict"] as? [String: Any]
+        settle(0.5)
+        report.check(clash.code == 2 && clash.json["error"] as? String == "conflict" && clashWith?["action"] as? String == "toggleWindow"
+                     && clashWith?["keys"] as? String == freeKey.label && delegate.shortcuts.binding(.search) == nil && row("search")?["keys"] is NSNull,
+                     "shortcut set 给出已被另一个动作占用的组合键：退出 2、conflict 写明被谁占用，运行中的 App 的绑定不变",
+                     clash.json["message"] as? String ?? "")
+        let unset = clip("shortcut", "clear", "pin", "--json")
+        let unsetLive = until { !delegate.shortcuts.isRegistered(.pin) && row("pin")?["keys"] is NSNull }
+        report.check(unset.code == 0 && unsetLive && delegate.shortcuts.binding(.pin) == nil, "shortcut clear：运行中的 App 注销 set 设的全局键")
+        evidence["shortcut_set"] = ["keys": setKey.label, "status": setRow?["status"] as? String ?? "", "conflict": clash.json["message"] as? String ?? ""]
 
         // 3. Two commands back to back. The second one's value must be what other processes read from the moment it
         // returns, and must stay; the app must end up on it too. Run with 配置同步 off, then again with it on.
@@ -259,6 +292,13 @@ enum RuntimeSelfTest {
         let wroteCopy = until(4) { fm.fileExists(atPath: cloudCopy.path) }
         report.check(on.code == 0 && on.json["requested"] as? Bool == true && turnedOn && delegate.configuration?.enabled == true && wroteCopy,
                      "config sync on：运行中的 App 打开开关并写出云端副本（隔离目录），config status 读到开")
+        // The sentence under the window's switch: the app records what it shows, `config status` reads it as sync_status.
+        func sentence() -> [String: Any]? { clip("config", "status", "--json").json["sync_status"] as? [String: Any] }
+        let shown = until { sentence()?["from"] as? String == "app" && sentence()?["text"] as? String == delegate.configuration?.status }
+        let shownNow = sentence()
+        report.check(shown && shownNow?["live"] as? Bool == true && shownNow?["at"] is String,
+                     "config status 的 sync_status 读到运行中的 App 开关下面此刻那句话", shownNow?["text"] as? String ?? "nil")
+        evidence["config_sync_status"] = shownNow?["text"] as? String ?? ""
         let refused = clip("config", "import", exported.path, "--yes", "--json")
         report.check(refused.code == 4 && refused.json["error"] as? String == "sync_enabled" && maxItems() == 4321,
                      "配置同步开着时 config import 退出 4（由运行中的 App 负责），设置不变")
@@ -334,6 +374,29 @@ enum RuntimeSelfTest {
             report.check(arranged && errorShown && errorGone,
                          "归档打开之后状态再变（整理状态、错误提示出现与消失）：运行中的 App 跟着重写，cloud status 的 live 读到新值", arrangedLine)
             evidence["cloud_after_change"] = ["archive_status": arrangedLine]
+
+            // 5b. The phone's 收藏 / 取消收藏 / 删除 on the synced history. Another process asks; this running app writes,
+            // through the phone's own ClipLibrary.mutate, into the archive opened above (this Mac only, never CloudKit);
+            // every verdict is read back by yet another process and compared with what this app holds.
+            let noteKey = (try? sync.library.save(text: "runtime self-test: a synced note", source: "自检")) ?? ""
+            func held(_ key: String) -> PocketClip? { (try? sync.library.list(limit: .max))?.first { $0.id == key } }
+            func shownFavorite(_ key: String) -> Bool? { (clip("cloud", "show", key, "--json").json["item"] as? [String: Any])?["favorite"] as? Bool }
+            let fav = clip("cloud", "favorite", noteKey, "--json")
+            report.check(!noteKey.isEmpty && fav.code == 0 && fav.json["changed"] as? Bool == true && fav.json["favorite"] as? Bool == true
+                         && held(noteKey)?.favorite == true && shownFavorite(noteKey) == true,
+                         "cloud favorite：另一个进程请求，运行中的 App 在同步历史里收藏这一条，cloud show 读到",
+                         "退出码 \(fav.code) \(fav.json["message"] as? String ?? "")")
+            let unfav = clip("cloud", "unfavorite", noteKey, "--json")
+            report.check(unfav.code == 0 && unfav.json["favorite"] as? Bool == false && held(noteKey)?.favorite == false && shownFavorite(noteKey) == false,
+                         "cloud unfavorite：运行中的 App 取消收藏，cloud show 读到", "退出码 \(unfav.code) \(unfav.json["message"] as? String ?? "")")
+            let del = clip("cloud", "delete", noteKey, "--yes", "--json")
+            let listed = ((clip("cloud", "list", "--json").json["items"] as? [[String: Any]]) ?? []).contains { $0["key"] as? String == noteKey }
+            report.check(del.code == 0 && del.json["deleted"] as? Bool == true && held(noteKey) == nil && !listed
+                         && clip("cloud", "show", noteKey, "--json").code == 3,
+                         "cloud delete --yes：运行中的 App 从同步历史删除这一条，cloud list / show 不再有它", "退出码 \(del.code) \(del.json["message"] as? String ?? "")")
+            let requestFiles = (try? fm.contentsOfDirectory(atPath: ClipCloudChange.directory(home: home).path)) ?? []
+            report.check(requestFiles.isEmpty, "同步历史的改动请求与回应：读完即清，数据目录里不留文件", requestFiles.joined(separator: " "))
+            evidence["cloud_change"] = ["key": String(noteKey.prefix(12)), "favorite": Int(fav.code), "unfavorite": Int(unfav.code), "delete": Int(del.code)]
         } else {
             report.check(false, "归档打开之后状态再变（整理状态、错误提示出现与消失）：运行中的 App 跟着重写，cloud status 的 live 读到新值", "归档没有打开")
         }

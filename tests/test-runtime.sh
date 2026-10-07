@@ -5,7 +5,7 @@
 # no Dock icon, status item, window or focus change) while the real in-bundle `clip` runs beside it as separate
 # processes; then, once that process has exited, `clip` is read again for the "Clip is not running" answers.
 # Isolated data dir, preferences suite and 配置与更新 directories; the pasteboard watcher is not started and iCloud is
-# never switched on. Opt-in: it registers ⌃⌥⇧⌘F20 / F19 as global hot keys for a few seconds.
+# never switched on. Opt-in: it registers ⌃⌥⇧⌘F20 / F19 / F18 as global hot keys for a few seconds.
 set -euo pipefail
 APP="${1:?usage: bash tests/test-runtime.sh <path/to/Clip.app>}"
 APP="$(cd "$APP" && pwd)"
@@ -54,6 +54,17 @@ check(rows.get("toggleWindow", {}).get("registration") == "app_not_running" and 
       and rows.get("toggleWindow", {}).get("status", "").startswith("已保存"), "App 退出后：全局键 registration 为 app_not_running，不再声称已启用")
 _, cloud = read("cloud", "status")
 check(cloud.get("live") is None and "未运行" in (cloud.get("live_status") or ""), "App 退出后：cloud status 的 live 为 null，写明 Clip 未运行")
+_, config = read("config", "status")
+sentence = config.get("sync_status") or {}
+check(config.get("sync_enabled") is False and sentence.get("live") is False and sentence.get("from") in ("record", "derived")
+      and sentence.get("text") == "iCloud 配置同步已关闭", "App 退出后：config status 的 sync_status 不再是实时的，开关为关时是「已关闭」那句")
+code, start = read("start", "--dry-run")
+# (Another Clip may be running on this Mac, e.g. the user's own: then start has nothing to do.)
+check(code == 0 and ((start.get("would_start") is True and start.get("arguments") == ["--background"])
+                     or (start.get("already_running") is True and start.get("would_start") is False)),
+      "App 退出后：start --dry-run 报告会在后台启动这个 App（不启动）")
+code, quit = read("quit")
+check(code == 0 and quit.get("was_running") is False and quit.get("quit") is False, "App 退出后：quit 没有可退出的 Clip，退出 0")
 ok = code == 0 and summary.get("ok") is True and checks and not failed and all(v for _, v in after)
 total = len(checks) + len(after)
 print(f"clip 运行态自检：{total} 项通过" if ok else "clip 运行态自检未通过：" + "、".join(failed + [w for w, v in after if not v] or [f"退出码 {code} / 无结果"]))

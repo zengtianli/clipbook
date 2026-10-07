@@ -120,8 +120,11 @@ enum ClipPortableConfiguration {
 
 /// Cross-process requests from `clip` to a running Clip. They carry no data: they ask the app to re-read state it
 /// already owns (the store / its preferences) or to run one of its own iCloud actions (the same code the Settings
-/// buttons call). The CLI itself never opens a sync container.
+/// buttons call). The CLI itself never opens a sync container. The one request that needs data — which record of the
+/// synced history to change — leaves it in a file first (`ClipCloudChange`).
 enum ClipSignal {
+    /// `clip cloud favorite|unfavorite|delete`: changes waiting in the data dir (`ClipCloudChange.pending`).
+    static let cloudChangeRequested = Notification.Name("cyou.tianli.clipbook.cloudChangeRequested")
     static let storeChanged = Notification.Name("cyou.tianli.clipbook.storeChanged")
     static let preferencesChanged = Notification.Name("cyou.tianli.clipbook.preferencesChanged")
     /// 设置 → iCloud 「补充最近历史」.
@@ -144,5 +147,64 @@ enum ClipSignal {
         DistributedNotificationCenter.default().addObserver(forName: name, object: scope, queue: .main) { _ in
             MainActor.assumeIsolated { handler() }
         }
+    }
+}
+
+/// One change to a record of the synced history — the phone's 收藏 / 取消收藏 / 删除 — asked by `clip` and carried out by
+/// the running app, which owns the archive (the command line never opens a second sync container). A distributed
+/// notification carries no data, so the request and the app's answer are two small files in the data dir:
+/// `cloud-requests/<id>.request.json`, then `<id>.answer.json`. Each side removes what it has read.
+struct ClipCloudChange: Codable, Equatable {
+    enum Action: String, Codable, CaseIterable { case favorite, unfavorite, delete }
+    struct Answer: Codable, Equatable {
+        var ok: Bool
+        /// "not_found" (the record is gone, e.g. deleted on another device meanwhile) or "store".
+        var code: String?
+        var message: String?
+    }
+    var id: String
+    var action: Action
+    var key: String
+    var at: Date
+
+    /// A request nobody answered in this long is dropped unread: the command that left it has stopped waiting.
+    static let lifetime: TimeInterval = 60
+    static func directory(home: URL) -> URL { home.appendingPathComponent("cloud-requests", isDirectory: true) }
+    private func url(_ kind: String, home: URL) -> URL { Self.directory(home: home).appendingPathComponent("\(id).\(kind).json") }
+    private static var encoder: JSONEncoder { let e = JSONEncoder(); e.dateEncodingStrategy = .iso8601; e.outputFormatting = [.sortedKeys]; return e }
+    private static var decoder: JSONDecoder { let d = JSONDecoder(); d.dateDecodingStrategy = .iso8601; return d }
+
+    /// The command's side: leave the request for the app.
+    func leave(home: URL) throws {
+        try FileManager.default.createDirectory(at: Self.directory(home: home), withIntermediateDirectories: true)
+        try Self.encoder.encode(self).write(to: url("request", home: home), options: .atomic)
+    }
+    /// The command's side: the app's answer, once it is there.
+    func takeAnswer(home: URL) -> Answer? {
+        let file = url("answer", home: home)
+        guard let data = try? Data(contentsOf: file), let answer = try? Self.decoder.decode(Answer.self, from: data) else { return nil }
+        try? FileManager.default.removeItem(at: file)
+        return answer
+    }
+    /// The command's side, when it stops waiting: nothing of this request stays behind.
+    func withdraw(home: URL) {
+        for kind in ["request", "answer"] { try? FileManager.default.removeItem(at: url(kind, home: home)) }
+    }
+    /// The app's side: every request waiting, oldest first, each taken (removed) as it is read. Expired ones are dropped.
+    static func pending(home: URL, now: Date = Date()) -> [ClipCloudChange] {
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory(home: home), includingPropertiesForKeys: nil)) ?? []
+        var changes: [ClipCloudChange] = []
+        for file in files where file.lastPathComponent.hasSuffix(".request.json") {
+            defer { try? FileManager.default.removeItem(at: file) }
+            guard let data = try? Data(contentsOf: file), let change = try? decoder.decode(ClipCloudChange.self, from: data),
+                  file.lastPathComponent == "\(change.id).request.json", now.timeIntervalSince(change.at) < lifetime else { continue }
+            changes.append(change)
+        }
+        return changes.sorted { $0.at < $1.at }
+    }
+    /// The app's side: what became of it.
+    func answer(_ answer: Answer, home: URL) {
+        try? FileManager.default.createDirectory(at: Self.directory(home: home), withIntermediateDirectories: true)
+        try? Self.encoder.encode(answer).write(to: url("answer", home: home), options: .atomic)
     }
 }

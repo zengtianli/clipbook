@@ -42,6 +42,9 @@ def check(ok, what):
 def general():
     return subprocess.run([os.environ["CHANGECOUNT"]], capture_output=True, text=True).stdout.strip()
 
+def running_now():
+    return run("status", "--json")[1]["gui"]["running"]
+
 before_pb = general()
 t0 = time.monotonic(); code, _, p = run("--help"); dt = time.monotonic() - t0
 check(code == 0 and "usage: clip" in p.stdout and dt < 5, f"clip --help 退出 0（{dt*1000:.0f} ms，无界面）")
@@ -51,11 +54,13 @@ code, _, p = run("frobnicate"); check(code == 2 and "未知命令" in p.stderr, 
 code, bad, _ = run("version", "--definitely-not-a-flag", "--json")
 check(code == 2 and bad["ok"] is False and bad["error"] == "usage" and bad["command"] == "version", "version 多余的参数退出 2")
 help_lines = [l.strip() for l in run("--help")[2].stdout.splitlines()]
-unlisted = [c for c in ["unpin", "pause", "resume", "ignore add", "ignore remove", "shortcut scope", "shortcut clear", "cloud show", "cloud list", "config import", "update check"]
+unlisted = [c for c in ["unpin", "pause", "resume", "ignore add", "ignore remove", "shortcut set", "shortcut scope", "shortcut clear", "cloud show", "cloud list",
+                        "cloud favorite", "cloud unfavorite", "cloud delete", "config import", "update check", "update install", "start", "quit"]
             if not any(l == c or l.startswith(c + " ") for l in help_lines)]
 check(not unlisted, f"顶层帮助在行首列出每个子命令{'（缺 ' + '、'.join(unlisted) + '）' if unlisted else ''}")
 for cmd in ["status", "stats", "list", "search", "show", "copy", "export", "add", "edit", "transform", "pin", "unpin", "delete",
-            "merge", "clear", "collections", "collection", "settings", "ignore", "pause", "resume", "import-deck", "cloud", "shortcut", "config"]:
+            "merge", "clear", "collections", "collection", "settings", "ignore", "pause", "resume", "import-deck", "cloud", "shortcut", "config",
+            "update", "start", "quit"]:
     if run(cmd, "--help")[0] != 0: failures.append(f"{cmd} --help")
 check(not [f for f in failures if f.endswith("--help")], "每个命令 --help 退出 0")
 
@@ -85,6 +90,21 @@ check(all(r["registration"] is None and r["status"] for r in sc["shortcuts"]), "
 code, e, _ = run("shortcut", "scope", "search", "global", "--json")
 check(code == 2 and e["ok"] is False and e["error"] == "invalid" and run("shortcut", "clear", "--all")[0] == 0
       and run("settings", "--json")[1]["settings"]["shortcuts"] == [], "shortcut scope 不新增组合键（退出 2）；clear --all 空操作")
+# shortcut set：写出来的组合键存给动作（隔离偏好域），list 读回；被占用时说明是谁；保留组合被拒；最后清掉。
+code, st, _ = run("shortcut", "set", "search", "opt+cmd+f", "--json")
+rows = {r["action"]: r for r in run("shortcut", "list", "--json")[1]["shortcuts"]}
+check(code == 0 and st["command"] == "shortcut set" and st["changed"] is True and st["set"] == {"action": "search", "keys": "⌥⌘F", "scope": "application", "previous": None}
+      and rows["search"]["keys"] == "⌥⌘F" and rows["search"]["scope"] == "application" and rows["search"]["registration"] == "not_needed",
+      "shortcut set 存下写出来的组合键，shortcut list 读回（默认仅 Clip 内）")
+code, cf, _ = run("shortcut", "set", "pin", "⌥⌘F", "--json")
+code2, rs, _ = run("shortcut", "set", "pin", "cmd+shift+v", "--json")
+code3, dr, _ = run("shortcut", "set", "pin", "ctrl+f5", "--scope", "global", "--dry-run", "--json")
+check(code == 2 and cf["error"] == "conflict" and cf["conflict"]["action"] == "search" and cf["conflict"]["keys"] == "⌥⌘F"
+      and code2 == 2 and rs["error"] == "invalid" and code3 == 0 and dr["dry_run"] is True and dr["would_change"] is True
+      and [s["action"] for s in run("settings", "--json")[1]["settings"]["shortcuts"]] == ["search"],
+      "shortcut set：被占用退出 2 并写明是谁（conflict），⌘⇧V 被拒，--dry-run 不写")
+check(run("shortcut", "clear", "--all", "--json")[1]["changed"] is True and run("settings", "--json")[1]["settings"]["shortcuts"] == [],
+      "shortcut clear --all 清掉 set 存下的绑定")
 cfg = os.path.join(work, "config.json")
 code, ex, _ = run("config", "export", "-o", cfg, "--json")
 check(code == 0 and ex["bytes"] == os.path.getsize(cfg) > 0 and run("config", "export", "-o", cfg)[0] == 2, "config export 写出文件；已存在要 --force")
@@ -96,6 +116,8 @@ check(code == 2 and e["error"] == "confirmation_required" and code2 == 0 and im[
 code, cs, _ = run("config", "status", "--json"); code2, dry, _ = run("config", "sync", "on", "--dry-run", "--json")
 check(code == 0 and cs["sync_enabled"] is False and code2 == 0 and dry["would_change"] is True and dry["dry_run"] is True
       and run("config", "sync", "on")[0] == 2, "config status 只读；config sync 没有 --yes 不发请求")
+check(cs["sync_status"]["text"] == "iCloud 配置同步已关闭" and cs["sync_status"]["from"] in ("derived", "record") and cs["sync_status"]["live"] is running_now(),
+      "config status 带开关下面那句同步状态（sync_status）")
 check(run("pause")[0] == 0 and run("status", "--json")[1]["recording"]["paused"] is True and run("resume")[0] == 0, "pause / resume")
 check(run("clear")[0] == 2 and run("clear", "--yes", "--json")[1]["kept"] == 1, "clear 需 --yes，保留收藏夹里的")
 code, bad, _ = run("collection", "create", "x", "--icon", "nosuch", "--json")
@@ -144,6 +166,43 @@ if v["edition"] == "icloud":
     code, same = published(v["version"], v["build"])
     check(code == 0 and same["state"] == "up_to_date" and same["update_available"] is False and os.listdir(feed) == ["release.json"],
           "update check：已是最新；不下载、不安装")
+    # 升级到新版：隔离运行只到 --dry-run，--yes 不会替换被测的这个 App。
+    exe = os.path.realpath(clip)
+    def install(version, build, *flags):
+        with open(os.path.join(feed, "release.json"), "w") as f:
+            json.dump({"version": version, "build": build, "bundle_id": "cyou.tianli.clipbook", "channel": "cloud",
+                       "filename": f"Clip-{version}.zip", "sha256": "a" * 64, "size_bytes": 10}, f)
+        p = subprocess.run([clip, "update", "install", *flags, "--json"], env=dict(env, APP_LIFECYCLE_CLOUD_DIR=feed_root), capture_output=True, text=True, timeout=60)
+        return p.returncode, json.loads(p.stdout)
+    before_exe = (os.path.getmtime(exe), os.path.getsize(exe))
+    code, plan = install("99.0", "1", "--dry-run")
+    check(code == 0 and plan["command"] == "update install" and plan["dry_run"] is True and plan["installed"] is False
+          and plan["would_install"] == {"from": {"version": v["version"], "build": v["build"]}, "to": {"version": "99.0", "build": "1"}}
+          and plan["will_quit_app"] is plan["app_running"], "update install --dry-run：报告会从哪版换到哪版，不替换")
+    code, need = install("99.0", "1")
+    code2, kept = install("99.0", "1", "--yes")
+    check(code == 2 and need["error"] == "confirmation_required" and code2 == 4 and kept["error"] == "system_setting" and "would_install" in kept
+          and (os.path.getmtime(exe), os.path.getsize(exe)) == before_exe and os.listdir(feed) == ["release.json"],
+          "update install：缺 --yes 退出 2；隔离运行里 --yes 退出 4，被测的 App 没有被替换")
+    code, none = install(v["version"], v["build"], "--yes")
+    check(code == 0 and none["ok"] and none["installed"] is False and none["state"] == "up_to_date" and none["current"]["build"] == v["build"],
+          "update install：没有新版时退出 0、installed 为 false")
+code, bad, _ = run("update", "install", "--definitely-not-a-flag", "--json")
+check(code == 2 and bad["ok"] is False and bad["error"] == "usage" and bad["command"] == "update install", "update install 参数错误退出 2")
+# Clip 本身：隔离运行里只看 --dry-run 与「没有自己的实例可退」；真实的后台启动与退出在 tests/test-start.sh。
+code, sd, _ = run("start", "--dry-run", "--json")
+code2, qd, _ = run("quit", "--dry-run", "--json")
+code3, q, _ = run("quit", "--json")
+check(code == 0 and sd["dry_run"] is True and sd["app_path"].endswith(".app") and sd["would_start"] is (not sd["already_running"])
+      and code2 == 0 and qd["would_quit"] is False and code3 == 0 and q["quit"] is False and q["was_running"] is False
+      and run("start", "extra")[0] == 2 and run("quit", "--wait", "abc")[0] == 2,
+      "start --dry-run 只报告；quit 在隔离运行里不退出别的 Clip；参数错误退出 2")
+# 同步历史的收藏 / 删除：这个隔离目录里没有归档缓存，也没有运行中的 Clip——只看拒绝路径（真路径在 tests/test-runtime.sh）。
+code, cf, _ = run("cloud", "favorite", "no-such-key", "--json")
+code2, cd, _ = run("cloud", "delete", "--yes", "--json")
+check(code == (3 if v["edition"] == "icloud" else 4) and cf["ok"] is False and cf["command"] == "cloud favorite"
+      and code2 == 2 and cd["error"] == "usage" and cd["command"] == "cloud delete" and run("cloud", "unfavorite", "x", "--wait", "0")[0] == 2,
+      "cloud favorite：没有这条记录退出 3（本地版 4）；cloud delete 缺 key、--wait 越界退出 2")
 code, bad, _ = run("update", "check", "--definitely-not-a-flag", "--json")
 check(code == 2 and bad["ok"] is False and bad["error"] == "usage" and bad["command"] == "update check" and run("update", "--help")[0] == 0,
       "update check 参数错误退出 2；update --help 退出 0")
