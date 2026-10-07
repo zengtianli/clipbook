@@ -80,10 +80,14 @@ clip cloud status --json · clip cloud list --favorites --json   # iCloud 状态
 clip cloud show <key> --json · clip cloud show <key> -o photo.png   # 归档里一条的全文与来源；导出图片（key 与 local_id 来自 cloud list）
 clip cloud push --dry-run --json           # 「补充最近历史」待归档条数；--yes 请运行中的 Clip 执行
 clip cloud on --yes · clip cloud off --yes # 请运行中的 Clip 拨「iCloud 历史归档」开关
-clip shortcut list --json · clip shortcut scope search global · clip shortcut clear search   # 快捷键的查看、作用范围、清除；组合键仍在窗口里由本人录制
+clip cloud favorite <key> · clip cloud unfavorite <key> · clip cloud delete <key> --yes   # iPhone / iPad 上的收藏、取消收藏、删除（同一份同步历史，由运行中的 Clip 改写）
+clip shortcut list --json · clip shortcut scope search global · clip shortcut clear search   # 快捷键的查看、作用范围、清除
+clip shortcut set search opt+cmd+f · clip shortcut set pause ⌃⌥P --scope global   # 给动作设组合键（写出来的组合键，等同在窗口里录制并保存；被占用时退出 2 并写明是谁）
+clip start · clip quit                     # 后台启动 Clip（不出主窗口、不抢焦点）· 退出 Clip
 clip config status --json · clip config export -o clip-config.json · clip config import clip-config.json --yes   # 「配置与更新」的导出与导入
 clip config sync on --yes                  # 请运行中的 Clip 打开「使用 iCloud 记住配置」
 clip update check --json                   # 「检查更新」：当前版本、此渠道最新版本、有没有新版、怎么升级（只读，不下载不安装）
+clip update install --dry-run --json · clip update install --yes   # 「升级到新版…」：验证发行包与签名、替换当前 App，运行中的先退出、换好再重开
 clip copy 1234                             # 改写系统剪贴板：只在用户明确要求时使用
 ```
 
@@ -91,7 +95,7 @@ clip copy 1234                             # 改写系统剪贴板：只在用�
 
 iCloud：同步由 App 进程持有，命令行从不打开同步库写入。`cloud status` / `cloud list` 只读打开本机归档缓存，列表直接调用手机端的 `ClipLibrary.list`（同一份代码：每个内容取最新一行、删除标记隐藏、新的在上、筛选与搜索相同），新鲜度取决于 App 上次同步。`cloud push`（=「补充最近历史」）与 `cloud on|off`（=「iCloud 历史归档」开关）会上传或停止同步你的 iCloud，必须 `--yes`，由运行中的 Clip 执行（App 做账户检查；Clip 未运行时退出码 4），结果用 `cloud status` 回读（`enabled`、`recent_pending`、归档标记计数）。iCloud 开着时，`clip add` / `edit` / 导入写入后运行中的 Clip 会像对待新复制一样把最新记录归档；Clip 没在运行时，下次启动补上。开机自启 `settings set launchAtLogin` 调用与设置页开关同一段代码（系统登录项），只对安装在 Applications 的 Clip 生效，隔离运行时退出码 4。
 
-只在 App 里（要真人，或只在窗口里有意义）：粘贴到前一个 App（切回它并合成 ⌘V）、快捷键录制、辅助功能「去授权…」、提示音试听、网格里的选择、窗口的显示/隐藏与搜索聚焦、打开设置与「配置与更新…」窗口、编辑菜单、打开数据目录/在 Finder 中显示/打开链接（`show --json` 已给出路径和 URL）、关于/最小化/关闭/退出。暂无命令：升级到新版（命令不做静默安装，`update check` 给出新版与步骤，替换并重启仍在窗口里确认）。只有运行中的 Clip 知道的三样——辅助功能是否已授权（`status` 的 `permissions.accessibility`）、全局快捷键是否注册成功（`shortcut list` 的 `registration`）、iCloud 同步状态与错误（`cloud status` 的 `live`）——由它写进数据目录的 `runtime-state.json`，命令照读；Clip 没在运行时后两样为 `app_not_running` / `null`，授权保留上次报告的值并标明不是实时。手机端收藏/删除在 iPhone/iPad 上做。界面功能与命令的逐项对照登记在 `project.yaml` 的 `sop.agent_cli`。
+只在 App 里（要真人，或只在窗口里有意义）：粘贴到前一个 App（切回它并合成 ⌘V）、快捷键录制、辅助功能「去授权…」、提示音试听、网格里的选择、窗口的显示/隐藏与搜索聚焦、打开设置与「配置与更新…」窗口、编辑菜单、打开数据目录/在 Finder 中显示/打开链接（`show --json` 已给出路径和 URL）、关于/最小化/关闭窗口。快捷键录制指的是按键捕获；把写出来的组合键存给动作用 `clip shortcut set`，默认仍不绑定任何键，只有明确给出动作和组合键才写入。启动与退出用 `clip start` / `clip quit`；升级到新版用 `clip update install --yes`（与窗口同一个安装器，隔离运行只到 `--dry-run`）。只有运行中的 Clip 知道的三样——辅助功能是否已授权（`status` 的 `permissions.accessibility`）、全局快捷键是否注册成功（`shortcut list` 的 `registration`）、iCloud 同步状态与错误（`cloud status` 的 `live`）——由它写进数据目录的 `runtime-state.json`，命令照读；Clip 没在运行时后两样为 `app_not_running` / `null`，授权保留上次报告的值并标明不是实时。「使用 iCloud 记住配置」开关下面那句同步状态在 `config status` 的 `sync_status`。手机端的收藏、取消收藏、删除改的是同一份同步历史，Mac 上用 `clip cloud favorite|unfavorite|delete <key>`：命令只读取并发请求，由运行中的 Clip 调用手机端同一段代码改写（Clip 没在运行时退出码 4，先 `clip start`），只改同步历史，Mac 自己库里的那条不变。界面功能与命令的逐项对照登记在 `project.yaml` 的 `sop.agent_cli`。
 
 验证：`bash tests/test-cli.sh [Clip.app]` 经包内入口在隔离库上跑一遍（并核对用户的通用剪贴板未被改动）；生产 `--selftest` 另有一组 `clip` 断言。
 

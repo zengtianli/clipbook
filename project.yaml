@@ -97,8 +97,13 @@ sop:
       human: 窗口里的输入焦点，只在窗口里有意义；搜索用 clip search
     - name: 编辑菜单（撤销、重做、剪切、粘贴、全选）
       human: 文本框里的系统编辑命令，只在窗口里有意义
-    - name: 关于、隐藏、最小化、关闭窗口、退出
+    - name: 关于、隐藏、最小化、关闭窗口
       human: 应用与窗口本身的操作，只在窗口里有意义；停止记录用 clip pause
+    # Clip 在不在运行决定 cloud push|on|off、cloud favorite|unfavorite|delete、config sync 能不能用（退出码 4），所以启动与退出单列。
+    - name: 退出 Clip
+      command: clip quit
+    - name: 启动 Clip（后台启动，不出主窗口、不抢焦点）
+      command: clip start
     # 设置 · 通用
     - name: 记录偏好与全部设置（读）
       command: clip settings
@@ -157,8 +162,10 @@ sop:
       command: clip shortcut list
     - name: 快捷键状态（全局键是否注册成功、系统拒绝注册的提示）
       command: clip shortcut list
-    - name: 录制快捷键
-      human: 要真人按键；默认不绑定任何键，命令也不新增组合键
+    - name: 录制快捷键（点「点击录制」后按下组合键）
+      human: 按键捕获要真人按；把写出来的组合键存给动作用 clip shortcut set
+    - name: 给动作设置组合键（写出组合键并保存，与录制后保存同一个入口）
+      command: clip shortcut set
     - name: 作用范围（仅 Clip 内 / 全局）
       command: clip shortcut scope
     - name: 清除绑定、清除所有快捷键
@@ -168,17 +175,19 @@ sop:
       command: clip version
     - name: 使用 iCloud 记住配置（状态）
       command: clip config status
+    - name: 开关下面那句同步状态
+      command: clip config status
     - name: 使用 iCloud 记住配置（开关）
       command: clip config sync
     - name: 导出配置…
       command: clip config export
     - name: 导入配置…
       command: clip config import
-    # 检查更新走共享命令层 AppLifecycleCLI（Sources/Shared，与窗口同一个发行渠道 ClipUpdates.source）。
+    # 检查更新与升级走共享命令层 AppLifecycleCLI（Sources/Shared，与窗口同一个发行渠道 ClipUpdates.source、同一个安装器）。
     - name: 检查更新
       command: clip update check
     - name: 升级到新版… / 下载新版…
-      missing: 共享命令层不做静默安装：clip update check 给出新版、按钮名、安装包地址与步骤，替换并重启 App 仍要本人在「配置与更新…」窗口确认
+      command: clip update install
   account:
     mode: none
     rationale: 本地剪贴板工具，没有产品账号、注册或登录；可选的 iCloud 历史归档与配置同步使用本机已登录的 Apple 账户（系统管理的 CloudKit 私有库与 iCloud Drive），不由本产品创建或管理账号。
