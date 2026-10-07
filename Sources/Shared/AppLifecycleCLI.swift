@@ -130,21 +130,37 @@ enum AppLifecycleCLI {
     }
 
     /// App side, one line after `AppLifecycleUI.install`: a running window follows what the command line changed.
-    /// The command says which way it left the switch, and that value goes through the window's own path (starts or
-    /// stops sync, refreshes the switch and the status line). The app never re-applies its own reading of the switch:
-    /// preferences written by another process reach this one late, and writing a stale reading back would undo the command.
-    /// An import carries no switch state and leaves the switch alone. The product's `onChange` then re-reads imported settings.
+    /// The command is the only writer of the switch; the app never stores it here, neither its own reading nor the
+    /// value the command announced. Preferences written by another process reach this one late, and a second command
+    /// may already have changed the switch again: either write would undo a command. (Storing the announced value
+    /// after the delay did exactly that on a running LiteGauge, 2026-10-07: `sync on` then `sync off` back to back,
+    /// and a fresh process read 开 again after `sync off` had returned.)
+    /// The app waits until its own reading agrees with what the newest command announced, then runs the non-writing
+    /// half of the window's path: `reconcile()` starts syncing when the switch is on and reports 已关闭 when it is off,
+    /// and its status notification refreshes the switch and the status line. Only the newest notification acts.
+    /// An import announces no switch state. The product's `onChange` then re-reads imported settings.
     static func follow(_ configuration: AppConfiguration?, bundle: Bundle = .main) {
         guard let configuration, let name = notification(bundle) else { return }
         followers.append(DistributedNotificationCenter.default().addObserver(forName: name, object: nil, queue: .main) { [weak configuration] note in
-            let target = switchState(note.object as? String)
-            // Settings written by the other process reach this one a moment after the notification; sync and onChange read them.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                guard let configuration else { return }
-                if let target { configuration.setEnabled(target) }
-                configuration.onChange?()
-            }
+            if let state = switchState(note.object as? String) { announced = state }
+            newest += 1
+            adopt(configuration, turn: newest, attempt: 0)
         })
+    }
+    private static var newest = 0
+    private static var announced: Bool?
+    private static func adopt(_ configuration: AppConfiguration?, turn: Int, attempt: Int) {
+        // Settings written by the other process reach this one a moment after the notification.
+        DispatchQueue.main.asyncAfter(deadline: .now() + (attempt == 0 ? 0.3 : 0.1)) { [weak configuration] in
+            guard let configuration, turn == newest else { return }   // a newer command's notification takes over
+            if let expected = announced, configuration.enabled != expected, attempt < 30 {
+                adopt(configuration, turn: turn, attempt: attempt + 1); return
+            }
+            announced = nil
+            configuration.start()       // no-op once started; the observers sync needs
+            configuration.reconcile()   // reads the stored switch, never writes it
+            configuration.onChange?()
+        }
     }
 
     // MARK: config
