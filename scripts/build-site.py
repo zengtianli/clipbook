@@ -114,10 +114,17 @@ def main():
     values = {"DOWNLOAD": "downloads/" + archive.name, "VERSION": release["version"],
               "MIN_OS": release["minimum_macos"], "FILENAME": archive.name,
               "SIZE": perf_block.size_mb(release["bytes"]), "SHA256": release["sha256"],
-              "LIGHT": perf_block.standalone_section(ROOT / "perf/lightweight.json", measured["version"].split(" ")[0] if reuse else release["version"], "#8250ad"),
+              "LIGHT": perf_block.standalone_section(ROOT / "perf/lightweight.json", measured["version"].split(" ")[0], "#8250ad"),
               "HERO": '<img src="media/overview.png" alt="Clip 的真实三栏窗口：来源与类型筛选、剪贴板记录、正文编辑">' if (media / "overview.png").is_file() else '<div class="preview-placeholder">等待真实窗口截图</div>',
               "VIDEOS": "".join(videos), "GUIDE": guide_player,
               "GUIDE_DOWNLOAD": "media/" + guide_files["sample.mp4"]}
+    measured_build = str(measured["version"])
+    released_build = f"{release['version']} ({release['build']})"
+    if measured_build != released_build:
+        scope = (f"本地验收构建 {measured_build} 的实测；当前公开下载为 {released_build}。"
+                 "下列数据不代表已发布包；没有将本地测量记成公开版的新测。")
+        values["LIGHT"] = values["LIGHT"].replace("<div class='perf-grid'>",
+            "<p class='fine'>" + html.escape(scope) + "</p><div class='perf-grid'>", 1)
     page = (ROOT / "site/index.html").read_text()
     history = None
     if reuse:
