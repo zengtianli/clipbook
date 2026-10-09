@@ -87,7 +87,8 @@ def main():
     shutil.copy2(ROOT / "icon/AppIcon.png", out / "images/icon.png")
     shutil.copy2(ROOT / "site/style.css", out / "style.css")
     shutil.copy2(archive, out / "downloads" / archive.name)
-    shutil.copy2(release_dir / "SHA256SUMS.txt", out / "downloads/SHA256SUMS.txt")
+    # Derived from the archive verified above, so the checksum file cannot lag behind the offered package.
+    (out / "downloads/SHA256SUMS.txt").write_text(f"{release['sha256']}  {archive.name}\n")
     (out / "release.json").write_text(json.dumps(release, ensure_ascii=False, indent=2) + "\n")
     for name in needed:
         if (media / name).is_file():
