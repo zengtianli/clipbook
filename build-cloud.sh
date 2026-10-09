@@ -5,6 +5,13 @@ cd "$(dirname "$0")"
 source "$HOME/Dev/tools/dev/lib/tools/macapp/xcode_env.sh"
 xcode_env_use macosx
 source "$HOME/Dev/tools/dev/lib/tools/macapp/scrub_env.sh"
+# This bundle needs an Apple Development identity and a CloudKit profile. Refuse
+# before entering the SDK queue when the local signing prerequisite is absent;
+# unattended builds must never open an account/keychain authorization dialog.
+if ! security find-identity -v -p codesigning | grep -q '"Apple Development:'; then
+  echo 'No valid Apple Development signing identity; configure Xcode Accounts on this Mac.' >&2
+  exit 4
+fi
 mkdir -p build
 # CLIP_DERIVED_DATA redirects the Xcode products (default .dd-cloud) for trial builds.
 DD="${CLIP_DERIVED_DATA:-.dd-cloud}"
