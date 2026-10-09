@@ -38,8 +38,14 @@ try:
                "DEPLOYMENT_POSTPROCESSING=YES", "STRIP_INSTALLED_PRODUCT=YES",
                "STRIP_STYLE=non-global", "build"]
     print("sim_lane admitted: CloudKit Release build, parallel jobs", os.cpu_count() or 1, flush=True)
+    # Xcode persists its inherited environment in build diagnostics. Keep only
+    # the documented tool/OS inputs; shell credentials and Homebrew CC/CXX/CPATH
+    # are neither required for this project nor safe to copy into build logs.
+    env_keys = ("PATH", "HOME", "USER", "LOGNAME", "DEVELOPER_DIR", "TMPDIR",
+                "SDKROOT", "LANG", "LC_ALL", "LC_CTYPE", "SSH_AUTH_SOCK")
+    build_env = {key: os.environ[key] for key in env_keys if key in os.environ}
     try:
-        child = subprocess.Popen(command, start_new_session=True)
+        child = subprocess.Popen(command, env=build_env, start_new_session=True)
         code = child.wait(timeout=900)
     except subprocess.TimeoutExpired:
         print("Clip build exceeded 900 seconds", file=sys.stderr)

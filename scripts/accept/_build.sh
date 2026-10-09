@@ -10,13 +10,13 @@ inputs_sha() {
     cat cloud-project.yml Cloud.entitlements build.sh build-cloud.sh project.yaml icon/AppIcon.icns; } | shasum -a 256 | cut -d' ' -f1
 }
 for _ in $(seq 1 1200); do mkdir "$LOCK" 2>/dev/null && break; sleep 0.5; done
-trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT
+trap 'exit_code=$?; rmdir "$LOCK" 2>/dev/null || true; exit "$exit_code"' EXIT
 SHA="$(inputs_sha)"
 APP="$ACC_DD/Build/Products/Release/Clipbook.app"
 if [ "$(cat build/.accept-build.sha 2>/dev/null)" != "$SHA" ] || [ ! -x "$APP/Contents/MacOS/Clipbook" ]; then
   rm -f build/.accept-build.sha
   CLIP_DERIVED_DATA="$ACC_DD" CLIP_CLOUD_BUILD_LOG=build/accept-build.log bash build-cloud.sh --build-only \
-    > build/accept-selftest.log 2>&1 || { code=$?; tail -40 build/accept-selftest.log; echo "构建或 --selftest 未完成（退出 $code）"; exit "$code"; }
+    > build/accept-selftest.log 2>&1 || { code=$?; tail -40 build/accept-selftest.log; echo "构建或 --selftest 未完成（退出 ${code}）"; exit "$code"; }
   echo "$SHA" > build/.accept-build.sha
 fi
 rmdir "$LOCK"; trap - EXIT
