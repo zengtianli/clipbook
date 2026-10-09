@@ -8,13 +8,15 @@
 
 CloudKit 版用 Apple Development 签名加 Xcode 自动管理的描述文件（`cloud-project.yml` 的 `CODE_SIGN_STYLE: Automatic`，`build-cloud.sh` 带 `-allowProvisioningUpdates`）。这类描述文件带设备清单，清单在生成那一刻定死：包内那份 `Mac Team Provisioning Profile: cyou.tianli.clipbook` 生成于 2026-09-08，当时账号里只有 Air，Mini 是之后才登记的。Xcode 只要本机缓存里还有一份没过期、含本机的描述文件就一直复用，不会因为账号里多了设备而重出。
 
+第二层：无人值守的 xcodebuild 看不到 Xcode 窗口里登录的账号（Air 上实测报 `No Accounts`），此前每次构建都只是在复用缓存里那一份。所以光把旧缓存移走不够，第一次试跑直接失败：`No profiles for 'cyou.tianli.clipbook' were found`。`build-cloud.sh` 现在和共享的 `build-platforms.sh` 一样，把 App Store Connect 接口密钥交给 xcodebuild（`~/.personal_env` 的密钥编号与发行方编号，私钥在 `~/.appstoreconnect/private_keys/`），Xcode 才能自己向账号要一份新的；密钥编号不进构建日志。没有密钥的机器行为不变。
+
 `codesign --verify --deep --strict` 在 Mini 上照样退出 0：它只验签名完整，不验设备是否在清单里。所以“两台同版本、签名验证通过”不等于“两台都能启动”。
 
 ## 做法
 
 1. 新 Mac 先登记进开发者账号设备表（本次 Mini 已登记且启用）。
 2. 在签名机（Air）把缓存里属于 `cyou.tianli.clipbook` 的旧描述文件移进废纸篓。位置是 `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`（旧版 Xcode 在 `~/Library/MobileDevice/Provisioning Profiles/`），用 `security cms -D -i <文件>` 读 `Entitlements` 里的 application-identifier 判断，只移这一个 bundle id 的。
-3. 先做一个真实提交（构建号是提交数，同版本号不许换内容），再走 `./build.sh`；构建脚本不用改。
+3. 先做一个真实提交（构建号是提交数，同版本号不许换内容），再走 `./build.sh`。签名机上要有上面那把接口密钥；没有的话移走缓存后构建会失败，把废纸篓里那份放回原处即可恢复原状。
 4. 装机前核包内清单：`security cms -D -i <包>/Contents/embedded.provisionprofile` 的 `ProvisionedDevices` 必须同时含每台要装的 Mac 的 Provisioning UDID（`system_profiler SPHardwareDataType` 读）。缺任何一台就不装、不发更新源。
 5. 每台装完实际启动一次：`clip version` 退出 0，`clip start` 后 `clip status --json` 读到运行中。
 

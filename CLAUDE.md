@@ -24,7 +24,7 @@ open -a "Clip"
 
 签名用 Apple Development 证书不是为了分发，是让「辅助功能」授权跨重编存活（adhoc 每次换 cdhash 授权就掉）。
 
-描述文件由 Xcode 自动管理，带设备清单，清单在生成时定死。不在清单里的 Mac 上，这个包一启动就被系统杀掉（退出 137，日志 `Provisioning profile does not allow this device`），而 `codesign --verify` 照样通过。添新 Mac 或描述文件重出后，装机前核 `security cms -D -i <包>/Contents/embedded.provisionprofile` 的 `ProvisionedDevices` 含每台要装的 Mac，装完每台实际跑一次 `clip version`。原因与重出步骤见 `handoffs/mini-device-profile-20261009.md`。
+描述文件由 Xcode 自动管理，带设备清单，清单在生成时定死。不在清单里的 Mac 上，这个包一启动就被系统杀掉（退出 137，日志 `Provisioning profile does not allow this device`），而 `codesign --verify` 照样通过。无人值守构建看不到 Xcode 窗口里登录的账号，`build-cloud.sh` 靠 App Store Connect 接口密钥让 Xcode 取或重出描述文件；没有密钥时只能复用缓存里那一份。添新 Mac 或描述文件重出后，装机前核 `security cms -D -i <包>/Contents/embedded.provisionprofile` 的 `ProvisionedDevices` 含每台要装的 Mac，装完每台实际跑一次 `clip version`。原因与重出步骤见 `handoffs/mini-device-profile-20261009.md`。
 
 ## iOS / iCloud（2026-09-09）
 

@@ -26,9 +26,34 @@ COUNT=$(git rev-list --count HEAD)
 # signing pipeline. The generic Mac lane build strips entitlements and therefore
 # cannot replace this build. Busy admission is temporary (75), never a build pass.
 scrub_env_run python3 - "$DD" "$COUNT" <<'PY' > "$LOG" 2>&1 || { code=$?; tail -60 "$LOG"; exit "$code"; }
-import os, pathlib, signal, subprocess, sys
+import os, pathlib, re, signal, subprocess, sys, threading
 sys.path.insert(0, str(pathlib.Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 import sim_lane
+
+def account_key():
+    # Unattended xcodebuild cannot see an account signed in to the Xcode window ("No Accounts"),
+    # so it can only reuse a cached managed profile and never refreshes its device list. With the
+    # App Store Connect API key (same lookup as the shared build-platforms.sh) Xcode can fetch or
+    # create the profile itself. No key: only the flag, as before.
+    env = pathlib.Path.home() / ".personal_env"
+    text = env.read_text(encoding="utf-8", errors="replace") if env.is_file() else ""
+    def value(name):
+        found = re.findall(rf"^\s*export\s+{name}=(.+)$", text, re.M)
+        return found[-1].strip().strip('"').strip("'") if found else ""
+    key_id, issuer = value("ASC_KEY_ID"), value("ASC_ISSUER_ID")
+    key = pathlib.Path.home() / ".appstoreconnect/private_keys" / f"AuthKey_{key_id}.p8"
+    if not (key_id and issuer and key.is_file()):
+        return [], []
+    return (["-authenticationKeyPath", str(key), "-authenticationKeyID", key_id,
+             "-authenticationKeyIssuerID", issuer], [key_id, issuer])
+
+def copy_output(stream, hidden):
+    # xcodebuild echoes its command line; keep the key identifiers out of the build log.
+    for line in stream:
+        for word in hidden:
+            line = line.replace(word.encode(), b"<hidden>")
+        sys.stdout.buffer.write(line)
+        sys.stdout.buffer.flush()
 
 locks = sim_lane.lock_chain(f"clipbook:xcodebuild:{os.getpid()}")
 child = None
@@ -44,6 +69,8 @@ try:
                f"CURRENT_PROJECT_VERSION={sys.argv[2]}", "-jobs", str(os.cpu_count() or 1),
                "DEPLOYMENT_POSTPROCESSING=YES", "STRIP_INSTALLED_PRODUCT=YES",
                "STRIP_STYLE=non-global", "build"]
+    key_args, hidden = account_key()
+    command[-1:-1] = key_args
     print("sim_lane admitted: CloudKit Release build, parallel jobs", os.cpu_count() or 1, flush=True)
     # Xcode persists its inherited environment in build diagnostics. Keep only
     # the documented tool/OS inputs; shell credentials and Homebrew CC/CXX/CPATH
@@ -52,8 +79,12 @@ try:
                 "SDKROOT", "LANG", "LC_ALL", "LC_CTYPE", "SSH_AUTH_SOCK")
     build_env = {key: os.environ[key] for key in env_keys if key in os.environ}
     try:
-        child = subprocess.Popen(command, env=build_env, start_new_session=True)
+        child = subprocess.Popen(command, env=build_env, start_new_session=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        reader = threading.Thread(target=copy_output, args=(child.stdout, hidden), daemon=True)
+        reader.start()
         code = child.wait(timeout=900)
+        reader.join(timeout=30)
     except subprocess.TimeoutExpired:
         print("Clip build exceeded 900 seconds", file=sys.stderr)
         code = 124
