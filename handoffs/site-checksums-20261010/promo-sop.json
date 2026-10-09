@@ -1,0 +1,163 @@
+{
+ "at": "2026-10-10T00:08:12+08:00",
+ "offline": false,
+ "mode": "run",
+ "scope": "当前登记组件的增量观察；保留异时点证据，不等同本轮全量验收",
+ "families": 1,
+ "apps": [
+  {
+   "id": "clipbook",
+   "name": "Clip · 剪贴板",
+   "repo": "/Users/tianli/Apps/clip/mac",
+   "form": "mac",
+   "family": "clip",
+   "current": "1.2.1 (78)",
+   "items": [
+    {
+     "stage": "perf",
+     "key": "test",
+     "status": "stale",
+     "detail": "相关输入内容变化，待按影响范围检查",
+     "fix": "运行单 App 对应阶段",
+     "auto": null
+    },
+    {
+     "stage": "perf",
+     "key": "changed",
+     "status": "stale",
+     "detail": "相关输入内容变化，待按影响范围检查",
+     "fix": "运行单 App 对应阶段",
+     "auto": null
+    },
+    {
+     "stage": "media",
+     "key": "media",
+     "status": "ok",
+     "detail": "截图 20 · 视频 21 · 录于 2026-09-10 16:50（按视频文件），1.2.1 (78) 沿用已标注录像",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "brand-naming",
+     "status": "ok",
+     "detail": "双语字段、英文主显、跨族重名及已拒绝拼音名检查通过；英语语义与其他拼音须人工审阅",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "card_icon",
+     "status": "ok",
+     "detail": "目录图标与正式素材一致",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "page_icon",
+     "status": "ok",
+     "detail": "产品页图标与正式素材一致",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "card",
+     "status": "ok",
+     "detail": "安装包 2.1 MB （安装后 3.1 MB ） · 空闲内存 56.6 MB · 空闲 CPU 0.07% · 冷启动到窗口出现 488 ms 实测 v1.2.1 (78) · 2026-10-06",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "page",
+     "status": "ok",
+     "detail": "https://app-mac-clips.tianli.cyou/",
+     "fix": null,
+     "auto": null
+    },
+    {
+     "stage": "promo",
+     "key": "readme",
+     "status": "stale",
+     "detail": "README 已更新但没推送（分支领先远端 10 个提交）",
+     "fix": "核对领先的提交后推送",
+     "auto": null
+    },
+    {
+     "stage": "ship",
+     "key": "changed",
+     "status": "stale",
+     "detail": "相关输入内容变化，待按影响范围检查",
+     "fix": "运行单 App 对应阶段",
+     "auto": null
+    }
+   ],
+   "last_updated_at": "2026-10-09T23:29:31+08:00",
+   "input_fingerprints": {
+    "stages": {
+     "test": "fcbf6f31cac1930e020b90937effbd891d53e678543e18b33455ca90226be9ea",
+     "perf": "ac67858276c95f1e4713744ad3e1d8957cb709754579efe9a46ab93c3e88d123",
+     "media": "9d2eec7687734ea56b596aae0a1e7e00c4b52974a9f2808e4ad53aa1179cc1dd",
+     "promo": "3bc3b9e2c6e1f787fe91f28e819709e5b1333c601d79617b5f804c2583ce8684",
+     "ship": "f432ad15411b0b00c2263fdbdf239d5825ec5da4affd426b4a2e2271a549f90e"
+    },
+    "bindings": {
+     "business": "852997efe090b7aad7d820d0ca465b6a49b9dfe443eb4c57004a457bc1d962ae",
+     "code": "40ff17bafe2da0af2ba3f30276885dbf62d8101eaa8cf0d4e8334f0f41788d7a",
+     "ui": "9b8e9304c5ef9a3bc0c52cea25d4e2c2417cd552b6a310f10c9053a606eef42a",
+     "promo_ui": "a8b66d875de904a38e552436f74b49a21888db7278441216beab4c7678104ee1",
+     "media": "631519788508048e0ec69b352e3afb6c31e382cfc3b8389a0f73978c7da13492",
+     "icon": "fe14948e4a53e6e04f9742a3571742c601fa93f1f6beaab9917bf5f657ae7e8e",
+     "installed_icon": "e643a505b9287515bc7e0ffae36ac927680156d12428fa1d99fd1399c17959c9",
+     "cli_entry": "93398cd48b22ae724826489e0b5ba2c75b366890b7c4e56d528788f20ae9066a",
+     "agent_cli": "bf5a4d9005c8f9b4d4fef497be85112b376e72fc845be75b02fdcfbfc6b485a2"
+    },
+    "icon_inputs": {
+     "png": {
+      "path": "/Users/tianli/Apps/clip/mac/icon/AppIcon.png",
+      "sha256": "ba0f18794c313c624ede745d1502e30df985d4558d4eb0f01797168c00d3ee2e"
+     },
+     "icns": {
+      "path": "/Users/tianli/Apps/clip/mac/icon/AppIcon.icns",
+      "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+     },
+     "provenance": {
+      "path": "/Users/tianli/Apps/clip/mac/icon/provenance.json",
+      "sha256": "3327af0b9b3b59bde30f5680f709bff809ff18166201ca0c4882094ebb7b7ede"
+     }
+    },
+    "installed_icon_inputs": {
+     "/Applications/Clip.app/Contents/Resources/AppIcon.icns": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+    },
+    "product_policy_sha256": "60e98957cb8c5a748a9234cb419dcc609893bf024e1e5bb77e9bf80cc4bde726",
+    "product_naming_sha256": "2c7f9741ba8724f563a59289efd325f46200aae80e83962acd3a60e51cd9b2cf",
+    "icon_complete": true,
+    "installed_icon_matches": true,
+    "components": {
+     "business": "852997efe090b7aad7d820d0ca465b6a49b9dfe443eb4c57004a457bc1d962ae",
+     "code": "40ff17bafe2da0af2ba3f30276885dbf62d8101eaa8cf0d4e8334f0f41788d7a",
+     "perf": "5c35445cfe2e4e95d44a7d235558a76a053061445ed3b565553b2d739df662ef",
+     "ui": "791bf7db42fee33ef69bee806e7870af3e29c34910ddea7fc7f3477c883b5086",
+     "media": "f94ff6f397573fab519b34fecc120d1e5a58c02f7a942c649bdad1f860492da2"
+    }
+   },
+   "machine_state": "needs_check",
+   "delivery_state": "pending_test",
+   "coverage": [
+    "functionality",
+    "recovery",
+    "privacy",
+    "native_ui",
+    "homepage_desktop",
+    "homepage_mobile",
+    "cli_entry",
+    "agent_cli"
+   ],
+   "resource_environments": [],
+   "scope_notes": []
+  }
+ ],
+ "actions": []
+}

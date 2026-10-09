@@ -1,0 +1,48 @@
+{
+ "ok": false,
+ "shipped": false,
+ "stopped_at": "review",
+ "steps": [
+  {
+   "step": "check",
+   "seconds": 15.1,
+   "ready": true,
+   "issues": [],
+   "out": "/private/tmp/clipbook-site-20261010-a0b12a9/build/out"
+  },
+  {
+   "step": "capture",
+   "seconds": 23.6,
+   "pages": 6,
+   "videos": 5,
+   "cues": [
+    "复制过的文字、链接和图片，集中在这里。",
+    "搜索框输入“会议”\n结果缩小为 2 条 · 搜索区局部放大",
+    "添加“4. 周五复盘”\n正文编辑区局部放大 · 修改尚未保存",
+    "点击左侧“常用片段”\n收藏夹筛选后只剩 1 条 · 侧栏局部放大",
+    "独立 iPhone 模拟器 · DEBUG 1.0.1 (5)\n全部内容为虚构演示数据"
+   ],
+   "images": [
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/p_clip-ios.html/p_clip-ios.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/p_clip-ios.html/p_clip-ios.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/p_clipbook.html/p_clipbook.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/p_clipbook.html/p_clipbook.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_ios_clip_index.html/products_ios_clip_index.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_ios_clip_index.html/products_ios_clip_index.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_ios_clip_privacy.html/products_ios_clip_privacy.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_ios_clip_privacy.html/products_ios_clip_privacy.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_ios_clip_support.html/products_ios_clip_support.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_ios_clip_support.html/products_ios_clip_support.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_mac_clips_index.html/products_mac_clips_index.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/review/captures/products_mac_clips_index.html/products_mac_clips_index.html-narrow.png"
+   ]
+  },
+  {
+   "step": "review",
+   "seconds": 6.4,
+   "error": "预览计划已过期：源输入、页面、素材或规范检查发生变化"
+  }
+ ],
+ "error": "预览计划已过期：源输入、页面、素材或规范检查发生变化",
+ "plan_file": "/private/tmp/clipbook-site-20261010-a0b12a9/lintel-plan.json"
+}

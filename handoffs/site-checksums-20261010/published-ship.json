@@ -1,0 +1,346 @@
+{
+ "ok": true,
+ "shipped": true,
+ "verified": true,
+ "published": true,
+ "steps": [
+  {
+   "step": "check",
+   "seconds": 16.7,
+   "ready": true,
+   "issues": [],
+   "out": "/private/tmp/clipbook-site-20261010-a0b12a9/retry/build/out"
+  },
+  {
+   "step": "capture",
+   "seconds": 35.8,
+   "pages": 6,
+   "videos": 5,
+   "cues": [
+    "复制过的文字、链接和图片，集中在这里。",
+    "搜索框输入“会议”\n结果缩小为 2 条 · 搜索区局部放大",
+    "添加“4. 周五复盘”\n正文编辑区局部放大 · 修改尚未保存",
+    "点击左侧“常用片段”\n收藏夹筛选后只剩 1 条 · 侧栏局部放大",
+    "独立 iPhone 模拟器 · DEBUG 1.0.1 (5)\n全部内容为虚构演示数据"
+   ],
+   "images": [
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/p_clip-ios.html/p_clip-ios.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/p_clip-ios.html/p_clip-ios.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/p_clipbook.html/p_clipbook.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/p_clipbook.html/p_clipbook.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_ios_clip_index.html/products_ios_clip_index.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_ios_clip_index.html/products_ios_clip_index.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_ios_clip_privacy.html/products_ios_clip_privacy.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_ios_clip_privacy.html/products_ios_clip_privacy.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_ios_clip_support.html/products_ios_clip_support.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_ios_clip_support.html/products_ios_clip_support.html-narrow.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_mac_clips_index.html/products_mac_clips_index.html-desktop.png",
+    "/private/tmp/clipbook-site-20261010-a0b12a9/retry/review/captures/products_mac_clips_index.html/products_mac_clips_index.html-narrow.png"
+   ]
+  },
+  {
+   "step": "review",
+   "seconds": 7.1,
+   "visual_verified": true,
+   "playback_verified": true,
+   "warnings_reviewed": true
+  },
+  {
+   "step": "queue",
+   "seconds": 0.0,
+   "waited": 0.0
+  },
+  {
+   "step": "publish",
+   "seconds": 52.2,
+   "published": true,
+   "verified": true,
+   "readback_attempts": 1,
+   "origin_verified": true,
+   "https_mismatched": []
+  }
+ ],
+ "readback": {
+  "ok": true,
+  "files": [
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/01.jpg",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/01.jpg",
+    "ok": true,
+    "sha256": "5cdc374fab1d40f0dff1fb15eea36aedbb4d85d779ec9136b616d60b86514e25",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/02.jpg",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/02.jpg",
+    "ok": true,
+    "sha256": "3f3cbfbd33670833e512cb4e95e96f9bd151037c03bb52037a2aa764af70dfc9",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/03.jpg",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/03.jpg",
+    "ok": true,
+    "sha256": "1093d779550230914044125214ebdea5a23abd9bcf6c2ddfa96058f073111cbf",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/demo-poster.jpg",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/demo-poster.jpg",
+    "ok": true,
+    "sha256": "4990f2f65f9cab1b010cd4653320cbae51bcf5f16e706623120d95ec5b95fd1a",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/demo.mp4",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/demo.mp4",
+    "ok": true,
+    "sha256": "ca01506d08266d4e20e24c55899bb5d2e8c86b9218157c1d6a2fde55bbd13af9",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/demo.vtt",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/demo.vtt",
+    "ok": true,
+    "sha256": "347b8cb129257603a094e59fcd3ffac0a70c8668a386aedb385547e37d53171d",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/assets/ios/clip-ios/icon.png",
+    "url": "https://app-ios-clip.tianli.cyou/assets/ios/clip-ios/icon.png",
+    "ok": true,
+    "sha256": "4bbaf7e254c43879fc2d94b23d6d0caa36ffd78362a2718ef86f685acd9eaabe",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/facts.json",
+    "url": "https://app-ios-clip.tianli.cyou/facts.json",
+    "ok": true,
+    "sha256": "50aac4619d438a4ba611ebe93f93d374fab6ec8e8f2e27846a94e9bbff96acb1",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/index.html",
+    "url": "https://app-ios-clip.tianli.cyou/index.html",
+    "ok": true,
+    "sha256": "ebdbc5c46f5f095799149a764aff4764c655ebec1ff61b6d5f9a6d9e78a9eca6",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/ios/clip/privacy.html",
+    "url": "https://app-ios-clip.tianli.cyou/privacy.html",
+    "ok": true,
+    "sha256": "f8eee549a2999e12fdba5660ee1039e457f9f43f162cb8fab7fcb9991a1fd85c",
+    "method": "http-sha256",
+    "expected_sha256": "b2884ec4e657c8aa6cd67eaf530fe19f44d9c089761698a6a097d4022b34dffb",
+    "edge": "cloudflare email_off markers removed; otherwise byte-identical"
+   },
+   {
+    "path": "products/ios/clip/support.html",
+    "url": "https://app-ios-clip.tianli.cyou/support.html",
+    "ok": true,
+    "sha256": "4ccfed10807ed9fbbf78926276161c03da95aeb27e823dd95ee1277322484b82",
+    "method": "http-sha256",
+    "expected_sha256": "189a83fd0ad39b1c953de7a077979f3e5349b7fe24ccd9d0af1e81bedd3a8098",
+    "edge": "cloudflare email_off markers removed; otherwise byte-identical"
+   },
+   {
+    "path": "products/mac/clips/downloads/Clip-1.2.1-local-arm64.zip",
+    "url": "https://app-mac-clips.tianli.cyou/downloads/Clip-1.2.1-local-arm64.zip",
+    "ok": true,
+    "sha256": "0257b371e5da46adf85111d687643a50f2605ad9e9485c2d7d962f6f7c147d47",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/downloads/SHA256SUMS.txt",
+    "url": "https://app-mac-clips.tianli.cyou/downloads/SHA256SUMS.txt",
+    "ok": true,
+    "sha256": "8c369a0c018c960b7462d61ce82b4ceaa98a1bd55fb09cf900c2346d9d143e1c",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/facts.json",
+    "url": "https://app-mac-clips.tianli.cyou/facts.json",
+    "ok": true,
+    "sha256": "3e24676f25bfcecd2368876d1f743e008e4d2bae9d31150db1a4605dfa4be1c4",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/images/icon.png",
+    "url": "https://app-mac-clips.tianli.cyou/images/icon.png",
+    "ok": true,
+    "sha256": "ba0f18794c313c624ede745d1502e30df985d4558d4eb0f01797168c00d3ee2e",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/index.html",
+    "url": "https://app-mac-clips.tianli.cyou/index.html",
+    "ok": true,
+    "sha256": "0a25fba6b049f441c9cd88647ec09236829e4296dc830d6bf1083f7e5d8877b7",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/clip-guide-0a6f43d83fa9.mp4",
+    "url": "https://app-mac-clips.tianli.cyou/media/clip-guide-0a6f43d83fa9.mp4",
+    "ok": true,
+    "sha256": "0a6f43d83fa967b04ba7738fa1bf31db2066bbca2223570e693dfbbd91246744",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/clip-guide-56353dae1247.vtt",
+    "url": "https://app-mac-clips.tianli.cyou/media/clip-guide-56353dae1247.vtt",
+    "ok": true,
+    "sha256": "56353dae1247c46efba472640f2ec878f5f1ee5882b0d3f053f1030c12f2db69",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/clip-guide-fe308c2a2dbc.jpg",
+    "url": "https://app-mac-clips.tianli.cyou/media/clip-guide-fe308c2a2dbc.jpg",
+    "ok": true,
+    "sha256": "fe308c2a2dbcd6e6d6c9a3a963d43158866a1dcbab3a747dbf684bbd6f958476",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/clip-guide-recording.json",
+    "url": "https://app-mac-clips.tianli.cyou/media/clip-guide-recording.json",
+    "ok": true,
+    "sha256": "5ad4e4386bcee0405c3826dcd2e7d150ceeb31cee6362b1062ae421b564e393c",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/edit.mp4",
+    "url": "https://app-mac-clips.tianli.cyou/media/edit.mp4",
+    "ok": true,
+    "sha256": "9a861870ce3e1a388c30709da3341935d6489fd8a9f86932527965b7116caad1",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/edit.png",
+    "url": "https://app-mac-clips.tianli.cyou/media/edit.png",
+    "ok": true,
+    "sha256": "96fbd53ec2c470c9d223d901a9f6e833f336fd3b761c9b9f6b67083f0f32744e",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/edit.vtt",
+    "url": "https://app-mac-clips.tianli.cyou/media/edit.vtt",
+    "ok": true,
+    "sha256": "03d12b1512a2879cabf1ff51306a653da50f2ab84f519af4d145f4df1975ccb6",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/organize.mp4",
+    "url": "https://app-mac-clips.tianli.cyou/media/organize.mp4",
+    "ok": true,
+    "sha256": "f5b2a48f7a5058887734c05be7021ce9bfe282d106a1c0dd573e0cede9edc74b",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/organize.png",
+    "url": "https://app-mac-clips.tianli.cyou/media/organize.png",
+    "ok": true,
+    "sha256": "46e58068d6fca9615962092407239f7087374c929e5e80ac1bb2c9d83bccfe5f",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/organize.vtt",
+    "url": "https://app-mac-clips.tianli.cyou/media/organize.vtt",
+    "ok": true,
+    "sha256": "29d95633ac86e43901634b15ff2cf500376c42c7b36d4c927016db43d6b48e04",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/overview.png",
+    "url": "https://app-mac-clips.tianli.cyou/media/overview.png",
+    "ok": true,
+    "sha256": "f0e4fda337f1c7c8bdf5c7f1139267ada043345d82d5a103400f86691c1774b1",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/recording.json",
+    "url": "https://app-mac-clips.tianli.cyou/media/recording.json",
+    "ok": true,
+    "sha256": "4d706700c8a5a7337e43bd784dc2d4a00c9484a900271126745aeb7bd2ee17cb",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/search.mp4",
+    "url": "https://app-mac-clips.tianli.cyou/media/search.mp4",
+    "ok": true,
+    "sha256": "211292eebbde4b20ed1b34bdd846b4813c49aec8ae3fb0b02384413731b264c7",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/search.png",
+    "url": "https://app-mac-clips.tianli.cyou/media/search.png",
+    "ok": true,
+    "sha256": "ee01ac4f909731d5c951c794645f14e79adddfdb9fb9c773a80de7678c18168e",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/search.vtt",
+    "url": "https://app-mac-clips.tianli.cyou/media/search.vtt",
+    "ok": true,
+    "sha256": "4e00933e80901dff43feb62e627f82dad876a62baf1f01b652b9c69a2dfb3bb0",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/media/tutorial.mp4",
+    "url": "https://app-mac-clips.tianli.cyou/media/tutorial.mp4",
+    "ok": true,
+    "sha256": "b40cbbc2f4f149158522faa678210ea858dbef1370d7fef836c237a7d8348a04",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/release.json",
+    "url": "https://app-mac-clips.tianli.cyou/release.json",
+    "ok": true,
+    "sha256": "220a016eeca820c67ce6f22bc784eff37a336e9f2e0287a51be15ee6d12245f9",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/site-manifest.json",
+    "url": "https://app-mac-clips.tianli.cyou/site-manifest.json",
+    "ok": true,
+    "sha256": "1adc6e831990f0e65a2c83454385784f015550dc2e80e77dab0efed909ac338e",
+    "method": "http-sha256"
+   },
+   {
+    "path": "products/mac/clips/style.css",
+    "url": "https://app-mac-clips.tianli.cyou/style.css",
+    "ok": true,
+    "sha256": "6dd5259f1bfb50ccfcba10df49f96ffa0e116eeceac6f46e7a7d9da8e497fc4c",
+    "method": "http-sha256"
+   }
+  ]
+ },
+ "https_mismatched": [],
+ "performed_by": "agent",
+ "owner_reviewed": false,
+ "reviewed_this_run": true,
+ "plan_file": "/private/tmp/clipbook-site-20261010-a0b12a9/retry/lintel-plan.json",
+ "entry_pages_checked": [
+  "p/clip-ios.html",
+  "p/clipbook.html"
+ ],
+ "entry_readback": {
+  "ok": true,
+  "files": [
+   {
+    "path": "p/clip-ios.html",
+    "url": "https://apps.tianli.cyou/p/clip-ios.html",
+    "ok": true,
+    "sha256": "75499b5ec2a14ebe078f2957eaf4c0c4b4f99be4cd6aa8cb6c1cd93011f324fb",
+    "method": "http-sha256"
+   },
+   {
+    "path": "p/clipbook.html",
+    "url": "https://apps.tianli.cyou/p/clipbook.html",
+    "ok": true,
+    "sha256": "02d61b5b6c25718d1c19373a4c46fd48f0e1620616ddf3910da6836cf4fa6c3b",
+    "method": "http-sha256"
+   }
+  ]
+ },
+ "entry_pages_stale": []
+}
