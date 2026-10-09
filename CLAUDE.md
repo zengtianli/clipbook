@@ -18,13 +18,15 @@ Clip 必须是正常独立应用：`LSUIElement=false` + `.regular` activation p
 ```bash
 cd ~/Apps/clip/mac
 git commit …      # 先提交（CFBundleVersion = commit 数）
-./build.sh        # → build-cloud.sh → XcodeGen/Release → --selftest → 签名/描述文件检查 → 装 /Applications/Clip.app
+./build.sh        # → build-cloud.sh → XcodeGen/Release → --selftest → 发行等级检查 → 公证、装订 → 装 /Applications/Clip.app
 open -a "Clip"
 ```
 
-签名用 Apple Development 证书不是为了分发，是让「辅助功能」授权跨重编存活（adhoc 每次换 cdhash 授权就掉）。
+Clip 是给所有人用的产品：装进 /Applications 或发到更新源的包，必须是任何一台 Mac 拿到都能直接运行的发行包（2026-10-09 本人纠正）。签名只有一种：`Developer ID Application: tianli Zeng (B9LJH93LA4)` + hardened runtime + 安全时间戳，Apple 公证 Accepted 并装订，`spctl --assess --type execute` 读到 `Notarized Developer ID`。不用 Apple Development，不用 adhoc，`build-cloud.sh` 没有别的签法可退；判据用共享的 `~/Dev/tools/dev/lib/tools/macapp/distribution_grade.py`。Developer ID 的 Team ID 固定，「辅助功能」授权照样跨重编存活。
 
-描述文件由 Xcode 自动管理，带设备清单，清单在生成时定死。不在清单里的 Mac 上，这个包一启动就被系统杀掉（退出 137，日志 `Provisioning profile does not allow this device`），而 `codesign --verify` 照样通过。无人值守构建看不到 Xcode 窗口里登录的账号，`build-cloud.sh` 靠 App Store Connect 接口密钥让 Xcode 取或重出描述文件；没有密钥时只能复用缓存里那一份。添新 Mac 或描述文件重出后，装机前核 `security cms -D -i <包>/Contents/embedded.provisionprofile` 的 `ProvisionedDevices` 含每台要装的 Mac，装完每台实际跑一次 `clip version`。原因与重出步骤见 `handoffs/mini-device-profile-20261009.md`。
+iCloud/CloudKit 需要描述文件，用 Developer ID 直接分发那一种（账号里名为 `Clip Developer ID`，接口类型 `MAC_APP_DIRECT`）：带 iCloud 能力，**没有设备清单**（`ProvisionsAllDevices`），有效期随证书。`cloud-project.yml` 手动签名指定它，`Cloud.entitlements` 的推送环境相应是 `production`；`scripts/developer-id-profile.py` 在构建前把它放到本机（本机已有就不联网；没有则用 App Store Connect 接口密钥取回，账号里没有时建一次）。Xcode 自己出不了这种描述文件：带接口密钥做 developer-id 自动签名导出，原话是 `Cloud signing permission error` 加 `Xcode couldn't find any Developer ID provisioning profiles`。**带设备清单的 “Mac Team Provisioning Profile”、把某台 Mac 加进清单再重出，这套已废弃，不是修法。**
+
+证书只在 Air 的登录钥匙串，签名要在 Air 的登录会话里跑（纯 SSH 里 codesign 报 errSecInternalComponent）。`./build.sh --build-only` 出的包已是 Developer ID 签名、未公证（验收用）；`./build.sh --install-only` 把同一提交的那份包公证、装订再装机，等公证时不占构建队列。发更新源和另一台 Mac 都用装好的这一份。经过与读数见 `handoffs/mini-device-profile-20261009.md`。
 
 ## iOS / iCloud（2026-09-09）
 
