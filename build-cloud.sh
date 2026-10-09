@@ -19,11 +19,15 @@ COUNT=$(git rev-list --count HEAD)
 # signing pipeline. The generic Mac lane build strips entitlements and therefore
 # cannot replace this build. Busy admission is temporary (75), never a build pass.
 scrub_env_run python3 - "$DD" "$COUNT" <<'PY' > "$LOG" 2>&1 || { code=$?; tail -60 "$LOG"; exit "$code"; }
-import os, pathlib, subprocess, sys
+import os, pathlib, signal, subprocess, sys
 sys.path.insert(0, str(pathlib.Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 import sim_lane
 
 locks = sim_lane.lock_chain(f"clipbook:xcodebuild:{os.getpid()}")
+child = None
+def stop(signum, frame):
+    raise KeyboardInterrupt
+signal.signal(signal.SIGTERM, stop)
 try:
     sim_lane.acquire(locks, None, lock_wait=120, load_wait=120,
                      max_load=sim_lane.max_load_default())
@@ -35,14 +39,23 @@ try:
                "STRIP_STYLE=non-global", "build"]
     print("sim_lane admitted: CloudKit Release build, parallel jobs", os.cpu_count() or 1, flush=True)
     try:
-        code = subprocess.run(command, timeout=900).returncode
+        child = subprocess.Popen(command, start_new_session=True)
+        code = child.wait(timeout=900)
     except subprocess.TimeoutExpired:
         print("Clip build exceeded 900 seconds", file=sys.stderr)
         code = 124
 except sim_lane.Busy as exc:
     print(str(exc), file=sys.stderr)
     code = 75
+except KeyboardInterrupt:
+    code = 130
 finally:
+    if child is not None and child.poll() is None:
+        try:
+            os.killpg(child.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        child.wait()
     for lock in reversed(locks):
         lock.release()
 sys.exit(code)
