@@ -16,7 +16,7 @@ APP="$ACC_DD/Build/Products/Release/Clipbook.app"
 if [ "$(cat build/.accept-build.sha 2>/dev/null)" != "$SHA" ] || [ ! -x "$APP/Contents/MacOS/Clipbook" ]; then
   rm -f build/.accept-build.sha
   CLIP_DERIVED_DATA="$ACC_DD" CLIP_CLOUD_BUILD_LOG=build/accept-build.log bash build-cloud.sh --build-only \
-    > build/accept-selftest.log 2>&1 || { tail -40 build/accept-selftest.log; echo "构建或 --selftest 门失败"; exit 1; }
+    > build/accept-selftest.log 2>&1 || { code=$?; tail -40 build/accept-selftest.log; echo "构建或 --selftest 未完成（退出 $code）"; exit "$code"; }
   echo "$SHA" > build/.accept-build.sha
 fi
 rmdir "$LOCK"; trap - EXIT

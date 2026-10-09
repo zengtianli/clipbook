@@ -15,11 +15,38 @@ COUNT=$(git rev-list --count HEAD)
 # Release strips symbols before Xcode signs (Xcode runs strip -x -T); the dSYM beside
 # the product keeps crash symbolication. Behaviour is unchanged; like an archive build,
 # Xcode then omits the get-task-allow debugger entitlement.
-scrub_env_run xcodebuild -project Clipbook.xcodeproj -scheme Clipbook \
-  -destination 'platform=macOS,arch=arm64' -configuration Release \
-  -derivedDataPath "$DD" -allowProvisioningUpdates CURRENT_PROJECT_VERSION="$COUNT" \
-  DEPLOYMENT_POSTPROCESSING=YES STRIP_INSTALLED_PRODUCT=YES STRIP_STYLE=non-global \
-  build > "$LOG" 2>&1 || { tail -60 "$LOG"; exit 1; }
+# Use the shared sim_lane admission/queue while retaining this product's CloudKit
+# signing pipeline. The generic Mac lane build strips entitlements and therefore
+# cannot replace this build. Busy admission is temporary (75), never a build pass.
+scrub_env_run python3 - "$DD" "$COUNT" <<'PY' > "$LOG" 2>&1 || { code=$?; tail -60 "$LOG"; exit "$code"; }
+import os, pathlib, subprocess, sys
+sys.path.insert(0, str(pathlib.Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
+import sim_lane
+
+locks = sim_lane.lock_chain(f"clipbook:xcodebuild:{os.getpid()}")
+try:
+    sim_lane.acquire(locks, None, lock_wait=120, load_wait=120,
+                     max_load=sim_lane.max_load_default())
+    command = ["xcodebuild", "-project", "Clipbook.xcodeproj", "-scheme", "Clipbook",
+               "-destination", "platform=macOS,arch=arm64", "-configuration", "Release",
+               "-derivedDataPath", sys.argv[1], "-allowProvisioningUpdates",
+               f"CURRENT_PROJECT_VERSION={sys.argv[2]}", "-jobs", str(os.cpu_count() or 1),
+               "DEPLOYMENT_POSTPROCESSING=YES", "STRIP_INSTALLED_PRODUCT=YES",
+               "STRIP_STYLE=non-global", "build"]
+    print("sim_lane admitted: CloudKit Release build, parallel jobs", os.cpu_count() or 1, flush=True)
+    try:
+        code = subprocess.run(command, timeout=900).returncode
+    except subprocess.TimeoutExpired:
+        print("Clip build exceeded 900 seconds", file=sys.stderr)
+        code = 124
+except sim_lane.Busy as exc:
+    print(str(exc), file=sys.stderr)
+    code = 75
+finally:
+    for lock in reversed(locks):
+        lock.release()
+sys.exit(code)
+PY
 APP="$DD/Build/Products/Release/Clipbook.app"
 "$APP/Contents/MacOS/Clipbook" --selftest
 codesign --verify --deep --strict "$APP"

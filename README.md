@@ -31,7 +31,7 @@
 
 - 本机 CloudKit 版（窗口隐藏常驻）：v1.1.1 (48)；2026-09-26；Mac16,12 / Apple M4 / macOS 27.2；安装后占用 2.4 MB；内存 26.2 MB；CPU 0.03%；速度 未测；CloudKit 功能开关为 True；主窗口隐藏，保留原有用户偏好与真实数据。该窗口仅代表空闲常驻，未触发上传、下载或新增复制，不表示云同步传输峰值。
 
-<sub>v1.2.1 (78) · Mac16,12 / Apple M4 / macOS 27.2 · 本机真实剪贴板库的快照副本（隔离数据目录，不碰原库），2902 条记录 · 2026-10-06。数字来自所列设备实测，版本更新后重新测量。内存口径为 phys_footprint；CPU 为 60 秒采样窗内 CPU 时间 ÷ 墙钟；大小按十进制 MB。原始数据见 [perf/lightweight.json](perf/lightweight.json)。</sub>
+<sub>v1.2.1 (78) · Mac16,12 / Apple M4 / macOS 27.2 · 本机真实剪贴板库的快照副本（隔离数据目录，不碰原库），2902 条记录 · 2026-10-06。数字来自所列版本与设备的测量记录；当前版本与测量范围以本页说明为准。内存口径为 phys_footprint；CPU 为 60 秒采样窗内 CPU 时间 ÷ 墙钟；大小按十进制 MB。原始数据见 [perf/lightweight.json](perf/lightweight.json)。</sub>
 <!-- lightweight:end -->
 
 同数据图片浏览测试中，内存从 **275.5 降至 117.3 MiB（约 57%）**，这是 Clip 自身优化前后的结果（build 26）。尚无同负载计时支持“比 Deck 更快”的结论。

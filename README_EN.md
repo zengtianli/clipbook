@@ -23,7 +23,7 @@ Other running components (separate devices and sampling windows; figures are not
 
 - Installed CloudKit edition (window hidden): v1.1.1 (48); 2026-09-26; Mac16,12 / Apple M4 / macOS 27.2; Installed 2.4 MB; Memory 26.2 MB; CPU 0.03%; Measured operation Not measured; CloudKit setting: True; main window hidden, original preferences and real data retained. Idle residency only, without triggered transfers or new clipboard copies; not a sync peak.
 
-<sub>v1.2.1 (78) · Mac16,12 / Apple M4 / macOS 27.2 · Local release; isolated snapshot of 2767 real clipboard records and separate preferences; named pasteboard polling remains active with no new copy, UI shown in background, no cloud sync. · measured 2026-10-06. Measured on the listed device; re-measured for each version. Memory uses phys_footprint; CPU is CPU time ÷ wall time over a 60-second sampling window; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
+<sub>v1.2.1 (78) · Mac16,12 / Apple M4 / macOS 27.2 · Local release; isolated snapshot of 2767 real clipboard records and separate preferences; named pasteboard polling remains active with no new copy, UI shown in background, no cloud sync. · measured 2026-10-06. Measured on the listed version and device; the current version and measurement scope are described on this page. Memory uses phys_footprint; CPU is CPU time ÷ wall time over a 60-second sampling window; sizes in decimal MB. Raw data: [perf/lightweight.json](perf/lightweight.json).</sub>
 <!-- lightweight:end -->
 
 In a controlled image-browsing test, Clip's own physical footprint dropped from 275.5 to 117.3 MiB (about 57%, build 26). This is a before/after result, not a Deck memory benchmark. Matched latency testing is still pending.
