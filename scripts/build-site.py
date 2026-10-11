@@ -24,23 +24,17 @@ def sha(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 def release_download(release):
-    """Read the registered GitHub asset; refuse another product or release before replacing output."""
+    """Read the registered versioned Release page before replacing output."""
     portal = Path.home() / "Apps/apps-portal/site/bin/apps-portal"
     result = json.loads(subprocess.check_output([str(portal), "show", "clipbook", "--json"], text=True))
     product = result["product"]
     download = product.get("download", "")
-    source, asset = urlsplit(product.get("source", "")), urlsplit(download)
-    expected = f"{source.path.rstrip('/')}/releases/download/v{release['version']}/{release['filename']}"
-    # The registry may name the release page; the product page always downloads its exact reviewed asset.
-    if (asset.scheme == "https" and asset.netloc == "github.com"
-            and unquote(asset.path) == f"{source.path.rstrip('/')}/releases/tag/v{release['version']}"
-            and not asset.query and not asset.fragment):
-        download = f"https://github.com{expected}"
-        asset = urlsplit(download)
+    source, page = urlsplit(product.get("source", "")), urlsplit(download)
+    expected = f"{source.path.rstrip('/')}/releases/tag/v{release['version']}"
     assert result.get("ok") is True and product.get("id") == "clipbook", "Portal returned another product"
     assert source.scheme == "https" and source.netloc == "github.com", "Public source must be a GitHub repository"
-    assert (asset.scheme == "https" and asset.netloc == "github.com" and unquote(asset.path) == expected
-            and not asset.query and not asset.fragment), "Registered download must be this release's GitHub asset"
+    assert (page.scheme == "https" and page.netloc == "github.com" and unquote(page.path) == expected
+            and not page.query and not page.fragment), "Registered download must be this version's GitHub Release page"
     return download
 
 def historical_reuse(release, proof_path):
