@@ -1,0 +1,91 @@
+{
+ "ok": true,
+ "product": "clipbook",
+ "bundle": "/Users/tianli/Apps/clip/mac/build/site",
+ "ready": false,
+ "errors": 10,
+ "issues": [
+  {
+   "code": "resources.metric.download",
+   "severity": "error",
+   "message": "资源模块中的 download 数字必须与当前原始实测及共享渲染器完全一致。"
+  },
+  {
+   "code": "resources.metric.installed",
+   "severity": "error",
+   "message": "资源模块中的 installed 数字必须与当前原始实测及共享渲染器完全一致。"
+  },
+  {
+   "code": "resources.metric.memory",
+   "severity": "error",
+   "message": "资源模块中的 memory 数字必须与当前原始实测及共享渲染器完全一致。"
+  },
+  {
+   "code": "resources.metric.cpu",
+   "severity": "error",
+   "message": "资源模块中的 cpu 数字必须与当前原始实测及共享渲染器完全一致。"
+  },
+  {
+   "code": "resources.metric.speed",
+   "severity": "error",
+   "message": "资源模块中的 speed 数字必须与当前原始实测及共享渲染器完全一致。"
+  },
+  {
+   "code": "resources.metrics",
+   "severity": "error",
+   "message": "资源模块的五项公开数字必须齐全；存在当前实测时还必须与共享渲染器逐字一致。"
+  },
+  {
+   "code": "resources.context",
+   "severity": "error",
+   "message": "资源模块的实测版本、设备/环境或测量日期与原始证据不一致。"
+  },
+  {
+   "code": "metadata.canonical_target",
+   "severity": "error",
+   "message": "canonical 必须唯一并指向本产品真实 HTTPS 主页。"
+  },
+  {
+   "code": "video.1.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "video.2.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "video.3.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "video.4.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "policy.private_source",
+   "severity": "error",
+   "message": "源码私有政策与页面源码入口冲突。"
+  },
+  {
+   "code": "package.integrity",
+   "severity": "error",
+   "message": "公开产品站点目录里的每个安装包（无论页面是否链接）都必须与发行清单的版本/文件名/字节数/SHA256 及 site-manifest 逐项吻合。未通过：https://github.com/zengtianli/clipbook/releases/download/v1.2.1/Clip-1.2.1-local-arm64.zip（链接不能映射到同源站点产物）、https://github.com/zengtianli/clipbook/releases/download/v1.2.1/Clip-1.2.1-local-arm64.zip（链接不能映射到同源站点产物）、https://github.com/zengtianli/clipbook/releases/download/v1.2.1/Clip-1.2.1-local-arm64.zip（链接不能映射到同源站点产物）"
+  }
+ ],
+ "pages": [
+  "index.html"
+ ],
+ "standard": {
+  "id": "lintel.product-homepage",
+  "version": 37,
+  "page_kind": "promotion",
+  "reference_profile": "clipbook"
+ },
+ "site_manifest": true,
+ "homepage": "https://app-ios-clip.tianli.cyou/",
+ "next": "零错误且有 site-manifest.json 后，由 Lintel 登记 homepage_bundle 并 lintel site ship 发布"
+}
