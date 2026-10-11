@@ -1,0 +1,41 @@
+{
+ "ok": true,
+ "product": "clipbook",
+ "bundle": "/Users/tianli/Apps/clip/mac/build/site",
+ "ready": true,
+ "errors": 0,
+ "issues": [
+  {
+   "code": "video.1.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "video.2.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "video.3.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  },
+  {
+   "code": "video.4.captions_default",
+   "severity": "warning",
+   "message": "中文字幕未声明默认启用，需实际播放确认字幕显示。"
+  }
+ ],
+ "pages": [
+  "index.html"
+ ],
+ "standard": {
+  "id": "lintel.product-homepage",
+  "version": 37,
+  "page_kind": "promotion",
+  "reference_profile": "clipbook"
+ },
+ "site_manifest": true,
+ "homepage": "https://app-mac-clips.tianli.cyou/",
+ "next": "零错误且有 site-manifest.json 后，由 Lintel 登记 homepage_bundle 并 lintel site ship 发布"
+}

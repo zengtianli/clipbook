@@ -1,5 +1,9 @@
 # Clip 官网下载改用 GitHub Release · 2026-10-11
 
+**最新结论：按主会话及时纠正，正式下载入口已统一为 [v1.2.1 Release 页](https://github.com/zengtianli/clipbook/releases/tag/v1.2.1)。已正式重建，指定 Lintel 静态自查 `ready:true`、0 个 error，站点没有安装包镜像。尚未发布。** 下方“初次实施”记录保留原始资产直链方案及当时失败结果，仅作历史；最终实现和验收见文末“及时纠正”。
+
+## 初次实施（历史，已被及时纠正取代）
+
 Task ID：`lintel-github-release-downloads-20261011`。执行开始：15:32:30（上海）。总预算 30 分钟，范围为本仓站点生成器、必要回归、正式重建 `build/site`、只读 Lintel 静态自查、限定提交与交接；不部署、不 push、不改 App 版本或 App 内渠道、不构建/安装 App、不重录素材。沿 Chapter 的 `--pid 27228 --session chapter-task:8553c354d35649bbbd0fd6df78b95f54` check 原写入声明，不释放声明。
 
 已加载所属 CLAUDE；入场其他会话有 project.yaml/perf 改动，站点生成器和模板未改。主会话负责共享下载登记，本轮仅通过只读 `apps-portal show clipbook --json` 取得 download/source/homepage_bundle，未修改 configs、apps-portal、Lintel 或共享源码。
@@ -43,3 +47,18 @@ Task ID：`lintel-github-release-downloads-20261011`。执行开始：15:32:30�
 本仓修改、GitHub 资产/SHA 验证、正式构建及目录无镜像检查均已完成；剩余为上述共享静态闸两类问题（产品族上下文、GitHub 安装包来源认可）。主会话修复其原入口后重跑同一条只读 check，再统一冻结发布即可，不能把本次结果称为 ready。
 
 **本轮未发布，等待主会话统一冻结与部署。**
+
+## 及时纠正：Release 页入口与最终静态验收
+
+同一 Task ID 的接续开始于 15:53:17.874（上海）；截至 15:55:53，源码提交、必要回归、正式构建和静态验收实际耗时约 155 秒（2 分 35 秒）。沿 Chapter 当前身份 `--pid 53048 --session chapter-task:dfe253795fef43fea1a1c2bca609ae85`，各写入路径先 check；未另开声明，未释放 Chapter 声明。
+
+先只读 `apps-portal show clipbook --json`，当前登记 download 为 `https://github.com/zengtianli/clipbook/releases/tag/v1.2.1`，source 为 `https://github.com/zengtianli/clipbook`，homepage 为 `https://app-mac-clips.tianli.cyou/`。源码提交 **`e63102cfac2bdb6c5044f1edee8a1a667207363b`**，仅 `scripts/build-site.py` 与 `site/index.html`：生成器保留登记的精确版本 Release 页，不再转换成 ZIP 直链；校验入口也指向该 Release 页。目前该 Release 没有独立 SHA256SUMS 资产，页面内 SHA 与站点生成的校验文本继续从已核对的原发行元数据派生。3 个安装包按钮与 1 个 Release/校验入口共 4 处均为上述 Release 页，无站内安装包、备用安装包或资产直链按钮。
+
+- 必要回归通过：生产 `release_download` 保留精确 `v1.2.1` Release 页；错版本、错仓库、站内 ZIP、HTTP、附加参数、latest、资产直链等 7 种错误入口均被拒绝。沿用原先删除输出前校验的顺序。
+- 正式入口：`cd /Users/tianli/Apps/clip/mac && /Users/tianli/Dev/.venv/bin/python -B scripts/build-site.py`，退出 0，耗时 **1.180 秒**。当前发行与素材版本满足原生成器条件，无需 `--keep-history` 或新增历史测试证明；未伪造证据或手改清单。
+- 登记构建目录：`/Users/tianli/Apps/clip/mac/build/site`。`preview:false`；清单的 22 个文件与目录逐文件 SHA 完全一致。目录无 `.zip/.dmg/.pkg/.app`，`downloads/` 仅有原发行 SHA 派生的校验文本；release.json 与原发行源字节一致。
+- GitHub 资产验证复用本轮初次实施的真实 API digest/size 和实际下载 SHA 证据，没有再次上传或发行。本地 `build/local-release/Clip-1.2.1-local-arm64.zip` 仍为 **2083786 字节**，SHA-256 **`0257b371e5da46adf85111d687643a50f2605ad9e9485c2d7d962f6f7c147d47`**，与原 release.json、GitHub uploaded 资产一致。公开范围保持 1.2.1 (78) local/arm64，无 iCloud 同步。
+- 原 15 个演示/教程/字幕/截图文件逐字节未变，教程 manifest 内容一致；教程下载继续保留。未改 App 源码、App 内渠道、版本或共享配置/引擎；他人 project.yaml、perf 及未提交文件保留，未纳入本轮提交。
+- 同一原入口静态自查退出 0，结果 **`ok:true`、`ready:true`、`errors:0`**，homepage 已正确为 Mac 域名；耗时约 **2.615 秒**（结果文件创建至最终写入）。完整原始结果：[github-downloads-20261011-release-check.json](github-downloads-20261011-release-check.json)。标准 `lintel.product-homepage` v37；未修改或放宽标准。仍有原来的 4 条 `video.*.captions_default` warning，本次下载入口调整未涉及字幕播放。
+
+本仓本轮任务已完成；原失败检查仍保留作为历史证据，最终应以本节及新的 ready:true 回执为准。**还未发布、未 push，等待主会话统一冻结发布。**
