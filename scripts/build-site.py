@@ -6,7 +6,9 @@ import html
 import json
 import re
 import shutil
+import subprocess
 import sys
+from urllib.parse import unquote, urlsplit
 
 sys.path.insert(0, str(Path.home() / "Apps/apps-portal/site"))
 import perf_block  # shared lightweight block; numbers come from perf/lightweight.json
@@ -20,6 +22,26 @@ SCENES = [("search", "找到需要的记录", "输入关键词，从结果中选
 def sha(path):
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
+
+def release_download(release):
+    """Read the registered GitHub asset; refuse another product or release before replacing output."""
+    portal = Path.home() / "Apps/apps-portal/site/bin/apps-portal"
+    result = json.loads(subprocess.check_output([str(portal), "show", "clipbook", "--json"], text=True))
+    product = result["product"]
+    download = product.get("download", "")
+    source, asset = urlsplit(product.get("source", "")), urlsplit(download)
+    expected = f"{source.path.rstrip('/')}/releases/download/v{release['version']}/{release['filename']}"
+    # The registry may name the release page; the product page always downloads its exact reviewed asset.
+    if (asset.scheme == "https" and asset.netloc == "github.com"
+            and unquote(asset.path) == f"{source.path.rstrip('/')}/releases/tag/v{release['version']}"
+            and not asset.query and not asset.fragment):
+        download = f"https://github.com{expected}"
+        asset = urlsplit(download)
+    assert result.get("ok") is True and product.get("id") == "clipbook", "Portal returned another product"
+    assert source.scheme == "https" and source.netloc == "github.com", "Public source must be a GitHub repository"
+    assert (asset.scheme == "https" and asset.netloc == "github.com" and unquote(asset.path) == expected
+            and not asset.query and not asset.fragment), "Registered download must be this release's GitHub asset"
+    return download
 
 def historical_reuse(release, proof_path):
     proof = json.loads(proof_path.read_text())
@@ -51,6 +73,8 @@ def main():
     release = json.loads((release_dir / "release.json").read_text())
     archive = release_dir / release["filename"]
     assert sha(archive) == release["sha256"], "Release archive changed"
+    assert archive.stat().st_size == release["bytes"], "Release archive size changed"
+    download = release_download(release)
     reuse = historical_reuse(release, args.history_tests) if args.keep_history else None
     measured = json.loads((ROOT / "perf/lightweight.json").read_text())
     media = ROOT / "docs/demo"
@@ -86,7 +110,6 @@ def main():
         (out / part).mkdir(parents=True, exist_ok=True)
     shutil.copy2(ROOT / "icon/AppIcon.png", out / "images/icon.png")
     shutil.copy2(ROOT / "site/style.css", out / "style.css")
-    shutil.copy2(archive, out / "downloads" / archive.name)
     # Derived from the archive verified above, so the checksum file cannot lag behind the offered package.
     (out / "downloads/SHA256SUMS.txt").write_text(f"{release['sha256']}  {archive.name}\n")
     (out / "release.json").write_text(json.dumps(release, ensure_ascii=False, indent=2) + "\n")
@@ -112,7 +135,7 @@ def main():
         player = (f'<video controls playsinline preload="metadata" poster="media/{name}.png"><source src="media/{name}.mp4" type="video/mp4"><track kind="subtitles" src="media/{name}.vtt" srclang="zh" label="中文">你的浏览器不支持视频，请下载观看。</video>'
                   if (media / f"{name}.mp4").is_file() else '<div class="preview-placeholder">真实片段录制准备中</div>')
         videos.append(f'<article>{player}<h3>{title}</h3><p>{description}</p><a href="media/{name}.mp4" download>下载这一段 ↗</a></article>')
-    values = {"DOWNLOAD": "downloads/" + archive.name, "VERSION": release["version"],
+    values = {"DOWNLOAD": download, "VERSION": release["version"],
               "MIN_OS": release["minimum_macos"], "FILENAME": archive.name,
               "SIZE": perf_block.size_mb(release["bytes"]), "SHA256": release["sha256"],
               "LIGHT": perf_block.standalone_section(ROOT / "perf/lightweight.json", measured["version"].split(" ")[0], "#8250ad"),
