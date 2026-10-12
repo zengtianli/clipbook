@@ -1,0 +1,4 @@
+/Info.plist
+/Clip.entitlements
+/*.xcodeproj/
+!Assets.xcassets/AppIcon.appiconset/*.png

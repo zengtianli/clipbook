@@ -3,6 +3,7 @@ import SwiftUI
 
 /// The release channel behind the 「配置与更新」 window and `clip update check`: one definition for both.
 /// Public local packages follow the existing public repository release channel.
+#if !APP_STORE
 enum ClipUpdates {
     #if CLIP_LOCAL_DISTRIBUTION
     static let source: AppUpdateSource = .github(repository: "zengtianli/clipbook")
@@ -10,6 +11,7 @@ enum ClipUpdates {
     static var source: AppUpdateSource { .privateCloud(channel: ProductIdentity.cloudSupported ? "cloud" : "local") }
     #endif
 }
+#endif
 
 /// Uses the production view without taking focus during an isolated capture.
 private final class ClipPreviewPanel: NSPanel {
@@ -31,8 +33,15 @@ extension ProductIdentity {
 @main
 enum Boot {
     static func main() {
+        #if APP_STORE
+        if CommandLine.arguments.contains("--store-self-test") {
+            exit(MainActor.assumeIsolated { StoreSelfTest.run() })
+        }
+        #endif
         // `clip …` (Contents/Resources/bin/clip) and CLI verbs: the agent-facing command line. No NSApplication.
+        #if !APP_STORE
         if ClipCLI.requested(CommandLine.arguments) { exit(ClipCLI.main(CommandLine.arguments)) }
+        #endif
         if CommandLine.arguments.contains("--keyboard-window-test") {
             exit(MainActor.assumeIsolated { KeyboardMemorySelfTest.windowRuntime() })
         }
@@ -52,6 +61,9 @@ enum Boot {
             })
         }
         if CommandLine.arguments.contains("--shortcut-runtime-test") {
+            #if APP_STORE
+            MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited) }
+            #endif
             exit(MainActor.assumeIsolated { ShortcutSelfTest.runtime() })
         }
         // Isolated acceptance entries: no Dock icon, no status item, no AppDelegate, nothing ordered on screen.
@@ -70,10 +82,13 @@ enum Boot {
         }
         // This process stands in for the running Clip (production wiring, nothing on screen) while the real `clip`
         // command runs beside it as separate processes. Opt-in (tests/test-runtime.sh): it registers two test hot keys.
+        #if !APP_STORE
         if args.contains("--runtime-self-test") {
             exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return RuntimeSelfTest.run() })
         }
+        #endif
         if CommandLine.arguments.contains("--selftest") {
+            #if !APP_STORE
             #if CLIP_LOCAL_DISTRIBUTION
             guard case .github(let repository) = ClipUpdates.source,
                   repository == "zengtianli/clipbook" else {
@@ -81,6 +96,7 @@ enum Boot {
                 exit(1)
             }
             print("PASS public local update source: GitHub zengtianli/clipbook")
+            #endif
             #endif
             exit(SelfTest.run())
         }
@@ -141,7 +157,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         appMenu.addItem(.separator())
         let settingsItem = appMenu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
         settingsItem.target = self
+        #if !APP_STORE
         for item in AppLifecycleUI.menuItems() { appMenu.addItem(item) }
+        #endif
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "隐藏 \(ProductIdentity.name)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "")
         appMenu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
@@ -183,15 +201,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             if !ProductIdentity.unattended { buildStatusItem() }
             buildWindow()
+            #if !APP_STORE
             connectCommandLine()
+            #endif
             if CommandLine.arguments.contains("--background") {
                 AppModel.shared.suspendInterface()
             } else {
                 showWindow()
             }
             // 首次启动且本机有 Deck → 自动把它的历史导进来（用户 2026-09-05 拍板；只读 Deck 的库）
+            #if !APP_STORE
             if ProcessInfo.processInfo.environment["CLIPBOOK_HOME"] == nil,
                AppModel.shared.deckImportedAt == nil, DeckImporter.available() { AppModel.shared.importDeck() }
+            #endif
         }
         let urls = pendingURLs
         pendingURLs.removeAll()
@@ -206,7 +228,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let config = ClipPortableConfiguration.make(defaults: AppPreferences.defaults)
         config.onChange = { [weak self] in AppSettings.shared.reload(); AppModel.shared.applySettings(); self?.shortcuts.reload() }
         configuration = config
+        #if APP_STORE
+        config.start()
+        #else
         AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipUpdates.source)
+        #endif
     }
 
     /// Everything `clip` asks of this running app and reads from it. Also called by `--runtime-self-test`.
@@ -277,7 +303,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(menuQuit), keyEquivalent: "")
         for it in menu.items { it.target = self }
+        #if !APP_STORE
         for item in AppLifecycleUI.menuItems() { menu.insertItem(item, at: menu.numberOfItems - 1) }
+        #endif
     }
 
     @objc private func menuOpen() { showWindow() }

@@ -59,6 +59,7 @@ struct SettingsView: View {
                 }
                 Text("密码管理器标记为敏感的内容无论如何都不会记录。").font(.caption).foregroundStyle(.secondary)
             }
+            #if !APP_STORE
             Section("从 Deck 导入") {
                 if DeckImporter.available() {
                     HStack {
@@ -71,6 +72,10 @@ struct SettingsView: View {
                     Text("没找到 Deck 的数据目录。").foregroundStyle(.secondary)
                 }
             }
+            #endif
+            #if APP_STORE
+            StoreConfigurationPane()
+            #endif
             Section("复制声音") {
                 Toggle("复制时播放声音（所有应用）", isOn: $settings.copySound).accessibilityIdentifier("copySound")
                 HStack {

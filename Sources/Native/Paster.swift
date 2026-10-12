@@ -68,7 +68,13 @@ enum Paster {
         return finish(pb, pb.writeObjects(objects))
     }
 
-    static var accessibilityTrusted: Bool { AXIsProcessTrusted() }
+    static var accessibilityTrusted: Bool {
+        #if APP_STORE
+        AXIsProcessTrusted() || CGPreflightPostEventAccess()
+        #else
+        AXIsProcessTrusted()
+        #endif
+    }
 
     static func promptAccessibility() {
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary

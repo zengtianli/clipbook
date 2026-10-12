@@ -268,6 +268,12 @@ final class AppModel: ObservableObject {
             notice = "隔离演示：仅写入演示剪贴板"
             return false
         }
+        #if APP_STORE
+        guard Paster.accessibilityTrusted else {
+            notice = "已复制到剪贴板，请切回目标应用按 ⌘V；自动粘贴需要授权"
+            return false
+        }
+        #endif
         hideWindow()
         if let app = previousApp {
             // macOS 14+ 协作式激活：必须用 activate(from:)「把激活权交出去」，裸 activate() 拉不动别的 app（2026-09-05 实测）
