@@ -39,6 +39,7 @@ chapter basics --app clipbook --json
 - 47 个实际输入摘要：`448b1f82822beb10cb9b921ba7cd0dfd042ac9f1f06f2182cde6b4a8f8afaad4`，构建时提交 `73a58be99d310ad63fb25f1b4337a39ad42e2576`；收尾逐文件核仍一致。回执保留编译时真实工作树状态。
 - 原件验收：`perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json`，SHA256 `5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757`；phase=installed、真实复制主程序匹配 receipt，22/22（含固定 14）。其中 acceptor 的 `installed_by_this_task:false` 表示验收脚本自己不执行安装，安装已由上面的原入口独立完成，并非候选冒充已装。
 - Chapter 原记录：`perf/acceptance/run-j4hu2occ/product_basics.json`，status=passed；`chapter basics` 回读 all_passed=true。delivery-evidence 只由 Chapter 生成；安装读回汇总 `build/accept/product-basics-install-readback.json` 不作为 product_basics 固定检查证据。
+- 离屏渲染原件：`perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/settings.png`（208,693 字节），已查看，实际原生配置/更新控件与版本 124 可见；没有上屏或让本人视觉确认。
 - 安装日志：`build/accept/product-basics-install.log`；旧原件保存在 `/Users/tianli/.Trash/clip-pre-icloud-20261015-015547/Clip.app`，版本 1.2.1 (115)，主程序 SHA256 `06c71d2da3e01d3f4d4d33abc0c41c34c1373c040431cbb2cb450db622b5899c`。旧包可回溯，没有安装第二次或重建公开安装镜像。
 
 配置与后台的实际边界：安装前后 `clip settings --json` 业务值完整相同（现有录制设置、快捷键、cloudEnabled=true、launchAtLogin=false），登录项仍 not_found，包内 CLI 软链及 `~/.local/bin/clip` 原链接保持。固定验收自身原件中的 owner_before/after 偏好 SHA 完全相同；安装前后整个真实偏好域 hash 不同，但键集合相同，检查历史 `appUpdateState` 的时间持续更新，因此不宣称所有缓存/窗口状态字节未变，也没有为恢复 hash 覆盖用户偏好。
