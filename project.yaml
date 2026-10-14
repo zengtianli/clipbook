@@ -192,10 +192,19 @@ sop:
     mode: none
     rationale: 本地剪贴板工具，没有产品账号、注册或登录；可选的 iCloud 历史归档与配置同步使用本机已登录的 Apple 账户（系统管理的 CloudKit 私有库与 iCloud Drive），不由本产品创建或管理账号。
   accept:
+    product_basics: ~/Dev/.venv/bin/python scripts/accept/product_basics.py --app build/accept/product-basics-candidate/Clip.app --receipt build/accept/product-basics-candidate.json
     functionality: bash scripts/accept/functionality.sh
     recovery: bash scripts/accept/recovery.sh
     privacy: bash scripts/accept/privacy.sh
     native_ui: bash scripts/accept/native_ui.sh
+  product_basics:
+    schema_version: 1
+    features:
+      settings: {entry: '应用菜单/侧栏「设置…」及「配置与更新…」', readback: 'clip settings --json'}
+      shortcuts: {entry: '设置 → 快捷键（默认不绑定，支持应用内/全局）', readback: 'clip shortcut list --json'}
+      icloud: {entry: '配置与更新 → 使用 iCloud 记住配置（默认关闭）', readback: 'clip config status --json'}
+      updates: {entry: '应用菜单「检查更新…」及配置与更新的更新选项', readback: 'clip update options --json / clip update check --json'}
+    inputs: [scripts/accept/product_basics.py, Sources/Native/ProductBasicsSelfTest.swift]
   ui:
   - Sources/Native/*View.swift
   - Sources/Native/Settings.swift

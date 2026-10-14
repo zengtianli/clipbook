@@ -3,8 +3,12 @@ import AppKit
 import ServiceManagement
 
 enum AppPreferences {
+    private static var isolatedDefaults: (String, UserDefaults)?
     static var defaults: UserDefaults {
-        if let suite = ProcessInfo.processInfo.environment["CLIPBOOK_PREFERENCES_SUITE"], let defaults = UserDefaults(suiteName: suite) { return defaults }
+        if let suite = ProcessInfo.processInfo.environment["CLIPBOOK_PREFERENCES_SUITE"] {
+            if let cached = isolatedDefaults, cached.0 == suite { return cached.1 }
+            if let defaults = UserDefaults(suiteName: suite) { isolatedDefaults = (suite, defaults); return defaults }
+        }
         return .standard
     }
     /// The preferences domain in use: the isolated suite, or the app's own domain.

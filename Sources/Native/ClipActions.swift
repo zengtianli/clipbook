@@ -112,7 +112,7 @@ enum ClipRules {
 enum ClipPortableConfiguration {
     static let productID = "cyou.tianli.clipbook"
     static let keys = ["ignoredBundles", "maxItems", "retentionDays", "plainTextOnly", "fetchLinkTitles",
-                       "copySound", "copySoundName", "copySoundVolume", "shortcuts.v1"]
+                       "copySound", "copySoundName", "copySoundVolume", "shortcuts.v1", "appUpdateOptions"]
     static func make(defaults: UserDefaults) -> AppConfiguration {
         AppConfiguration(productID: productID, defaultsKeys: keys, defaults: defaults)
     }

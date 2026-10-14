@@ -68,6 +68,14 @@ enum Boot {
         }
         // Isolated acceptance entries: no Dock icon, no status item, no AppDelegate, nothing ordered on screen.
         let args = CommandLine.arguments
+        #if !APP_STORE
+        if let i = args.firstIndex(of: "--product-basics-self-test"), args.indices.contains(i + 1) {
+            exit(MainActor.assumeIsolated {
+                NSApplication.shared.setActivationPolicy(.prohibited)
+                return ProductBasicsSelfTest.run(out: URL(fileURLWithPath: args[i + 1]))
+            })
+        }
+        #endif
         if let i = args.firstIndex(of: "--ui-self-test") {
             exit(MainActor.assumeIsolated {
                 NSApplication.shared.setActivationPolicy(.prohibited)
@@ -234,6 +242,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipUpdates.source)
         #endif
     }
+
+    /// Builds the production window without showing it, only for isolated process-internal acceptance.
+    func prepareBasicsWindow() -> NSWindow { buildWindow(); return window }
 
     /// Everything `clip` asks of this running app and reads from it. Also called by `--runtime-self-test`.
     func connectCommandLine() {

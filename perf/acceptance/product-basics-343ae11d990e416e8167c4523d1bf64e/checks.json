@@ -1,0 +1,22 @@
+{
+  "checks" : {
+    "icloud.conflict_or_corrupt_recovery" : true,
+    "icloud.disable_preserves_data" : true,
+    "icloud.push_pull" : true,
+    "icloud.unavailable_local_fallback" : true,
+    "settings.error_preserves_data" : true,
+    "settings.interaction" : true,
+    "settings.no_screen_or_dock" : true,
+    "settings.persisted_readback" : true,
+    "settings.real_views_offscreen" : true,
+    "shortcuts.action_path" : true,
+    "shortcuts.conflict_or_reserved_keys" : true,
+    "shortcuts.disable_restore" : true,
+    "updates.check_result" : true,
+    "updates.data_preservation" : true,
+    "updates.failure_recovery" : true,
+    "updates.options_or_store_entry" : true
+  },
+  "cloud_scope" : "Isolated shared configuration engine; Apple server\/device transfer not tested",
+  "home" : "\/Users\/tianli\/Apps\/clip\/mac\/perf\/acceptance\/product-basics-343ae11d990e416e8167c4523d1bf64e\/home"
+}

@@ -250,6 +250,7 @@ enum ClipCLI {
           cloud delete <key> --yes [--dry-run]       从同步历史里删除一条（iPhone / iPad 上的「删除」；不能恢复，Mac 自己的库不受影响）
           config sync on|off --yes [--dry-run]       请运行中的 Clip 开关「使用 iCloud 记住配置」
         \(AppLifecycleCLI.helpInstall("clip"))
+        \(AppLifecycleCLI.helpOptions)
 
         Clip 本身（上面写「请运行中的 Clip」的命令在它没运行时退出码 4）:
           start [--wait <秒>] [--dry-run]            后台启动 Clip：不出主窗口、不抢焦点（Dock 与菜单栏图标照常出现）；已在运行则什么都不做
@@ -375,6 +376,7 @@ enum ClipCLI {
         "update": """
             usage: clip update check [--json]
                    clip update install --yes [--dry-run] [--json]
+                   clip update options [--auto-check on|off] [--interval 1..720] --yes [--json]
             「配置与更新」窗口的「检查更新」与「升级到新版…」，走共享的命令层（与窗口同一个发行渠道、同一套版本比较、同一个安装器）。
             check：只读，不下载、不安装。
               --json：current{version, build}、source{kind, …}、latest{version, build, channel, download_url, release_url, sha256, size_bytes}、
