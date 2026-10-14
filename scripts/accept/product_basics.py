@@ -116,7 +116,7 @@ def main():
                          'evidence': str(raw_path.relative_to(ROOT)), 'evidence_sha256': sha(raw_path), 'checks': names}
     passed = all(row['result'] == 'passed' for row in features.values())
     detail = {'schema_version': 1, 'app_id': 'clipbook', 'spec_digest': spec['digest'], 'features': features,
-              'summary': f"Clip 基础功能 {'通过' if passed else '失败'}；{len(checks)} 项真实检查；{binding.get('phase', 'unbound')} 包，未安装；iCloud 为隔离本机链路",
+              'summary': f"Clip 基础功能 {'通过' if passed else '失败'}；{len(checks)} 项真实检查；{'实际已装原件' if binding.get('phase') == 'installed' else '候选包，未安装'}；iCloud 为隔离本机链路",
               'scope': raw['scope'], 'binding': binding, 'error': failure}
     (out / 'product_basics.detail.json').write_text(json.dumps(detail, ensure_ascii=False, indent=2) + '\n')
     print(detail['summary'])
