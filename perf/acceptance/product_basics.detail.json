@@ -6,8 +6,8 @@
     "settings": {
       "result": "passed",
       "method": "ui_automation",
-      "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-      "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+      "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+      "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
       "checks": [
         "settings.artifact_matches_receipt",
         "settings.current_source_matches_receipt",
@@ -24,8 +24,8 @@
     "shortcuts": {
       "result": "passed",
       "method": "real_product",
-      "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-      "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+      "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+      "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
       "checks": [
         "shortcuts.action_path",
         "shortcuts.conflict_or_reserved_keys",
@@ -35,8 +35,8 @@
     "icloud": {
       "result": "passed",
       "method": "real_product",
-      "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-      "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+      "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+      "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
       "checks": [
         "icloud.conflict_or_corrupt_recovery",
         "icloud.disable_preserves_data",
@@ -47,8 +47,8 @@
     "updates": {
       "result": "passed",
       "method": "real_product",
-      "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-      "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+      "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+      "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
       "checks": [
         "updates.check_result",
         "updates.data_preservation",

@@ -2,11 +2,25 @@
 
 ## 进度
 
+- 2026-10-15 02:19 接续：Chapter 新回读报正式装机回执不符；实读磁盘 124 与 build/accept 的原真实回执逐项匹配，但默认 perf/build-receipt.json 仍记旧 108。上一轮遗漏默认回执同步，不是当前包或图标错误。
+- 本轮仅保存旧默认回执、逐字节同步既有真实构建回执至默认入口、执行固定 product_basics 验收并更新原报告；不重新编译/替换已匹配包，不改变源码、项目登记、用户配置或常驻进程。写前复用 --pid 32528 / Chapter 原 session check，不另建或释放声明。
+- 02:22 正式默认回执修复完成：Chapter 原 verify_build_receipt 返回 true；必须执行的 accept 退出 0，22/22，basics 回读 all_passed=true；原 PID 689 保留。
+
 - 2026-10-15 01:45（上海）接续：用户明确授权本机一次免公证快装；进入安装阶段，不发布更新源、不部署、不推送。
 - 本阶段只改原 build-cloud.sh 的分离编译/签名检查与明确快装入口、固定验收的已装登记/文字、本交接和 build/accept 产物；共享生产引擎、真实数据/偏好/账号/登录项保留。
 - Mini 只持 Apple Development，Air 只读实查持 B9LJH93LA4 Developer ID；复用 macmini 原 login_run.py 登录会话签名，保持既有 CloudKit 身份与无设备清单描述文件。写前复用 Chapter --pid 84476 / 原 session check，声明不另建或释放。
 - 01:54 安装前检查真实拒绝退出 4，已装 115 没被替换：新增团队检查的 grep -q 提前关闭管道，pipefail 误判；实读签名正确，改为读取完整输出，重建回执并保留第一次候选。没有减标准或改签法。
 - 01:55 原入口一次成功快装 1.2.1 (124)，保留旧包；01:56–01:57 默认已装原件的 Chapter 固定验收退出 0 / passed，22/22。01:59 完成源码/已装 SHA、设置、登录项及原进程回读；候选阶段结论由下文安装接续覆盖。
+
+## 默认装机回执修复完成（2026-10-15 02:22）
+
+Chapter 回读的真实错误为“装机可执行文件/版本/图标与构建 receipt 不符”。根因是默认 `perf/build-receipt.json` 还登记 1.2.1 (108)，而上一轮实际构建/安装/固定验收使用 `build/accept/product-basics-installed.json` 的 124。上一轮未同步正式默认入口，属于交付遗漏；图标本身 SHA 相同，没有重新生成图标或换包。
+
+已先核 124 的 bundle/version/build/主程序/icon 和 47 个来源文件，全部与实际构建时由 Chapter 生成的原回执一致，再原样复制该回执至 `perf/build-receipt.json`。没有补造 built_at、来源 commit、输入摘要或构建命令；两个位置逐字节一致，SHA256 均为 `badf64a724a70fcc921c1e93a270022ad25fdc48bdc3ad15bb8f16f7a48654c8`，仍记录真实构建时间 01:55:30、提交 73a58be。旧未提交默认回执原字节保留在 `build/accept/default-build-receipt-before-20261015-0219.json`，SHA256 `c4d333f512de88e72cfc89a6db5e6e5796a445205a7efbba1be4a793cb14953f`，其他会话的源码/登记/暂存差异没有撤销。
+
+本轮实际 `chapter sop accept --app clipbook --check product_basics --json` 退出 0 / passed，当前正式记录 `perf/acceptance/run-wg4inlai/product_basics.json`；新原件 `perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json`，SHA256 `f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d`，phase=installed，22 项严格布尔全部 true，完整含政策固定 14 项。delivery-evidence 由 Chapter 写入，未手写。
+
+只读调用 Chapter 原 `verify_build_receipt` 的默认入口回读 `(True, '装机可执行文件、图标与当前构建输入均匹配 receipt')`；`chapter basics --app clipbook --json` 返回 passed=1 / all_passed=true。生产源码与原构建输入未改，本轮没有第二次编译或安装，没有公证、发布、推送、部署或写更新源。原 PID 689 仍运行，常驻实例切换与苹果跨设备传输的边界继续按下文报告；本轮回执不符无剩余受阻。
 
 ## 安装接续完成（2026-10-15 01:59）
 

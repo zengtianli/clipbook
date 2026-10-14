@@ -5,10 +5,10 @@
   "command": "~/Dev/.venv/bin/python scripts/accept/product_basics.py --receipt build/accept/product-basics-installed.json",
   "exit_code": 0,
   "status": "passed",
-  "started_at": "2026-10-15T01:56:49.950227+08:00",
-  "finished_at": "2026-10-15T01:56:52.310043+08:00",
+  "started_at": "2026-10-15T02:20:24.305845+08:00",
+  "finished_at": "2026-10-15T02:20:27.046953+08:00",
   "input_sha256": "c6fd3e6a033735707e4300122317487a5d00d459a40b3a42b6015ffda2273431",
-  "log": "perf/acceptance/run-j4hu2occ/product_basics.log",
+  "log": "perf/acceptance/run-wg4inlai/product_basics.log",
   "log_sha256": "0498f0daf6352d89aa4f7e5a149cfc6229dfc7ba7f6008bb749f37361f86a8e9",
   "summary": "Clip 基础功能 通过；22 项真实检查；实际已装原件；iCloud 为隔离本机链路",
   "detail": {
@@ -19,8 +19,8 @@
       "settings": {
         "result": "passed",
         "method": "ui_automation",
-        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+        "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
         "checks": [
           "settings.artifact_matches_receipt",
           "settings.current_source_matches_receipt",
@@ -37,8 +37,8 @@
       "shortcuts": {
         "result": "passed",
         "method": "real_product",
-        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+        "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
         "checks": [
           "shortcuts.action_path",
           "shortcuts.conflict_or_reserved_keys",
@@ -48,8 +48,8 @@
       "icloud": {
         "result": "passed",
         "method": "real_product",
-        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+        "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
         "checks": [
           "icloud.conflict_or_corrupt_recovery",
           "icloud.disable_preserves_data",
@@ -60,8 +60,8 @@
       "updates": {
         "result": "passed",
         "method": "real_product",
-        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
-        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "evidence": "perf/acceptance/product-basics-da29425f75054b8e85856a5445282087/raw.json",
+        "evidence_sha256": "f02af80248b980fbad471f6f3b5ccf05fb70063ab4a727e99e8151ed814c913d",
         "checks": [
           "updates.check_result",
           "updates.data_preservation",
@@ -96,9 +96,9 @@
     "error": null
   },
   "previous_observation": {
-    "path": "perf/acceptance/attempts/product_basics/20261015T015649949354+0800-zx1641zr",
-    "manifest_sha256": "c451fb9f3c1fb2970866e2ca5b24823983e138261750d20a7e424a71d8bdaaad"
+    "path": "perf/acceptance/attempts/product_basics/20261015T022024304998+0800-2gecjpfc",
+    "manifest_sha256": "1ffb4efe2b706b9b4b5760f0a2eba917031711db812866053cfcce5424672c73"
   },
-  "run_id": "run-j4hu2occ",
-  "evidence_file": "perf/acceptance/run-j4hu2occ/product_basics.json"
+  "run_id": "run-wg4inlai",
+  "evidence_file": "perf/acceptance/run-wg4inlai/product_basics.json"
 }
