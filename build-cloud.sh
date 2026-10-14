@@ -102,7 +102,7 @@ fi
 "$APP/Contents/MacOS/Clipbook" --selftest
 if [ "$MODE" = --compile-only ]; then echo "Compiled (not an installable product): $APP"; exit 0; fi
 codesign --verify --deep --strict "$APP"
-codesign -dv --verbose=4 "$APP" 2>&1 | grep -q "^TeamIdentifier=$TEAM$" || { echo 'Developer team changed; refusing product' >&2; exit 4; }
+codesign -dv --verbose=4 "$APP" 2>&1 | grep "^TeamIdentifier=$TEAM$" > /dev/null || { echo 'Developer team changed; refusing product' >&2; exit 4; }
 # One shared verdict for what may enter /Applications or an update feed: Developer ID
 # Application, hardened runtime, secure timestamp, no profile with a device list.
 python3 "$GRADE" check --stage signed "$APP"

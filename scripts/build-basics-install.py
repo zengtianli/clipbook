@@ -28,9 +28,11 @@ def run(*args, **kwargs):
 def main():
     os.chdir(ROOT)
     OUT.mkdir(parents=True, exist_ok=True)
+    app = OUT / 'Build/Products/Release/Clipbook.app'
+    if app.exists():
+        app.rename(app.with_name('Clipbook-previous-' + uuid.uuid4().hex[:8] + '.app'))
     env = dict(os.environ, CLIP_DERIVED_DATA=str(OUT), CLIP_CLOUD_BUILD_LOG=str(OUT / 'compile.log'))
     run('bash', 'build.sh', '--compile-only', env=env)
-    app = OUT / 'Build/Products/Release/Clipbook.app'
     # Reuse the actual installed all-device Developer ID profile. Never create an account/profile.
     reference = Path('/Applications/Clip.app')
     run('codesign', '--verify', '--deep', '--strict', str(reference))
@@ -78,7 +80,7 @@ shasum -a 256 signed.zip
     assert hashlib.sha256(signed).hexdigest() == receipt.stdout.split()[0], 'Signing transport SHA mismatch'
     (OUT / 'signed.zip').write_bytes(signed)
     # Replace only this task's unsigned candidate, retaining an exact copy for diagnosis.
-    app.rename(app.with_name('Clipbook-unsigned.app'))
+    app.rename(app.with_name('Clipbook-unsigned-' + uuid.uuid4().hex[:8] + '.app'))
     run('ditto', '-x', '-k', str(OUT / 'signed.zip'), str(app.parent))
     run('bash', 'build.sh', '--check-only', env=env)
     print(f'Signed source candidate: {app}\nSigning login-run: {name}\nTransfer SHA256: {receipt.stdout.split()[0]}')
