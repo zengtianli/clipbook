@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "app_id": "clipbook",
+  "spec_digest": "9937ffbf4aa2bc48437a6150726cc86b1382612cf1e445b1df03a3a983cbfcee",
+  "checks": {
+    "settings.artifact_matches_receipt": true,
+    "settings.current_source_matches_receipt": true,
+    "settings.artifact_signature_valid": true,
+    "settings.fixture_copied_actual_executable": true,
+    "icloud.conflict_or_corrupt_recovery": true,
+    "icloud.disable_preserves_data": true,
+    "icloud.push_pull": true,
+    "icloud.unavailable_local_fallback": true,
+    "settings.error_preserves_data": true,
+    "settings.interaction": true,
+    "settings.no_screen_or_dock": true,
+    "settings.persisted_readback": true,
+    "settings.real_views_offscreen": true,
+    "shortcuts.action_path": true,
+    "shortcuts.conflict_or_reserved_keys": true,
+    "shortcuts.disable_restore": true,
+    "updates.check_result": true,
+    "updates.data_preservation": true,
+    "updates.failure_recovery": true,
+    "updates.options_or_store_entry": true,
+    "settings.process_exit_success": true,
+    "updates.owner_and_installed_unchanged": true
+  },
+  "binding": {
+    "phase": "installed",
+    "app": "/Applications/Clip.app",
+    "receipt": "build/accept/product-basics-installed.json",
+    "receipt_sha256": "badf64a724a70fcc921c1e93a270022ad25fdc48bdc3ad15bb8f16f7a48654c8",
+    "source_sha256": "448b1f82822beb10cb9b921ba7cd0dfd042ac9f1f06f2182cde6b4a8f8afaad4",
+    "source_commit": "73a58be99d310ad63fb25f1b4337a39ad42e2576",
+    "artifact": {
+      "bundle_id": "cyou.tianli.clipbook",
+      "version": "1.2.1",
+      "build": "124",
+      "executable": "Contents/MacOS/Clipbook",
+      "sha256": "8c52b4d6773b7dc2308739a488c2d79e35a27de51072b95f618e3e771580201b",
+      "icon": {
+        "path": "Contents/Resources/AppIcon.icns",
+        "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+      }
+    },
+    "installed_by_this_task": false
+  },
+  "owner_before": {
+    "installed_executable": "8c52b4d6773b7dc2308739a488c2d79e35a27de51072b95f618e3e771580201b",
+    "preferences": "1aa6e91765d4fc0f085630ca57fb4f32deb2dd6c01e92d4ef5fe86894a234dca"
+  },
+  "owner_after": {
+    "installed_executable": "8c52b4d6773b7dc2308739a488c2d79e35a27de51072b95f618e3e771580201b",
+    "preferences": "1aa6e91765d4fc0f085630ca57fb4f32deb2dd6c01e92d4ef5fe86894a234dca"
+  },
+  "error": null,
+  "scope": "Actual receipt-bound candidate/installed executable; disposable identity; native offscreen views/actions, fresh-process reads, coordinated isolated configuration and test update feed. No Apple cross-device transport or installation."
+}

@@ -1,0 +1,18 @@
+PASS settings.real_views_offscreen
+PASS settings.interaction
+PASS settings.persisted_readback
+PASS settings.error_preserves_data
+PASS shortcuts.action_path
+PASS shortcuts.disable_restore
+PASS shortcuts.conflict_or_reserved_keys
+PASS icloud.push_pull
+PASS icloud.unavailable_local_fallback
+PASS icloud.conflict_or_corrupt_recovery
+PASS icloud.disable_preserves_data
+PASS updates.check_result
+PASS updates.failure_recovery
+PASS updates.options_or_store_entry
+PASS updates.data_preservation — preview=(0, ["app_running": 0, "will_relaunch": 0, "state": update_available, "will_quit_app": 0, "ok": 1, "source": {⏎    channel = basics;⏎    kind = "private_cloud";⏎}, "installed": 0, "latest": {⏎    build = 999;⏎    channel = basics;⏎    "download_url" = "file:///Users/tianli/Apps/clip/mac/perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/cloud/TianliApps/Updates/test.tianli.clipbook.basics.078e5861ebe54cb5bf7611ed7c883f9e/basics/Clip.zip";⏎    notes = "<null>";⏎    "published_at" = "<null>";⏎    "release_url" = "<null>";⏎    sha256 = 0c9e17cbd9c0523fed386dc4d42f3cd2b77399ee8d9673fd3e67ef99ee7af4a5;⏎    "size_bytes" = 23;⏎    version = "99.0";⏎}, "dry_run": 1, "current": {⏎    build = 124;⏎    version = "1.2.1";⏎}, "installation": bundle, "message": 有新版 99.0 (999)，当前 1.2.1 (124)。升级会保留本机配置。, "would_install": {⏎    from =     {⏎        build = 124;⏎        version = "1.2.1";⏎    };⏎    to =     {⏎        build = 999;⏎        version = "99.0";⏎    };⏎}, "command": update install])
+PASS settings.no_screen_or_dock
+{"checks":{"icloud.conflict_or_corrupt_recovery":true,"icloud.disable_preserves_data":true,"icloud.push_pull":true,"icloud.unavailable_local_fallback":true,"settings.error_preserves_data":true,"settings.interaction":true,"settings.no_screen_or_dock":true,"settings.persisted_readback":true,"settings.real_views_offscreen":true,"shortcuts.action_path":true,"shortcuts.conflict_or_reserved_keys":true,"shortcuts.disable_restore":true,"updates.check_result":true,"updates.data_preservation":true,"updates.failure_recovery":true,"updates.options_or_store_entry":true},"not_covered":[],"ok":true,"screenshots":[]}
+2026-10-15 01:56:50.089 Clipbook[97128:3328726] Using your own bundle identifier as an NSUserDefaults suite name does not make sense and will not work. Break on _NSUserDefaults_Log_Nonsensical_Suites to find this

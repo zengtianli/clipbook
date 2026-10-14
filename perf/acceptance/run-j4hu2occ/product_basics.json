@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "name": "product_basics",
+  "app_id": "clipbook",
+  "command": "~/Dev/.venv/bin/python scripts/accept/product_basics.py --receipt build/accept/product-basics-installed.json",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-10-15T01:56:49.950227+08:00",
+  "finished_at": "2026-10-15T01:56:52.310043+08:00",
+  "input_sha256": "c6fd3e6a033735707e4300122317487a5d00d459a40b3a42b6015ffda2273431",
+  "log": "perf/acceptance/run-j4hu2occ/product_basics.log",
+  "log_sha256": "0498f0daf6352d89aa4f7e5a149cfc6229dfc7ba7f6008bb749f37361f86a8e9",
+  "summary": "Clip 基础功能 通过；22 项真实检查；实际已装原件；iCloud 为隔离本机链路",
+  "detail": {
+    "schema_version": 1,
+    "app_id": "clipbook",
+    "spec_digest": "9937ffbf4aa2bc48437a6150726cc86b1382612cf1e445b1df03a3a983cbfcee",
+    "features": {
+      "settings": {
+        "result": "passed",
+        "method": "ui_automation",
+        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
+        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "checks": [
+          "settings.artifact_matches_receipt",
+          "settings.current_source_matches_receipt",
+          "settings.artifact_signature_valid",
+          "settings.fixture_copied_actual_executable",
+          "settings.error_preserves_data",
+          "settings.interaction",
+          "settings.no_screen_or_dock",
+          "settings.persisted_readback",
+          "settings.real_views_offscreen",
+          "settings.process_exit_success"
+        ]
+      },
+      "shortcuts": {
+        "result": "passed",
+        "method": "real_product",
+        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
+        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "checks": [
+          "shortcuts.action_path",
+          "shortcuts.conflict_or_reserved_keys",
+          "shortcuts.disable_restore"
+        ]
+      },
+      "icloud": {
+        "result": "passed",
+        "method": "real_product",
+        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
+        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "checks": [
+          "icloud.conflict_or_corrupt_recovery",
+          "icloud.disable_preserves_data",
+          "icloud.push_pull",
+          "icloud.unavailable_local_fallback"
+        ]
+      },
+      "updates": {
+        "result": "passed",
+        "method": "real_product",
+        "evidence": "perf/acceptance/product-basics-19d85aed5d894dfd95b24aeb6fcf07b1/raw.json",
+        "evidence_sha256": "5d924c041282cb3bda42e2cc7f39ad91d7d1cda8075270d036d03d1c33d5e757",
+        "checks": [
+          "updates.check_result",
+          "updates.data_preservation",
+          "updates.failure_recovery",
+          "updates.options_or_store_entry",
+          "updates.owner_and_installed_unchanged"
+        ]
+      }
+    },
+    "summary": "Clip 基础功能 通过；22 项真实检查；实际已装原件；iCloud 为隔离本机链路",
+    "scope": "Actual receipt-bound candidate/installed executable; disposable identity; native offscreen views/actions, fresh-process reads, coordinated isolated configuration and test update feed. No Apple cross-device transport or installation.",
+    "binding": {
+      "phase": "installed",
+      "app": "/Applications/Clip.app",
+      "receipt": "build/accept/product-basics-installed.json",
+      "receipt_sha256": "badf64a724a70fcc921c1e93a270022ad25fdc48bdc3ad15bb8f16f7a48654c8",
+      "source_sha256": "448b1f82822beb10cb9b921ba7cd0dfd042ac9f1f06f2182cde6b4a8f8afaad4",
+      "source_commit": "73a58be99d310ad63fb25f1b4337a39ad42e2576",
+      "artifact": {
+        "bundle_id": "cyou.tianli.clipbook",
+        "version": "1.2.1",
+        "build": "124",
+        "executable": "Contents/MacOS/Clipbook",
+        "sha256": "8c52b4d6773b7dc2308739a488c2d79e35a27de51072b95f618e3e771580201b",
+        "icon": {
+          "path": "Contents/Resources/AppIcon.icns",
+          "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+        }
+      },
+      "installed_by_this_task": false
+    },
+    "error": null
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/product_basics/20261015T015649949354+0800-zx1641zr",
+    "manifest_sha256": "c451fb9f3c1fb2970866e2ca5b24823983e138261750d20a7e424a71d8bdaaad"
+  },
+  "run_id": "run-j4hu2occ",
+  "evidence_file": "perf/acceptance/run-j4hu2occ/product_basics.json"
+}
