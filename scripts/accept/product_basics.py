@@ -9,7 +9,6 @@ import plistlib
 import shutil
 import subprocess
 import sys
-import time
 import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +17,23 @@ LS = '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchService
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def source_binding(app, receipt_path, candidate):
+    """Chapter owns the production input set; acceptance must not reclassify it."""
+    digest = os.environ.get('SOP_CODE_BINDING_SHA256', '')
+    current = os.environ.get('SOP_BUILD_CURRENT')
+    if len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest) or current not in ('0', '1'):
+        raise ValueError('Missing or invalid Chapter production code binding')
+    if candidate:
+        # SOP_BUILD_CURRENT describes the installed app, not an explicit candidate.
+        # Reuse Chapter's original read-only verifier for that separate artifact.
+        sys.path.insert(0, str(ROOT.parents[1] / 'chapter/engine'))
+        import app_sop
+        product = app_sop.load_apps('clipbook')[0]
+        matched, reason = app_sop.verify_build_receipt(product, app, receipt_path=receipt_path, code_only=True)
+        return digest, matched, reason
+    return digest, current == '1', 'Chapter reports that the installed build does not match current production inputs'
 
 
 def owner():
@@ -47,7 +63,7 @@ def main():
     cloned = run / 'fixture/Clip.app'
     identity = 'test.tianli.clipbook.basics.' + uuid.uuid4().hex
     before = owner()
-    binding = {}
+    binding = {'phase': 'candidate' if args.app else 'installed', 'app': str(app)}
     try:
         receipt = json.loads(receipt_path.read_text())
         artifact = receipt['artifact']
@@ -57,23 +73,19 @@ def main():
                    and info['CFBundleShortVersionString'] == artifact['version']
                    and str(info['CFBundleVersion']) == str(artifact['build'])
                    and sha(executable) == artifact['sha256'])
-        # Test, acceptance and measurement edits do not change the installed app.
-        # Keep production inputs bound to the original candidate/installed receipt.
-        inputs = {p: h for p, h in receipt['source']['files'].items()
-                  if not p.startswith(('Tests/', 'tests/', 'Test/', 'test/',
-                                       'scripts/accept/', 'scripts/perf/', 'handoffs/', 'perf/'))}
-        current = all((ROOT / p).is_file() and sha(ROOT / p) == h for p, h in inputs.items())
         checks['settings.artifact_matches_receipt'] = matched
+        assert matched, 'Actual package does not match build receipt; refusing fixture execution'
+        code_digest, current, reason = source_binding(app, receipt_path, bool(args.app))
+        binding.update(code_binding_sha256=code_digest, build_current=current)
         checks['settings.current_source_matches_receipt'] = current
-        assert matched and current, 'Actual package/source mismatch; refusing fixture execution'
+        assert current, reason + '; refusing fixture execution'
         signature = subprocess.run(['codesign', '--verify', '--deep', '--strict', str(app)], capture_output=True, text=True)
         (run / 'signature.log').write_text(signature.stdout + signature.stderr)
         checks['settings.artifact_signature_valid'] = signature.returncode == 0
-        assert signature.returncode == 0
-        binding = {'phase': 'candidate' if args.app else 'installed', 'app': str(app),
-                   'receipt': str(receipt_path.relative_to(ROOT)), 'receipt_sha256': sha(receipt_path),
-                   'source_sha256': receipt['source']['sha256'], 'source_commit': receipt['source']['commit'],
-                   'artifact': artifact, 'installed_by_this_task': False}
+        assert signature.returncode == 0, 'Actual package signature is invalid; refusing fixture execution'
+        binding.update(receipt=str(receipt_path.relative_to(ROOT)), receipt_sha256=sha(receipt_path),
+                       source_sha256=receipt['source']['sha256'], source_commit=receipt['source']['commit'],
+                       artifact=artifact, installed_by_this_task=False)
         cloned.parent.mkdir()
         shutil.copytree(app, cloned, symlinks=True)
         checks['settings.fixture_copied_actual_executable'] = sha(cloned / artifact['executable']) == artifact['sha256']
