@@ -9,7 +9,15 @@ inputs_sha() {
   { find -L Sources -name '*.swift' -type f | LC_ALL=C sort | xargs cat
     cat cloud-project.yml Cloud.entitlements build.sh build-cloud.sh project.yaml icon/AppIcon.icns; } | shasum -a 256 | cut -d' ' -f1
 }
-for _ in $(seq 1 1200); do mkdir "$LOCK" 2>/dev/null && break; sleep 0.5; done
+LOCKED=0
+for ((attempt=0; attempt<${CLIP_ACCEPT_LOCK_ATTEMPTS:-60}; attempt++)); do
+  if mkdir "$LOCK" 2>/dev/null; then LOCKED=1; break; fi
+  sleep 0.5
+done
+if [ "$LOCKED" != 1 ]; then
+  echo "验收构建缓存正被使用；退出 75，交原队列接续" >&2
+  exit 75
+fi
 trap 'exit_code=$?; rmdir "$LOCK" 2>/dev/null || true; exit "$exit_code"' EXIT
 SHA="$(inputs_sha)"
 APP="$ACC_DD/Build/Products/Release/Clipbook.app"

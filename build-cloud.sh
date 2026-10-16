@@ -36,30 +36,33 @@ COUNT=$(git rev-list --count HEAD)
 APP="$DD/Build/Products/Release/Clipbook.app"
 if [[ "$MODE" != --install-only && "$MODE" != --check-only && "$MODE" != --install-local ]]; then
 python3 "$HOME/Dev/tools/dev/lib/tools/macapp/check_codingkeys.py" .
-# Manual signing needs the profile on this Mac; fetched (or created once) through the App
-# Store Connect API. The shared venv has the token library; plain python3 suffices once cached.
+# Manual signing needs a profile containing this Mac's signing certificate. Fetch only
+# existing compatible profiles; account/profile changes require a separate authorized task.
 PROFILE_PY="$HOME/Dev/.venv/bin/python"; [ -x "$PROFILE_PY" ] || PROFILE_PY=python3
-if [ "$MODE" != --compile-only ]; then "$PROFILE_PY" scripts/developer-id-profile.py; fi
+PROFILE_UUID=""; SIGNING_IDENTITY=""
+if [ "$MODE" != --compile-only ]; then
+  PROFILE_JSON="$("$PROFILE_PY" scripts/developer-id-profile.py)"
+  echo "$PROFILE_JSON"
+  PROFILE_SELECTION="$(python3 -c 'import json,sys; p=json.loads(sys.argv[1]); print(p["uuid"], p["signing_identity"])' "$PROFILE_JSON")"
+  read -r PROFILE_UUID SIGNING_IDENTITY <<< "$PROFILE_SELECTION"
+fi
 xcodegen generate --spec cloud-project.yml
 # Release strips symbols before Xcode signs (Xcode runs strip -x -T); the dSYM beside
 # the product keeps crash symbolication. Behaviour is unchanged; like an archive build,
 # Xcode then omits the get-task-allow debugger entitlement.
-# Use the shared sim_lane admission/queue while retaining this product's CloudKit
+# Use a shared build slot while retaining this product's CloudKit
 # signing pipeline. The generic Mac lane build strips entitlements and therefore
 # cannot replace this build. Busy admission is temporary (75), never a build pass.
-scrub_env_run python3 - "$DD" "$COUNT" "$MODE" <<'PY' > "$LOG" 2>&1 || { code=$?; tail -60 "$LOG"; exit "$code"; }
+scrub_env_run python3 - "$DD" "$COUNT" "$MODE" "$PROFILE_UUID" "$SIGNING_IDENTITY" <<'PY' > "$LOG" 2>&1 || { code=$?; tail -60 "$LOG"; exit "$code"; }
 import os, pathlib, signal, subprocess, sys
 sys.path.insert(0, str(pathlib.Path.home() / "Dev/tools/dev/lib/tools/macapp/ios"))
 import sim_lane
 
-locks = sim_lane.lock_chain(f"clipbook:xcodebuild:{os.getpid()}")
 child = None
 def stop(signum, frame):
     raise KeyboardInterrupt
 signal.signal(signal.SIGTERM, stop)
 try:
-    sim_lane.acquire(locks, None, lock_wait=120, load_wait=120,
-                     max_load=sim_lane.max_load_default())
     command = ["xcodebuild", "-project", "Clipbook.xcodeproj", "-scheme", "Clipbook",
                "-destination", "platform=macOS,arch=arm64", "-configuration", "Release",
                "-derivedDataPath", sys.argv[1],
@@ -68,33 +71,37 @@ try:
                "STRIP_STYLE=non-global", "build"]
     if sys.argv[3] == "--compile-only":
         command.append("CODE_SIGNING_ALLOWED=NO")
-    print("sim_lane admitted: CloudKit Release build, parallel jobs", os.cpu_count() or 1, flush=True)
+    else:
+        # Pin both choices verified by the preflight. A duplicate cached profile name
+        # or a second local Developer ID certificate must not change Xcode's selection.
+        command += ["PROVISIONING_PROFILE_SPECIFIER=", f"PROVISIONING_PROFILE={sys.argv[4]}",
+                    f"CODE_SIGN_IDENTITY={sys.argv[5]}"]
     # Xcode persists its inherited environment in build diagnostics. Keep only
     # the documented tool/OS inputs; shell credentials and Homebrew CC/CXX/CPATH
     # are neither required for this project nor safe to copy into build logs.
     env_keys = ("PATH", "HOME", "USER", "LOGNAME", "DEVELOPER_DIR", "TMPDIR",
                 "SDKROOT", "LANG", "LC_ALL", "LC_CTYPE", "SSH_AUTH_SOCK")
     build_env = {key: os.environ[key] for key in env_keys if key in os.environ}
-    try:
-        child = subprocess.Popen(command, env=build_env, start_new_session=True)
-        code = child.wait(timeout=900)
-    except subprocess.TimeoutExpired:
-        print("Clip build exceeded 900 seconds", file=sys.stderr)
-        code = 124
+    with sim_lane.BuildSlot(f"clipbook:xcodebuild:{os.getpid()}", wait=120):
+        print("sim_lane build slot admitted: CloudKit Release build, parallel jobs", os.cpu_count() or 1, flush=True)
+        try:
+            child = subprocess.Popen(command, env=build_env, start_new_session=True)
+            code = child.wait(timeout=900)
+        except subprocess.TimeoutExpired:
+            print("Clip build exceeded 900 seconds", file=sys.stderr)
+            code = 124
+        finally:
+            if child is not None and child.poll() is None:
+                try:
+                    os.killpg(child.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                child.wait()
 except sim_lane.Busy as exc:
     print(str(exc), file=sys.stderr)
     code = 75
 except KeyboardInterrupt:
     code = 130
-finally:
-    if child is not None and child.poll() is None:
-        try:
-            os.killpg(child.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        child.wait()
-    for lock in reversed(locks):
-        lock.release()
 sys.exit(code)
 PY
 fi
