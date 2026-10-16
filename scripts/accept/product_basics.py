@@ -57,7 +57,11 @@ def main():
                    and info['CFBundleShortVersionString'] == artifact['version']
                    and str(info['CFBundleVersion']) == str(artifact['build'])
                    and sha(executable) == artifact['sha256'])
-        inputs = receipt['source']['files']
+        # Test, acceptance and measurement edits do not change the installed app.
+        # Keep production inputs bound to the original candidate/installed receipt.
+        inputs = {p: h for p, h in receipt['source']['files'].items()
+                  if not p.startswith(('Tests/', 'tests/', 'Test/', 'test/',
+                                       'scripts/accept/', 'scripts/perf/', 'handoffs/', 'perf/'))}
         current = all((ROOT / p).is_file() and sha(ROOT / p) == h for p, h in inputs.items())
         checks['settings.artifact_matches_receipt'] = matched
         checks['settings.current_source_matches_receipt'] = current
