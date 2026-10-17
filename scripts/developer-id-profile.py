@@ -48,6 +48,11 @@ def matching_identity(profile, identities):
 
 def usable(profile, name, bundle_id, team, identities):
     entitlements = profile.get("Entitlements") or {}
+    services = entitlements.get("com.apple.developer.icloud-services")
+    # Apple's direct-distribution profiles may authorize every iCloud service
+    # with the string "*", rather than an explicit array containing CloudKit.
+    cloudkit = services == "*" or (isinstance(services, list)
+                                   and ("CloudKit" in services or "*" in services))
     identifier = entitlements.get("com.apple.application-identifier") or entitlements.get("application-identifier")
     expires = profile.get("ExpirationDate")
     now = datetime.datetime.now(expires.tzinfo) if isinstance(expires, datetime.datetime) else None
@@ -56,7 +61,7 @@ def usable(profile, name, bundle_id, team, identities):
             and entitlements.get("com.apple.developer.team-identifier") == team
             and entitlements.get("com.apple.developer.icloud-container-environment") == "Production"
             and entitlements.get("com.apple.developer.icloud-container-identifiers") == ["iCloud.cyou.tianli.clip"]
-            and "CloudKit" in (entitlements.get("com.apple.developer.icloud-services") or [])
+            and cloudkit
             and "ProvisionedDevices" not in profile and profile.get("ProvisionsAllDevices") is True
             and now is not None and expires > now + datetime.timedelta(days=7)
             and matching_identity(profile, identities) is not None)

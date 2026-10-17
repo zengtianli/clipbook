@@ -10,7 +10,7 @@
 
 仓库现场为 PUBLIC，起点 HEAD `7c3affd`，领先 origin/main 8 个提交；没有他人暂存。推前只读探针返回 push_allowed=true、workflow 全部手动；本轮仍遵守公开仓仅本地提交授权，不执行 push、公证、更新源或审核提交。
 
-装机和两项复验结果将在本节续记。
+新 profile 的实际 iCloud services 为 Apple 通配值 `"*"`，原预检错误拒绝此值。必要范围补充 `scripts/developer-id-profile.py` 的服务授权类型识别与 `tests/test_developer_id_profile.py` 的边界回归：接受通配值或明确含 CloudKit 的数组，仍拒绝缺失、其他服务、任意字符串和字典；不放宽证书、Team、容器、Production 或设备约束。装机和两项复验结果将在本节续记。
 
 本轮仅接续 `delivery-native_ui`，复用 Chapter 的精确身份 `--pid 24643 --session chapter-task:bbb3eb5e08fe4f3894a31dd16132c2a3`；不另开或释放声明。
 

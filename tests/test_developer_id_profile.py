@@ -73,6 +73,16 @@ def test_identity_lookup_uses_valid_developer_id_of_the_product_team(module, mon
     assert module.signing_identities(TEAM) == [IDENTITY]
 
 
+@pytest.mark.parametrize('services, expected', [
+    ('*', True), (['*'], True), (['CloudKit'], True),
+    (['CloudDocuments', 'CloudKit'], True), (['CloudDocuments'], False),
+    ('NotCloudKit', False), ('CloudKit', False), (None, False), ({'CloudKit': True}, False),
+])
+def test_cloudkit_authorization_accepts_apple_wildcard_only(module, profile, services, expected):
+    profile['Entitlements']['com.apple.developer.icloud-services'] = services
+    assert module.usable(profile, NAME, BUNDLE, TEAM, [IDENTITY]) is expected
+
+
 def test_same_name_stale_cache_does_not_hide_compatible_profile(module, profile, tmp_path, monkeypatch):
     stale = copy.deepcopy(profile)
     stale['DeveloperCertificates'] = [b'old certificate']
