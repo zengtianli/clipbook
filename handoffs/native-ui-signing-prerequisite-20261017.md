@@ -10,7 +10,23 @@
 
 仓库现场为 PUBLIC，起点 HEAD `7c3affd`，领先 origin/main 8 个提交；没有他人暂存。推前只读探针返回 push_allowed=true、workflow 全部手动；本轮仍遵守公开仓仅本地提交授权，不执行 push、公证、更新源或审核提交。
 
-新 profile 的实际 iCloud services 为 Apple 通配值 `"*"`，原预检错误拒绝此值。必要范围补充 `scripts/developer-id-profile.py` 的服务授权类型识别与 `tests/test_developer_id_profile.py` 的边界回归：接受通配值或明确含 CloudKit 的数组，仍拒绝缺失、其他服务、任意字符串和字典；不放宽证书、Team、容器、Production 或设备约束。装机和两项复验结果将在本节续记。
+新 profile 的实际 iCloud services 为 Apple 通配值 `"*"`，原预检错误拒绝此值。必要范围补充 `scripts/developer-id-profile.py` 的服务授权类型识别与 `tests/test_developer_id_profile.py` 的边界回归：接受通配值或明确含 CloudKit 的数组，仍拒绝缺失、其他服务、任意字符串和字典；不放宽证书、Team、容器、Production 或设备约束。
+
+结果：
+
+- 本机获取后 `scripts/developer-id-profile.py --check` 退出 0，source=installed、signing_identity=72F835AA…、UUID 与 ASC 回读一致。
+- `/Users/tianli/Dev/.venv/bin/python -m pytest -n auto tests/test_developer_id_profile.py tests/test_build_cloud.py tests/test_product_basics.py -q`：37 passed，退出 0。
+- 原 `scripts/install-local.py` 退出 0，实际安装 `/Applications/Clip.app` 为 **1.2.1 (138)**；包内 `clip version --json`、深验签和 Chapter `verify_build_receipt` 均通过。来源提交 `17c1d1d039093b2b96c6a69c03faaa1014a38a28`，源码摘要 `9842cae01180510713837b581ecd3dc608578f2950268950a885a25bede62aa5`，已装可执行 SHA256 `b75602045b3ed4fa8dabbea3e324d0666c341f17a7b60d2c5ba707b410f8f69c`。原始来源回执 `perf/build-receipt.json`（同时保留构建原件 `build/accept/local-install.json`），编译日志 `build/local-install-xcodebuild.log`。原安装备份 `/Users/tianli/.Trash/clip-pre-icloud-20261017-135520/Clip.app`。原 PID 3064 的日常实例未重启；已装文件版本与原在途实例分开，不声称后者已加载新版。
+- 原 `chapter sop accept --app clipbook --check native_ui --check product_basics --json` 退出 0，input_stable 均为 true。native_ui **26/26**，记录 `perf/acceptance/run-mjuql7iz/native_ui.json`；product_basics **22/22**，phase=installed、build_current=true，记录 `perf/acceptance/run-sstqrick/product_basics.json`。基础功能 raw 原件 `perf/acceptance/product-basics-73f8e63d940249b99e5c29b452dc8c6c/raw.json`，SHA256 `42ac58b29283fc91eed9824c48f8625ce1006dd5bdc64106ff934788d41a9fa6`。native_ui 是原入口单独编译的当前源码离屏包（SHA256 `d8b69f218ef2975bc1af7ec41b9c4e57ddc8e770fcfc3eddd2dab2fee6ffcc45`）；没有把它称为已装包。
+- 已查看 native_ui 的 main/settings 离屏截图，布局与内容非空；选中材质的黑块是原验收明确列出的 cacheDisplay 限制。未验证真人键鼠、上屏激活或 Apple 跨设备 iCloud 传输；iCloud 基础验收是隔离本机链路。未改用户默认快捷键、偏好和通用剪贴板；未提交审核、公证或分发。
+
+源码本地提交 `1615253`、`17c1d1d`；本次只提交本轮源码、测试、本节及真实构建回执，其他会话已脏的 perf 最新索引和 project.yaml 不纳入提交。新验收由 Chapter 自动记录，未手写通过证据。
+
+最终状态 **blocked**：技术修复、已装版与两项复验通过，但 PUBLIC 仓本轮只授权本地提交，未满足“本轮提交已推送、分支不领先”的完成谓词。远端 main 回读仍为 `de098c4f84b1a7a2ca67e65025fb522760ef144e`；本轮不擅自推送，也不报 done。Xcode Cloud 现场前提为 ok / push_allowed=true，不把它误记为 unmet。
+
+接手（仅在另获公开仓推送授权后）：先 `cd /Users/tianli/Apps/clip/mac && chapter xcode-cloud status --repo . --json`；读取本仓 push_allowed，仅 true 或统一规则允许的 unknown 才执行 `git log --oneline '@{u}..HEAD'` 审阅全部领先提交，再 `git push origin main && git rev-list '@{u}..HEAD' && git status -sb && git ls-remote origin refs/heads/main`。若 push_allowed=false，保持原队列 waiting_prerequisite，附探针实际 fix，不推送。
+
+## 前轮只读排查（原记录）
 
 本轮仅接续 `delivery-native_ui`，复用 Chapter 的精确身份 `--pid 24643 --session chapter-task:bbb3eb5e08fe4f3894a31dd16132c2a3`；不另开或释放声明。
 
