@@ -26,7 +26,7 @@ Clip 是给所有人用的产品：装进 /Applications 或发到更新源的包
 
 iCloud/CloudKit 需要描述文件，用 Developer ID 直接分发那一种（账号里名为 `Clip Developer ID`，接口类型 `MAC_APP_DIRECT`）：带 iCloud 能力，**没有设备清单**（`ProvisionsAllDevices`），有效期随证书。`cloud-project.yml` 手动签名指定它，`Cloud.entitlements` 的推送环境相应是 `production`；`scripts/developer-id-profile.py` 在构建前把它放到本机（本机已有就不联网；没有则用 App Store Connect 接口密钥取回，账号里没有时建一次）。Xcode 自己出不了这种描述文件：带接口密钥做 developer-id 自动签名导出，原话是 `Cloud signing permission error` 加 `Xcode couldn't find any Developer ID provisioning profiles`。**带设备清单的 “Mac Team Provisioning Profile”、把某台 Mac 加进清单再重出，这套已废弃，不是修法。**
 
-证书只在 Air 的登录钥匙串，签名要在 Air 的登录会话里跑（纯 SSH 里 codesign 报 errSecInternalComponent）。`./build.sh --build-only` 出的包已是 Developer ID 签名、未公证（验收用）；`./build.sh --install-only` 把同一提交的那份包公证、装订再装机，等公证时不占构建队列。发更新源和另一台 Mac 都用装好的这一份。经过与读数见 `handoffs/mini-device-profile-20261009.md`。
+Developer ID 证书在 Mini 的登录钥匙串（以 `security find-identity -v -p codesigning` 现状为准），签名、公证、装机都在 Mini 本机的登录会话里做，不派 Air；纯 SSH 会话里 codesign 会报 errSecInternalComponent。`./build.sh --build-only` 出的包已是 Developer ID 签名、未公证（验收用）；`./build.sh --install-only` 把同一提交的那份包公证、装订再装机，等公证时不占构建队列。发更新源和另一台 Mac 都用装好的这一份。经过与读数见 `handoffs/mini-device-profile-20261009.md`。
 
 ## iOS / iCloud（2026-09-09）
 
