@@ -19,11 +19,20 @@ def install(sop):
     app, = sop.load_apps('clipbook')
     if Path(app['repo']).resolve() != ROOT:
         raise ValueError('Chapter registration must resolve to this Clip component')
+    target = ROOT / 'perf/build-receipt.json'
+    if INSTALLED.is_dir() and target.is_file():
+        matched, detail = sop.verify_build_receipt(app, INSTALLED)
+        if matched:
+            print(json.dumps({'installed': str(INSTALLED), 'artifact': sop.artifact_snapshot(INSTALLED),
+                              'receipt': str(target), 'reused': True, 'detail': detail}, ensure_ascii=False))
+            return 0
     patterns = list(dict.fromkeys([*app['sop']['source'], 'project.yaml']))
     derived = ROOT / 'build/local-install'
     candidate = derived / 'Build/Products/Release/Clipbook.app'
     receipt = ROOT / 'build/accept/local-install.json'
-    command = shlex.join(['env', f'CLIP_DERIVED_DATA={derived}', 'bash', 'build.sh', '--build-only'])
+    command = shlex.join(['env', f'CLIP_DERIVED_DATA={derived}',
+                          f'CLIP_CLOUD_BUILD_LOG={ROOT / "build/local-install-xcodebuild.log"}',
+                          'bash', 'build.sh', '--build-only'])
     try:
         sop.build_receipt(app, candidate, patterns, command, output_path=receipt)
     except sop.BuildCommandError as exc:
@@ -41,7 +50,6 @@ def install(sop):
         raise RuntimeError(f'Installed package does not match the fresh build: {detail}')
     # Promote the original Chapter receipt bytes only after verifying the actual
     # installed bundle. Never synthesize a receipt for an existing/failed build.
-    target = ROOT / 'perf/build-receipt.json'
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_suffix('.local-install.tmp')
     temporary.write_bytes(receipt.read_bytes())

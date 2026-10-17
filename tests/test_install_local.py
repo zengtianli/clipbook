@@ -27,7 +27,7 @@ def setup_install(monkeypatch, tmp_path):
         assert '--build-only' in command and '--install-local' not in command
         output_path.parent.mkdir(parents=True)
         output_path.write_bytes(b'fresh original Chapter receipt')
-    def verify(app, artifact, receipt_path):
+    def verify(app, artifact, receipt_path=None):
         events.append('installed_verify' if artifact == installer.INSTALLED else 'candidate_verify')
         assert target.read_bytes() == b'previous installed receipt'
         return True, 'fixture verified'
@@ -80,10 +80,29 @@ def test_receipt_is_promoted_only_after_actual_installed_verification(setup_inst
     assert target.read_bytes() == b'fresh original Chapter receipt'
 
 
+def test_installed_mismatch_preserves_previous_receipt(setup_install):
+    sop, events, target = setup_install
+    def verify(app, artifact, receipt_path):
+        return (False, 'installed mismatch') if artifact == installer.INSTALLED else (True, 'candidate verified')
+    sop.verify_build_receipt = verify
+    with pytest.raises(RuntimeError, match='Installed package does not match'):
+        installer.install(sop)
+    assert events == ['build', 'install']
+    assert target.read_bytes() == b'previous installed receipt'
+
+
 def test_wrong_registration_never_builds(setup_install, tmp_path):
     sop, events, target = setup_install
     sop.load_apps = lambda name: [{'repo': tmp_path / 'another-component'}]
     with pytest.raises(ValueError, match='this Clip component'):
         installer.install(sop)
     assert events == []
+    assert target.read_bytes() == b'previous installed receipt'
+
+
+def test_current_installed_build_is_reused_without_installation(setup_install):
+    sop, events, target = setup_install
+    installer.INSTALLED.mkdir(parents=True)
+    assert installer.install(sop) == 0
+    assert events == ['installed_verify']
     assert target.read_bytes() == b'previous installed receipt'
