@@ -1,5 +1,17 @@
 # native_ui 签名前提受阻 · 2026-10-17
 
+## 本轮签名前提修复与装机复验
+
+本轮 owner：Chapter `--pid 52030 --session chapter-task:090857d57de54a07a9141b551d719110`，写前沿原身份 check，不另开同范围声明、不释放原声明。源码写入仅 `cloud-project.yml` 的 `PROVISIONING_PROFILE_SPECIFIER`；交接写入本节；原脚本生成 build/、perf/build-receipt.json 与 native_ui、product_basics 验收产物。其他会话的 project.yaml、perf 差异、暂存及后台保持。
+
+共享资源：Mini 登录钥匙串（只读身份）、ASC 中本 bundle 的 MAC_APP_DIRECT 描述文件、本机 Xcode profile 目录、既有 sim_lane.BuildSlot、/Applications/Clip.app 与原备份目录。构建用现有 BuildSlot，不加重构建全局锁；无模拟器或性能测量。有限阶段为一次签名前提修复、原入口构建装机、两项固定复验和本地提交；75 交原队列有界接续。完成须回读实际已装包、来源与两项真实验收；公开仓只本地提交，未推送按本轮完成谓词记 blocked，不伪报 done。
+
+2026-10-17 现场核 `security find-identity -v -p codesigning`，Mini 有效 Developer ID 指纹为 `72F835AA663461521834BFF102A4C16A52892F9C`。经共享 ios/asc.py 凭据入口创建并 GET 回读 `Clip Developer ID 72F835AA`（API id `8FBVYJ2MQB`，UUID `c0cf62b9-1075-47b9-aa14-10b428c6b0a2`），包含该证书，MAC_APP_DIRECT / ACTIVE / Production / ProvisionsAllDevices=true / 无设备清单，原 Team 与 CloudKit 容器保持。旧 `Clip Developer ID` 未撤销、删除或替换；新名称防止影响旧消费者。正常构建仍只读获取 profile，不新增自动账号写逻辑。
+
+仓库现场为 PUBLIC，起点 HEAD `7c3affd`，领先 origin/main 8 个提交；没有他人暂存。推前只读探针返回 push_allowed=true、workflow 全部手动；本轮仍遵守公开仓仅本地提交授权，不执行 push、公证、更新源或审核提交。
+
+装机和两项复验结果将在本节续记。
+
 本轮仅接续 `delivery-native_ui`，复用 Chapter 的精确身份 `--pid 24643 --session chapter-task:bbb3eb5e08fe4f3894a31dd16132c2a3`；不另开或释放声明。
 
 ## 范围、资源与完成条件

@@ -29,7 +29,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.clipbook
         CODE_SIGN_ENTITLEMENTS: Cloud.entitlements
-        PROVISIONING_PROFILE_SPECIFIER: Clip Developer ID
+        PROVISIONING_PROFILE_SPECIFIER: Clip Developer ID 72F835AA
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_CFBundleDisplayName: Clip
         INFOPLIST_KEY_CFBundleName: Clip
