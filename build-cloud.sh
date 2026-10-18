@@ -15,6 +15,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 MODE="${1:-}"
 case "$MODE" in ''|--build-only|--install-only|--compile-only|--check-only|--install-local) ;; *) echo "Usage: $0 [--build-only|--install-only|--compile-only|--check-only|--install-local]" >&2; exit 2 ;; esac
+if [[ "$MODE" = '' || "$MODE" = --install-only || "$MODE" = --install-local ]]; then
+  chapter local-install check --app clipbook --direct --json
+fi
 GRADE="$HOME/Dev/tools/dev/lib/tools/macapp/distribution_grade.py"
 source "$HOME/Dev/tools/dev/lib/tools/macapp/xcode_env.sh"
 xcode_env_use macosx
@@ -155,6 +158,7 @@ if [ -e "$DEST" ]; then
   echo "Previous bundle: $ARCHIVE/Clip.app"
 fi
 ditto "$APP" "$DEST"
+chapter local-install check --app clipbook --direct --require-installed --json
 codesign --verify --deep --strict "$DEST"
 if [ "$MODE" = --install-local ]; then
   python3 "$GRADE" check --stage signed "$DEST"

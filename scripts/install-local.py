@@ -15,10 +15,20 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTALLED = Path('/Applications/Clip.app')
 
 
+def local_install_check(*, require_installed=False):
+    command = ['chapter', 'local-install', 'check', '--app', 'clipbook', '--direct', '--json']
+    if require_installed:
+        command.append('--require-installed')
+    return subprocess.run(command, cwd=ROOT).returncode
+
+
 def install(sop):
     app, = sop.load_apps('clipbook')
     if Path(app['repo']).resolve() != ROOT:
         raise ValueError('Chapter registration must resolve to this Clip component')
+    code = local_install_check()
+    if code:
+        return code
     target = ROOT / 'perf/build-receipt.json'
     if INSTALLED.is_dir() and target.is_file():
         matched, detail = sop.verify_build_receipt(app, INSTALLED)
@@ -45,6 +55,9 @@ def install(sop):
                             env=dict(os.environ, CLIP_DERIVED_DATA=str(derived)))
     if result.returncode:
         return result.returncode
+    code = local_install_check(require_installed=True)
+    if code:
+        return code
     matched, detail = sop.verify_build_receipt(app, INSTALLED, receipt_path=receipt)
     if not matched:
         raise RuntimeError(f'Installed package does not match the fresh build: {detail}')

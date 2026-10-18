@@ -8,6 +8,7 @@ lifecycle: active
 bundle_id: cyou.tianli.clipbook
 origin: own
 sop:
+  local_install: testflight
   # 本机迭代：原 CloudKit/Developer ID 构建 + 来源回执 + --install-local；不公证或发布。
   install: ~/Dev/.venv/bin/python scripts/install-local.py
   test: bash tests/test-link-title.sh

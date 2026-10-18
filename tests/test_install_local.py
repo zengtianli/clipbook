@@ -12,6 +12,7 @@ SPEC.loader.exec_module(installer)
 
 @pytest.fixture
 def setup_install(monkeypatch, tmp_path):
+    monkeypatch.setattr(installer, 'local_install_check', lambda **kwargs: 0)
     monkeypatch.setattr(installer, 'ROOT', tmp_path)
     monkeypatch.setattr(installer, 'INSTALLED', tmp_path / 'Applications/Clip.app')
     target = tmp_path / 'perf/build-receipt.json'
@@ -96,6 +97,14 @@ def test_wrong_registration_never_builds(setup_install, tmp_path):
     sop.load_apps = lambda name: [{'repo': tmp_path / 'another-component'}]
     with pytest.raises(ValueError, match='this Clip component'):
         installer.install(sop)
+    assert events == []
+    assert target.read_bytes() == b'previous installed receipt'
+
+
+def test_policy_refusal_never_builds_or_promotes_receipt(setup_install, monkeypatch):
+    sop, events, target = setup_install
+    monkeypatch.setattr(installer, 'local_install_check', lambda **kwargs: 1)
+    assert installer.install(sop) == 1
     assert events == []
     assert target.read_bytes() == b'previous installed receipt'
 
