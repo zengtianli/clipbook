@@ -11,6 +11,8 @@ sop:
   local_install: testflight
   # 本机迭代：原 CloudKit/Developer ID 构建 + 来源回执 + --install-local；不公证或发布。
   install: ~/Dev/.venv/bin/python scripts/install-local.py
+  # 只构建（chapter l10n run 的 TestFlight 路径）：不签名、不装机，产物 .dd-cloud/Build/Products/Release/Clipbook.app 即 localization.shots 读取处。
+  build: bash build.sh --compile-only
   test: bash tests/test-link-title.sh
   # Agent CLI: same executable as the app (Contents/Resources/bin/clip -> ../../MacOS/Clipbook),
   # linked to ~/.local/bin/clip by scripts/install-cli.py after build.sh installs.
