@@ -2,7 +2,7 @@
 # lock; skipped when the inputs are unchanged since the last successful acceptance build) with the same
 # pipeline as build.sh but --build-only, which also runs the production --selftest gate. Never installs.
 # Sets APP and EXE, and helpers isolated_env / cleanup_isolated for the in-process self-tests.
-ACC_DD=build/.dd-accept
+ACC_DD="$(pwd)/build/.dd-accept"
 LOCK=build/.accept-build.lock
 mkdir -p build
 inputs_sha() {
@@ -19,11 +19,14 @@ if [ "$LOCKED" != 1 ]; then
   exit 75
 fi
 trap 'exit_code=$?; rmdir "$LOCK" 2>/dev/null || true; exit "$exit_code"' EXIT
-SHA="$(inputs_sha)"
+# Chapter's detached worktree preserves the relative family link, but has no
+# sibling iOS tree. Prepare a build-only projection without changing the snapshot.
+BUILD_ROOT="$(python3 "$(dirname "${BASH_SOURCE[0]}")/prepare_build.py")"
+SHA="$(cd "$BUILD_ROOT" && inputs_sha)"
 APP="$ACC_DD/Build/Products/Release/Clipbook.app"
 if [ "$(cat build/.accept-build.sha 2>/dev/null)" != "$SHA" ] || [ ! -x "$APP/Contents/MacOS/Clipbook" ]; then
   rm -f build/.accept-build.sha
-  CLIP_DERIVED_DATA="$ACC_DD" CLIP_CLOUD_BUILD_LOG=build/accept-build.log bash build-cloud.sh --build-only \
+  CLIP_DERIVED_DATA="$ACC_DD" CLIP_CLOUD_BUILD_LOG="$(pwd)/build/accept-build.log" bash "$BUILD_ROOT/build-cloud.sh" --build-only \
     > build/accept-selftest.log 2>&1 || { code=$?; tail -40 build/accept-selftest.log; echo "构建或 --selftest 未完成（退出 ${code}）"; exit "$code"; }
   echo "$SHA" > build/.accept-build.sha
 fi

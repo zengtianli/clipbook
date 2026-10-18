@@ -11,7 +11,13 @@ import subprocess
 import sys
 import uuid
 
-ROOT = Path(__file__).resolve().parents[2]
+def repository_root():
+    # Scripts execute in a frozen worktree; installed receipts and SOP_OUT_DIR
+    # remain in the original component, as specified by Chapter's contract.
+    return Path(os.environ.get('SOP_SOURCE_REPO') or Path(__file__).resolve().parents[2]).resolve()
+
+
+ROOT = repository_root()
 LS = '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister'
 
 

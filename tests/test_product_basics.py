@@ -63,6 +63,23 @@ def rig(tmp_path, monkeypatch):
     return SimpleNamespace(app=app, executable=executable, receipt=receipt, calls=calls, result=result)
 
 
+def test_worktree_acceptance_uses_original_default_receipt_and_evidence(rig, monkeypatch):
+    original = rig.app.parent
+    frozen_script = original / 'worktree/scripts/accept/product_basics.py'
+    monkeypatch.setattr(accept, '__file__', str(frozen_script))
+    monkeypatch.setenv('SOP_SOURCE_REPO', str(original))
+    monkeypatch.setattr(accept, 'ROOT', accept.repository_root())
+    (original / 'perf/build-receipt.json').write_bytes(rig.receipt.read_bytes())
+    monkeypatch.setattr(sys, 'argv', [str(frozen_script)])
+    monkeypatch.setattr(accept, 'Path', lambda value: rig.app if value == '/Applications/Clip.app' else Path(value))
+    status, detail, raw = rig.result()
+    assert status == 0 and raw['binding']['phase'] == 'installed'
+    assert raw['binding']['receipt'] == 'perf/build-receipt.json'
+    assert all(row['evidence'].startswith('perf/acceptance/') for row in detail['features'].values())
+    monkeypatch.delenv('SOP_SOURCE_REPO')
+    assert accept.repository_root() == frozen_script.parents[2]
+
+
 def test_chapter_binding_accepts_non_production_receipt_churn(rig):
     status, detail, raw = rig.result()
     assert status == 0 and all(row['result'] == 'passed' for row in detail['features'].values())
