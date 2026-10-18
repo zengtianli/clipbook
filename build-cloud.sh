@@ -38,6 +38,7 @@ LOG="${CLIP_CLOUD_BUILD_LOG:-build/cloud-build.log}"
 COUNT=$(git rev-list --count HEAD)
 APP="$DD/Build/Products/Release/Clipbook.app"
 if [[ "$MODE" != --install-only && "$MODE" != --check-only && "$MODE" != --install-local ]]; then
+python3 "$HOME/Dev/tools/dev/lib/tools/macapp/swift-shared/vendor-lifecycle.py" --platform mac --target-source-dir Sources/Shared
 python3 "$HOME/Dev/tools/dev/lib/tools/macapp/check_codingkeys.py" .
 # Manual signing needs a profile containing this Mac's signing certificate. Fetch only
 # existing compatible profiles; account/profile changes require a separate authorized task.
