@@ -153,7 +153,9 @@ DEST=/Applications/Clip.app
 if [ -e "$DEST" ]; then
   ARCHIVE="$HOME/.Trash/clip-pre-icloud-$(date +%Y%m%d-%H%M%S)"
   mkdir -p "$ARCHIVE"
-  mv "$DEST" "$ARCHIVE/"
+  # A TestFlight/App Store install is root-owned; move it aside with the whitelisted
+  # non-interactive sudo mv (never a password prompt), keeping it recoverable in the Trash.
+  mv "$DEST" "$ARCHIVE/" 2>/dev/null || sudo -n /bin/mv "$DEST" "$ARCHIVE/"
   echo "Previous bundle: $ARCHIVE/Clip.app"
 fi
 ditto "$APP" "$DEST"

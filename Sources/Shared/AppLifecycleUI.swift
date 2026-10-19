@@ -82,6 +82,9 @@ final class AppLifecycleUI: NSObject {
         guard let appMenu = NSApp.mainMenu?.items.first?.submenu,
               !appMenu.items.contains(where: { ($0.target === self && $0.action == #selector(openSettings)) || ["配置与更新…", "Settings & Updates…"].contains($0.title) }) else { return }
         let items = Self.menuItems()
+        // Standard ⌘, opens settings, unless the app already binds ⌘, to its own settings item.
+        let taken = NSApp.mainMenu?.items.compactMap(\.submenu).flatMap(\.items).contains { $0.keyEquivalent == "," && $0.keyEquivalentModifierMask.intersection([.command, .shift, .option, .control]) == .command } ?? false
+        if !taken { items[0].keyEquivalent = ","; items[0].keyEquivalentModifierMask = .command }
         let index = min(1, appMenu.numberOfItems)
         for (offset, item) in items.enumerated() { appMenu.insertItem(item, at: index + offset) }
         appMenu.insertItem(.separator(), at: index + items.count)
