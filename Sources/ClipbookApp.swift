@@ -204,7 +204,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationDidFinishLaunching(_ note: Notification) {
         MainActor.assumeIsolated {
-            if !ProductIdentity.backgroundPreview { installLifecycle() }
+            if !ProductIdentity.backgroundPreview {
+                installLifecycle()
+                #if !APP_STORE
+                // 菜单栏下拉快捷键 = 左键点图标（Clip 左键开主窗口，本人 2026-10-20 认可）；常驻菜单栏，关窗只隐藏、真退出在菜单里。
+                // 只在用户的 Clip 里装：隔离预览、自测和 `clip` 命令行都不经过这里。
+                MenuBarHotKey.install(default: "⌃⌥V")
+                MenuBarResident.install()
+                #endif
+            }
             AppModel.shared.startWatching()
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             if !ProductIdentity.unattended { buildStatusItem() }
@@ -366,6 +374,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) { shortcuts.suspend() }
+
+    /// 常驻菜单栏：关掉最后一个窗口不退出，真退出只走菜单栏菜单里的「退出 Clip」。
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     // MARK: 主窗口
 
