@@ -8,7 +8,7 @@ lifecycle: active
 bundle_id: cyou.tianli.clipbook
 origin: own
 sop:
-  local_install: testflight
+  local_install: direct  # 本人 2026-10-19 补充：本机直接装本地构建；brew/TF 归 appship，本人开口才走
   # 本机迭代：原 CloudKit/Developer ID 构建 + 来源回执 + --install-local；不公证或发布。
   install: ~/Dev/.venv/bin/python scripts/install-local.py
   # 只构建（chapter l10n run 的 TestFlight 路径）：不签名、不装机，产物 .dd-cloud/Build/Products/Release/Clipbook.app 即 localization.shots 读取处。
