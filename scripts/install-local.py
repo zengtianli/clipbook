@@ -16,7 +16,7 @@ INSTALLED = Path('/Applications/Clip.app')
 
 
 def local_install_check(*, require_installed=False):
-    command = ['chapter', 'local-install', 'check', '--app', 'clipbook', '--direct', '--json']
+    command = ['appship', 'install', 'check', '--app', 'clipbook', '--direct', '--json']
     if require_installed:
         command.append('--require-installed')
     return subprocess.run(command, cwd=ROOT).returncode

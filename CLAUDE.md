@@ -18,15 +18,15 @@ Clip 必须是正常独立应用：`LSUIElement=false` + `.regular` activation p
 ```bash
 cd ~/Apps/clip/mac
 git commit …      # 先提交（CFBundleVersion = commit 数）
-./build.sh        # → build-cloud.sh → XcodeGen/Release → --selftest → 发行等级检查 → 公证、装订 → 装 /Applications/Clip.app
+./build.sh        # → build-cloud.sh → XcodeGen/Release → --selftest → 签名等级检查 → 装 /Applications/Clip.app（本机不公证）
 open -a "Clip"
 ```
 
-Clip 是给所有人用的产品：装进 /Applications 或发到更新源的包，必须是任何一台 Mac 拿到都能直接运行的发行包（2026-10-09 本人纠正）。签名只有一种：`Developer ID Application: tianli Zeng (B9LJH93LA4)` + hardened runtime + 安全时间戳，Apple 公证 Accepted 并装订，`spctl --assess --type execute` 读到 `Notarized Developer ID`。不用 Apple Development，不用 adhoc，`build-cloud.sh` 没有别的签法可退；判据用共享的 `~/Dev/tools/dev/lib/tools/macapp/distribution_grade.py`。Developer ID 的 Team ID 固定，「辅助功能」授权照样跨重编存活。
+Clip 是给所有人用的产品，签名只有一种：`Developer ID Application: tianli Zeng (B9LJH93LA4)` + hardened runtime + 安全时间戳（2026-10-09 本人纠正；CloudKit 也要它）。本机直接装这份签名构建、不公证（本人 2026-10-20）；给别人的包（dmg、brew、更新源、TestFlight）由 appship（~/Apps/appship）对副本公证装订，`spctl` 读到 `Notarized Developer ID` 才发。不用 Apple Development，不用 adhoc，`build-cloud.sh` 没有别的签法可退；判据用共享的 `~/Dev/tools/dev/lib/tools/macapp/distribution_grade.py`。Developer ID 的 Team ID 固定，「辅助功能」授权照样跨重编存活。
 
 iCloud/CloudKit 需要描述文件，用 Developer ID 直接分发那一种（账号里名为 `Clip Developer ID`，接口类型 `MAC_APP_DIRECT`）：带 iCloud 能力，**没有设备清单**（`ProvisionsAllDevices`），有效期随证书。`cloud-project.yml` 手动签名指定它，`Cloud.entitlements` 的推送环境相应是 `production`；`scripts/developer-id-profile.py` 在构建前把它放到本机（本机已有就不联网；没有则用 App Store Connect 接口密钥取回，账号里没有时建一次）。Xcode 自己出不了这种描述文件：带接口密钥做 developer-id 自动签名导出，原话是 `Cloud signing permission error` 加 `Xcode couldn't find any Developer ID provisioning profiles`。**带设备清单的 “Mac Team Provisioning Profile”、把某台 Mac 加进清单再重出，这套已废弃，不是修法。**
 
-Developer ID 证书在 Mini 的登录钥匙串（以 `security find-identity -v -p codesigning` 现状为准），签名、公证、装机都在 Mini 本机的登录会话里做，不派 Air；纯 SSH 会话里 codesign 会报 errSecInternalComponent。`./build.sh --build-only` 出的包已是 Developer ID 签名、未公证（验收用）；`./build.sh --install-only` 把同一提交的那份包公证、装订再装机，等公证时不占构建队列。发更新源和另一台 Mac 都用装好的这一份。经过与读数见 `handoffs/mini-device-profile-20261009.md`。
+Developer ID 证书在 Mini 的登录钥匙串（以 `security find-identity -v -p codesigning` 现状为准），签名、公证、装机都在 Mini 本机的登录会话里做，不派 Air；纯 SSH 会话里 codesign 会报 errSecInternalComponent。`./build.sh --build-only` 出的包已是 Developer ID 签名、未公证（验收用）；`./build.sh --install-only` 把同一提交的那份包直接装机。发更新源、给别人用走 `appship ship --app clipbook --channels dmg,brew,feed`。经过与读数见 `handoffs/mini-device-profile-20261009.md`。
 
 ## iOS / iCloud（2026-09-09）
 

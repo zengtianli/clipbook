@@ -3,11 +3,12 @@
 # Every bundle it produces is a release for any Mac, not for a list of registered machines:
 # Developer ID Application signature, the Developer ID (direct distribution) provisioning
 # profile that carries iCloud and no device list, hardened runtime, secure timestamp
-# (cloud-project.yml). Installing additionally requires an Accepted Apple notarization and a
-# stapled ticket. There is no development-signed or ad hoc way into /Applications.
-#   ./build-cloud.sh                 build, selftest, checks, notarize, staple, install
-#   ./build-cloud.sh --build-only    stop after the checks (acceptance builds; not notarized)
-#   ./build-cloud.sh --install-only  notarize, staple and install what --build-only left for this commit
+# (cloud-project.yml). There is no development-signed or ad hoc way into /Applications.
+# 本人 2026-10-20: we install local builds directly (no notarization); notarized packages for
+# others (dmg, brew, update feed, TestFlight) come only from appship (~/Apps/appship).
+#   ./build-cloud.sh                 build, selftest, checks, install
+#   ./build-cloud.sh --build-only    stop after the checks (acceptance and appship candidate builds)
+#   ./build-cloud.sh --install-only  install what --build-only left for this commit
 #   ./build-cloud.sh --compile-only  Mini compilation for a separate signing-Mac step; never installs
 #   ./build-cloud.sh --check-only    verify a transferred Developer ID product, without installing
 #   ./build-cloud.sh --install-local explicitly authorized local iteration, signed checks, no notarization
@@ -16,7 +17,7 @@ cd "$(dirname "$0")"
 MODE="${1:-}"
 case "$MODE" in ''|--build-only|--install-only|--compile-only|--check-only|--install-local) ;; *) echo "Usage: $0 [--build-only|--install-only|--compile-only|--check-only|--install-local]" >&2; exit 2 ;; esac
 if [[ "$MODE" = '' || "$MODE" = --install-only || "$MODE" = --install-local ]]; then
-  chapter local-install check --app clipbook --direct --json
+  appship install check --app clipbook --direct --json
 fi
 GRADE="$HOME/Dev/tools/dev/lib/tools/macapp/distribution_grade.py"
 source "$HOME/Dev/tools/dev/lib/tools/macapp/xcode_env.sh"
@@ -148,9 +149,6 @@ assert info['CFBundleName'] == info['CFBundleDisplayName']
 assert info['CFBundleIconFile'] == 'AppIcon'
 PY
 if [[ "$MODE" = --build-only || "$MODE" = --check-only ]]; then echo "Built and signed: $APP"; exit 0; fi
-# Submit to Apple, staple, and read back spctl "Notarized Developer ID". This runs outside the
-# build queue (the wait is Apple's); a bundle that already carries its ticket is not resubmitted.
-if [ "$MODE" != --install-local ]; then python3 "$GRADE" notarize "$APP"; fi
 DEST=/Applications/Clip.app
 if [ -e "$DEST" ]; then
   ARCHIVE="$HOME/.Trash/clip-pre-icloud-$(date +%Y%m%d-%H%M%S)"
@@ -159,12 +157,8 @@ if [ -e "$DEST" ]; then
   echo "Previous bundle: $ARCHIVE/Clip.app"
 fi
 ditto "$APP" "$DEST"
-chapter local-install check --app clipbook --direct --require-installed --json
+appship install check --app clipbook --direct --require-installed --json
 codesign --verify --deep --strict "$DEST"
-if [ "$MODE" = --install-local ]; then
-  python3 "$GRADE" check --stage signed "$DEST"
-else
-  python3 "$GRADE" check "$DEST"
-fi
+python3 "$GRADE" check --stage signed "$DEST"
 echo "Installed: $DEST"
 python3 scripts/install-cli.py "$DEST"
