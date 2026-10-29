@@ -53,7 +53,7 @@ enum KeyboardMemorySelfTest {
                 check(editor(in: window.contentView)?.string == "Unsaved keyboard draft", "卸载并重建主界面后未保存正文仍在")
             } else { check(false, "实际正文编辑器可访问") }
             delegate.showSettings(); settle()
-            if let settings = app.windows.first(where: { $0.title == "\(ProductIdentity.name) 设置" }) { _ = delegate.windowShouldClose(settings) }
+            if let settings = app.windows.first(where: { $0.title == String(localized: "\(ProductIdentity.name) 设置") }) { _ = delegate.windowShouldClose(settings) }
             delegate.hideWindow(); settle()
             check(window.contentView == nil && !model.interfaceActive, "关主窗后 HostingView 确实释放且查询暂停")
             delegate.showWindow(); settle()

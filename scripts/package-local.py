@@ -31,9 +31,14 @@ def main():
         (APP / "Contents/Resources/bin").mkdir()
         os.symlink("../../MacOS/Clipbook", APP / "Contents/Resources/bin/clip")
         shutil.copy2(ROOT / "icon/AppIcon.icns", APP / "Contents/Resources/AppIcon.icns")
+        # The interface follows the system language: compile the String Catalog into en/zh-Hans .lproj tables.
+        for table in sorted((ROOT / "Sources").glob("*.xcstrings")):
+            subprocess.run(["xcrun", "xcstringstool", "compile", str(table), "--output-directory",
+                            str(APP / "Contents/Resources")], check=True)
         version = re.search(r"MARKETING_VERSION:\s*['\"]?([\d.]+)", (ROOT / "cloud-project.yml").read_text()).group(1)
         build = subprocess.check_output(["git", "rev-list", "--count", "HEAD"], cwd=ROOT, text=True).strip()
-        info = {"CFBundleIdentifier": field("bundle_id"), "CFBundleName": field("name_en"),
+        info = {"CFBundleDevelopmentRegion": "en", "CFBundleLocalizations": ["en", "zh-Hans"],
+                "CFBundleIdentifier": field("bundle_id"), "CFBundleName": field("name_en"),
                 "CFBundleDisplayName": field("name_en"), "CFBundleExecutable": "Clipbook",
                 "CFBundleShortVersionString": version, "CFBundleVersion": build,
                 "CFBundlePackageType": "APPL", "CFBundleIconFile": "AppIcon",

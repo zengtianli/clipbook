@@ -2,6 +2,12 @@
 # lock; skipped when the inputs are unchanged since the last successful acceptance build) with the same
 # pipeline as build.sh but --build-only, which also runs the production --selftest gate. Never installs.
 # Sets APP and EXE, and helpers isolated_env / cleanup_isolated for the in-process self-tests.
+# Chapter (PRD-foundation R1) hands the current-source candidate it built in SOP_INSTALLED_APP: test that bundle
+# as is. Manual runs (no SOP_INSTALLED_APP) keep building their own acceptance copy below.
+if [ -n "${SOP_INSTALLED_APP:-}" ]; then
+  APP="$SOP_INSTALLED_APP"
+  [ -x "$APP/Contents/MacOS/Clipbook" ] || { echo "被测包缺可执行文件：$APP"; exit 1; }
+else
 ACC_DD="$(pwd)/build/.dd-accept"
 LOCK=build/.accept-build.lock
 mkdir -p build
@@ -31,6 +37,7 @@ if [ "$(cat build/.accept-build.sha 2>/dev/null)" != "$SHA" ] || [ ! -x "$APP/Co
   echo "$SHA" > build/.accept-build.sha
 fi
 rmdir "$LOCK"; trap - EXIT
+fi
 EXE="$APP/Contents/MacOS/Clipbook"
 EXE_SHA="$(shasum -a 256 "$EXE" | cut -d' ' -f1)"
 

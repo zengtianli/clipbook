@@ -27,7 +27,7 @@ struct MainView: View {
                 if settingsPaused { Label("已暂停记录", systemImage: "pause.circle").foregroundStyle(.orange) }
             }
             ToolbarItem(placement: .automatic) {
-                if let n = model.notice { Text(n).font(.callout).foregroundStyle(.secondary).lineLimit(1) }
+                if let n = model.notice { Text(L10n.display(n)).font(.callout).foregroundStyle(.secondary).lineLimit(1) }
             }
             ToolbarItem(placement: .automatic) {
                 Button { AppDelegate.shared.showSettings() } label: { Label("设置", systemImage: "gearshape") }

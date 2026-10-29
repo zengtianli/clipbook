@@ -1,0 +1,42 @@
+{
+  "summary": "缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执",
+  "passed": false,
+  "spec": {
+    "label": "多语言",
+    "applicable": true,
+    "registered": false,
+    "default_basis": "客户端形态 mac 默认须提供英文与简体中文界面",
+    "languages": [
+      "en",
+      "zh-Hans"
+    ],
+    "development": "en",
+    "problems": []
+  },
+  "issues": [
+    "缺 Info.plist 本地化声明",
+    "缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源",
+    "缺 en 界面截图",
+    "缺 zh-Hans 界面截图",
+    "缺截图源码输入绑定 JSON 回执"
+  ],
+  "apple": {
+    "plists": [],
+    "inspection_basis": "repository_bundle_fallback",
+    "total_keys": 0,
+    "missing_english_keys": [],
+    "missing_english_count": 0,
+    "missing_english_ratio": null,
+    "english_coverage": 0.0
+  },
+  "screenshots": {
+    "images": {
+      "en": [],
+      "zh-Hans": []
+    },
+    "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
+    "current_binding": false,
+    "issues": []
+  },
+  "localization_status": "missing"
+}

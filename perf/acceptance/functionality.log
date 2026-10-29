@@ -157,6 +157,53 @@ Clipbook --selftest
   ✅ clip 运行中的设置对象 reload 后读到命令行的修改
   ✅ clip resume 与忽略名单
   ✅ clip settings --json 回读；快捷键只读列出（默认无绑定）
+  ✅ clip version 校验参数：多余的参数退出 2
+  ✅ clip 顶层帮助：每个子命令都在行首列出；没有「暂无命令」，「仅在窗口中」不混入已有命令的项
+  ✅ clip shortcut list：每个动作一行，默认没有任何绑定
+  ✅ clip shortcut scope 不替你新增组合键：未录制的动作、未知动作、未知范围都退出 2
+  ✅ clip shortcut scope 只改作用范围，组合键不变
+  ✅ clip shortcut list 不替 App 声称全局键已启用：Clip 未运行时 registration 为 app_not_running，status 写「已保存」
+  ✅ clip shortcut scope 重复执行不再写入
+  ✅ clip shortcut clear 清除绑定；已空时 clear --all 不变
+  ✅ clip shortcut set 把写出来的组合键存给动作（与录制同一个保存入口），不写 --scope 时只在 Clip 内
+  ✅ clip shortcut set 认 list 打印的写法；写明 --scope global 才是全局键，且不替 App 声称已启用
+  ✅ clip shortcut set 不写 --scope 时沿用这个动作现在的作用范围；重复执行不再写入
+  ✅ clip shortcut set 遇到已被占用的组合键：退出 2、conflict，写明被哪个动作占用，什么都不写
+  ✅ clip shortcut set 沿用窗口的校验：⌘⇧V、没有修饰键、系统编辑组合、认不出的写法都退出 2，不写；未知动作、缺组合键、未知范围退出 2
+  ✅ clip shortcut set --dry-run 只校验并报告，不写
+  ✅ clip shortcut set 允许给「复制所选记录」设应用内 ⌘C（与窗口相同）
+  ✅ clip 组合键写法解析：标签与名字两种写法得到同一个键，list 打印的标签能原样写回
+  ✅ clip shortcut clear --all 清掉 set 存下的全部绑定
+  ✅ clip shortcut list 读到运行中的 App 报告的注册结果：registered / failed，status 是窗口里那句话
+  ✅ clip status 的 permissions.accessibility 来自运行中的 App；授权变了随之变
+  ✅ clip cloud status 的 live 读到 App 报告的同步状态、整理状态与错误
+  ✅ clip Clip 未运行：全局键 app_not_running、iCloud live 为 null；辅助功能给出上次的值并标明不是实时
+  ✅ clip 没有 App 报告时 permissions.accessibility.trusted 为 null（不猜）
+  ✅ clip config status 只读报告开关与可迁移的偏好键
+  ✅ clip config status 带开关下面那句同步状态（sync_status）
+  ✅ clip config export 写出配置文件；已存在时要 --force
+  ✅ clip config import 没有 --yes 不动配置；文件不存在退出 3
+  ✅ clip config import 恢复导出时的配置，原配置备份在隔离数据目录里
+  ✅ clip config import 拒绝无法识别的文件，配置不变
+  ✅ clip config sync 要 --yes 与运行中的 Clip；命令行自己不拨开关
+  ✅ clip update check 读不到发行记录时退出 1、check_incomplete，仍给出当前版本
+  ✅ clip update check 报出此渠道的新版与升级办法（与窗口同一渠道）
+  ✅ clip update check 已是最新时如实报告
+  ✅ clip update check 不下载、不安装
+  ✅ clip update install --dry-run 报告会从哪版换到哪版，不替换
+  ✅ clip update install 缺 --yes 退出 2、confirmation_required
+  ✅ clip update install --yes 在隔离运行里不替换 App：退出 4、system_setting
+  ✅ clip update install 没有新版时退出 0、installed 为 false
+  ✅ clip update install 参数错误退出 2、usage
+  ✅ clip update 用法错误退出 2，--help 退出 0
+  ✅ clip start --dry-run 只报告将启动哪个 App，不启动
+  ✅ clip start 请系统在后台启动 clip 所在的 App（--background：不出主窗口），等到它运行并报告就绪
+  ✅ clip start 在 Clip 已运行时什么都不做
+  ✅ clip quit --dry-run 只报告，不发退出请求
+  ✅ clip quit 发出请求后 Clip 没有退出：退出 1、app_busy，如实说仍在运行
+  ✅ clip quit 请使用这个数据目录的 Clip 退出，并等到它结束
+  ✅ clip quit 在没有 Clip 运行时退出 0；隔离运行不退出别的 Clip 实例
+  ✅ clip start 之后进程没有出现：退出 1、launch_failed；start / quit 参数错误退出 2
   ✅ clip 另一个 Deck 导入进行中 → 退出 5
   ✅ clip import-deck 导入并幂等
   ✅ clip 没有 Deck 库退出 3
@@ -169,6 +216,16 @@ Clipbook --selftest
   ✅ clip cloud push --dry-run 报告待归档条数（MacClipSync 同一标记规则）；--yes 请 App 补充最近历史
   ✅ clip cloud list 与手机 ClipLibrary.list 结果逐项相同（删除隐藏、收藏、类型、搜索）
   ✅ clip cloud status 归档缓存统计；--favorites 与 --kind 互斥
+  ✅ clip cloud show 给出全文、标题与来源（cloud list 只有 200 字预览）；Mac 库里没有对应记录时 local_id 为 null
+  ✅ clip cloud show 接受唯一的 key 前缀；local_id 读 MacClipSync 写下的对应标记
+  ✅ clip cloud show -o 导出归档原图；已存在要 --force；文本记录没有图片可导出
+  ✅ clip cloud show：不存在或已在手机上删除的记录退出 3；缺 key 退出 2
+  ✅ clip cloud favorite / delete：--dry-run 只报告；Clip 未运行退出 4；已是收藏不发请求；delete 缺 --yes 退出 2——都没有发出请求
+  ✅ clip cloud favorite：运行中的 App 用手机端同一个 mutate 收藏，cloud show 与手机的收藏筛选都读到（key 可给唯一前缀）
+  ✅ clip cloud unfavorite 取消收藏；重复执行不再发请求
+  ✅ clip cloud delete --yes：从同步历史删除（手机列表不再有它），再删退出 3、不发请求
+  ✅ clip cloud favorite：记录刚被别的设备删除退出 3；App 没按时回应退出 1（app_busy）；App 没能改写退出 1（store）；未知 key 退出 3，缺 key 退出 2
+  ✅ clip 同步历史的改动请求：命令留下请求文件，App 取走并回应；过期的请求不执行；双方读完即清
   ✅ clip 只读打开的库拒绝写入
 · Transform
   ✅ 去空白 / 去换行
@@ -189,11 +246,13 @@ Clipbook --selftest
   ✅ 大小写不敏感、解实体、压空白
   ✅ 没有 title → nil
 ✅ selftest 全部通过
-[xcode_env] Xcode.app (Xcode 27.0, macosx SDK 27.0)
+[xcode_env] Xcode.app (Xcode 27.1, macosx SDK 27.0)
 PASS: ignored Range response returns title before delayed body finishes
-  ✅ clip --help 退出 0（23 ms，无界面）
-  ✅ 经链接重入真实可执行：Clip 1.2.0 (70)
+  ✅ clip --help 退出 0（15 ms，无界面）
+  ✅ 经链接重入真实可执行：Clip 1.2.1 (146)
   ✅ 未知命令退出 2
+  ✅ version 多余的参数退出 2
+  ✅ 顶层帮助在行首列出每个子命令
   ✅ 每个命令 --help 退出 0
   ✅ status 只读：空目录不建库
   ✅ 无库 list → ok:false 退出 3
@@ -208,6 +267,16 @@ PASS: ignored Range response returns title before delayed body finishes
   ✅ 收藏夹新建与加入
   ✅ 设置范围校验与写入
   ✅ 设置写入隔离偏好域
+  ✅ shortcut list：十二个动作，默认没有任何绑定
+  ✅ shortcut list：没有绑定时 registration 为 null
+  ✅ shortcut scope 不新增组合键（退出 2）；clear --all 空操作
+  ✅ shortcut set 存下写出来的组合键，shortcut list 读回（默认仅 Clip 内）
+  ✅ shortcut set：被占用退出 2 并写明是谁（conflict），⌘⇧V 被拒，--dry-run 不写
+  ✅ shortcut clear --all 清掉 set 存下的绑定
+  ✅ config export 写出文件；已存在要 --force
+  ✅ config import 要 --yes；恢复导出时的值，备份留在隔离目录
+  ✅ config status 只读；config sync 没有 --yes 不发请求
+  ✅ config status 带开关下面那句同步状态（sync_status）
   ✅ pause / resume
   ✅ clear 需 --yes，保留收藏夹里的
   ✅ 失败时 JSON command 与成功相同（collection create）
@@ -215,11 +284,21 @@ PASS: ignored Range response returns title before delayed body finishes
   ✅ edit 正文未变不重写（changed:false）
   ✅ 去重时给出原来源 previous_source
   ✅ cloud 未知子命令退出 2
-  ✅ 无归档缓存 cloud list 退出 3
+  ✅ 无归档缓存 cloud list / cloud show 退出 3；cloud show 缺 key 退出 2
   ✅ iCloud 归档未开时 cloud push 退出 2
   ✅ cloud on 需 --yes；--dry-run 只报告
-  ✅ cloud on --yes：Clip 未运行→退出 4
+  ✅ cloud on --yes：Clip 运行中→只发隔离范围的请求
   ✅ 开机自启：隔离运行退出 4，--dry-run 只报告
+  ✅ update check：隔离运行没有发行记录时退出 1、check_incomplete，仍给出当前版本
+  ✅ update check：读到此渠道的新版，给出升级办法
+  ✅ update check：已是最新；不下载、不安装
+  ✅ update install --dry-run：报告会从哪版换到哪版，不替换
+  ✅ update install：缺 --yes 退出 2；隔离运行里 --yes 退出 4，被测的 App 没有被替换
+  ✅ update install：没有新版时退出 0、installed 为 false
+  ✅ update install 参数错误退出 2
+  ✅ start --dry-run 只报告；quit 在隔离运行里不退出别的 Clip；参数错误退出 2
+  ✅ cloud favorite：没有这条记录退出 3（本地版 4）；cloud delete 缺 key、--wait 越界退出 2
+  ✅ update check 参数错误退出 2；update --help 退出 0
   ✅ 用户的通用剪贴板未被改动
-clip CLI 真实入口：30 项通过
-当前源码 Release 构建：生产 --selftest 176 项断言全过，链接标题有界抓取测试通过，clip 命令行经包内入口隔离验证通过（可执行 f84c89d35a35）
+clip CLI 真实入口：52 项通过
+当前源码 Release 构建：生产 --selftest 233 项断言全过，链接标题有界抓取测试通过，clip 命令行经包内入口隔离验证通过（可执行 96a75f63cefe）

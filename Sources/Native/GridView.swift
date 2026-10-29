@@ -18,7 +18,7 @@ struct GridPane: View {
                             .overlay(ClickCatcher(onClick: { flags, count in
                                 if count == 2 { model.copy(item) } else { model.click(item.id, modifiers: flags) }
                             }, onKey: { model.navigate(code: $0.keyCode, modifiers: $0.modifierFlags) },
-                               accessibilityLabel: "选择\(item.kind.label)：\(item.title.isEmpty ? String(item.text.prefix(60)) : item.title)"))
+                               accessibilityLabel: String(localized: "选择\(L10n.display(item.kind.label))：\(item.title.isEmpty ? String(item.text.prefix(60)) : item.title)")))
                             .id(item.id)
                             .contextMenu { ItemMenu(item: item, model: model, hideWindow: hideWindow) }
                     }
@@ -35,9 +35,9 @@ struct GridPane: View {
             }
             .overlay {
                 if model.items.isEmpty {
-                    ContentUnavailableView(model.search.isEmpty ? "这里还没有记录" : "没有匹配「\(model.search)」",
+                    ContentUnavailableView(model.search.isEmpty ? String(localized: "这里还没有记录") : String(localized: "没有匹配「\(model.search)」"),
                                            systemImage: "doc.on.clipboard",
-                                           description: Text(model.search.isEmpty ? "复制点什么，它就会出现在这里" : "换个词，或换个筛选"))
+                                           description: Text(model.search.isEmpty ? String(localized: "复制点什么，它就会出现在这里") : String(localized: "换个词，或换个筛选")))
                 }
             }
             }
@@ -55,7 +55,8 @@ struct GridPane: View {
     }
 
     private var batchBar: some View {
-        HStack(spacing: 12) {
+        // English labels run wider than the Chinese ones: tighter spacing keeps every action whole at the minimum width.
+        HStack(spacing: 8) {
             Text("已选 \(model.selection.count) 条").font(.callout.weight(.medium))
             Button("复制") { model.copySelection() }.accessibilityIdentifier("batchCopy")
             Button("全选本页") { model.selectAll() }.accessibilityIdentifier("selectAll")
@@ -63,6 +64,7 @@ struct GridPane: View {
                 ForEach(model.collections) { c in Button(c.name) { model.add(model.selection, to: c.id) } }
                 if model.collections.isEmpty { Text("还没有收藏夹") }
             }
+            .fixedSize()  // "Add to Collection" is wider than 加入收藏夹: keep the menu title whole
             .accessibilityIdentifier("batchAddToCollection")
             Button("合并成一条") { model.merge(model.items.filter { model.selection.contains($0.id) }.map(\.id)) }
                 .disabled(ClipRules.mergeRefusal(model.items.filter { model.selection.contains($0.id) }) != nil)
@@ -112,8 +114,8 @@ struct ItemMenu: View {
 
     var body: some View {
         Button("复制") { model.copy(item) }
-        Button("粘贴到 \(model.previousApp?.localizedName ?? "前一个 app")") { model.paste(item, hideWindow: hideWindow) }
-        Button(item.pinned ? "取消置顶" : "置顶") { model.togglePin(item) }
+        Button("粘贴到 \(model.previousApp?.localizedName ?? String(localized: "前一个 app"))") { model.paste(item, hideWindow: hideWindow) }
+        Button(item.pinned ? String(localized: "取消置顶") : String(localized: "置顶")) { model.togglePin(item) }
         Menu("加入收藏夹") {
             ForEach(model.collections) { c in Button(c.name) { model.add([item.id], to: c.id) } }
             if model.collections.isEmpty { Text("还没有收藏夹") }
@@ -138,7 +140,7 @@ struct CardView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 5) {
                 Image(nsImage: model.appIcon(bundle: item.appBundle)).resizable().frame(width: 14, height: 14)
-                Text(item.appName.isEmpty ? "未知来源" : item.appName).lineLimit(1)
+                Text(item.appName.isEmpty ? String(localized: "未知来源") : item.appName).lineLimit(1)
                 Spacer(minLength: 4)
                 Text(Fmt.when(item.createdAt)).lineLimit(1)
             }
@@ -150,7 +152,7 @@ struct CardView: View {
             preview.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             HStack(spacing: 5) {
-                Label(item.kind.label, systemImage: item.kind.symbol).labelStyle(.titleAndIcon)
+                Label(L10n.display(item.kind.label), systemImage: item.kind.symbol).labelStyle(.titleAndIcon)
                 Text(Fmt.meta(item))
                 Spacer(minLength: 4)
                 ForEach(model.collectionMap[item.id] ?? [], id: \.self) { cid in
@@ -207,22 +209,25 @@ struct CardView: View {
 }
 
 enum Fmt {
+    /// Dates in the interface language: Chinese dates for the Chinese interface, the system's format otherwise.
+    static let locale = L10n.chinese ? Locale(identifier: "zh_CN")
+        : Locale.current.language.languageCode == .english ? Locale.autoupdatingCurrent : Locale(identifier: "en_US")
     static let rel: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "zh_CN")
+        f.locale = locale
         f.unitsStyle = .short
         return f
     }()
 
     static func when(_ d: Date) -> String {
         let age = Date().timeIntervalSince(d)
-        if age < 60 { return "刚刚" }
+        if age < 60 { return String(localized: "刚刚") }
         if age < 86400 * 2 { return rel.localizedString(for: d, relativeTo: Date()) }
-        return d.formatted(.dateTime.month().day().hour().minute().locale(Locale(identifier: "zh_CN")))
+        return d.formatted(.dateTime.month().day().hour().minute().locale(locale))
     }
 
     static func full(_ d: Date) -> String {
-        d.formatted(.dateTime.year().month().day().hour().minute().locale(Locale(identifier: "zh_CN")))
+        d.formatted(.dateTime.year().month().day().hour().minute().locale(locale))
     }
 
     static func bytes(_ n: Int) -> String {
@@ -232,8 +237,8 @@ enum Fmt {
     static func meta(_ item: ClipItem) -> String {
         switch item.kind {
         case .image: return "\(item.width)×\(item.height) · \(bytes(item.bytes))"
-        case .file:  return "\(item.filePaths.count) 项"
-        default:     return "\(item.text.count) 字 · \(item.lineCount) 行"
+        case .file:  return String(localized: "\(item.filePaths.count) 项")
+        default:     return String(localized: "\(item.text.count) 字 · \(item.lineCount) 行")
         }
     }
 }

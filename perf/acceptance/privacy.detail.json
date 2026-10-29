@@ -1,6 +1,6 @@
 {
-  "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
-  "executable_sha256": "f84c89d35a35e095068a43d8aba2db4bf4d1a842d322c8d72dd1a22e6925bfa9",
+  "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 a8f5ff9b9c39；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
+  "executable_sha256": "a8f5ff9b9c3973e158830928c7c30e0ed9d6d90075a97014d5882b15ca1f8d42",
   "entry": "--privacy-test",
   "exit_code": 0,
   "checks": {
@@ -42,7 +42,9 @@
       "non_system_libs": [],
       "usage_strings": "",
       "network_source_files": [
-        "Sources/Native/LinkTitle.swift"
+        "Sources/Native/LinkTitle.swift",
+        "Sources/Shared/AppLifecycle.swift",
+        "Sources/Shared/AppLifecycleUI.swift"
       ],
       "third_party_urls": []
     }

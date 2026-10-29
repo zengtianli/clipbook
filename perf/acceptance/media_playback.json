@@ -5,14 +5,14 @@
   "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/media_playback.py",
   "exit_code": 0,
   "status": "passed",
-  "started_at": "2026-10-01T10:21:59.728907+08:00",
-  "finished_at": "2026-10-01T10:22:18.231019+08:00",
-  "input_sha256": "2af5b2fbe684541e522ce1e2f8e154786620fd297c5e00597430bb20991c45fd",
-  "log": "perf/acceptance/media_playback.log",
-  "log_sha256": "95b893e7cb2e2427a3ea047675f4c26084f44cd6fd1f06b24c94d56d9c1ce899",
+  "started_at": "2026-10-18T17:44:10.308039+08:00",
+  "finished_at": "2026-10-18T17:46:00.160898+08:00",
+  "input_sha256": "60412c8b58664e9e167f2991a2e9b7addb6bd1a0c349e8a6c95259d06e1629fd",
+  "log": "perf/acceptance/run-gqgzlybd/media_playback.log",
+  "log_sha256": "8b6118745d74c4ab57fd2d4de5566d4ec26dd44c162335f02c855484015fbe5c",
   "summary": "17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、",
   "detail": {
-    "summary": "17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、promotion/video/maccy-images-raw.mov 8.1s h264、promotion/video/pastepal-bench-scene.mp4 8.0s h264、promotion/video/pastepal-images-raw.mov 12.0s h264、promotion/video/scene-0.mp4 14.0s h264、promotion/video/scene-1.mp4 8.0s h264、promotion/video/scene-2.mp4 19.0s h264、promotion/video/scene-end.mp4 10.0s h264）；推广页 4 个视频在无界面浏览器中实际播放（1.2/39s、1.4/10s、1.6/11s、1.4/13s）",
+    "summary": "17 个本地视频 ffprobe/ffmpeg 全量解码通过（promotion/video/capture-test.mov 3.0s h264、promotion/video/clip-bench-scene.mp4 8.0s h264、promotion/video/clip-competitors.mp4 36.0s h264、promotion/video/clip-demo-raw.mov 55.1s h264、promotion/video/clip-demo.mp4 51.0s h264、promotion/video/clip-edit-raw.mov 20.0s h264、promotion/video/clip-images-raw.mov 10.0s h264、promotion/video/clip-keyboard-raw.mov 25.0s h264、promotion/video/competitor-results-scene.mp4 12.0s h264、promotion/video/maccy-bench-scene.mp4 8.0s h264、promotion/video/maccy-images-raw.mov 8.1s h264、promotion/video/pastepal-bench-scene.mp4 8.0s h264、promotion/video/pastepal-images-raw.mov 12.0s h264、promotion/video/scene-0.mp4 14.0s h264、promotion/video/scene-1.mp4 8.0s h264、promotion/video/scene-2.mp4 19.0s h264、promotion/video/scene-end.mp4 10.0s h264）；推广页 4 个视频在无界面浏览器中实际播放（1.9/39s、1.4/10s、1.3/11s、1.2/13s）",
     "passed": true,
     "local_videos": [
       {
@@ -255,12 +255,414 @@
       }
     ],
     "page_url": "https://app-mac-clips.tianli.cyou/",
+    "page_diagnostics": {
+      "title": "Clip · 剪贴板",
+      "inner_width": 1440,
+      "inner_height": 900,
+      "scroll_width": 1440,
+      "client_width": 1440,
+      "scroll_height": 6321,
+      "images": [
+        {
+          "src": "https://app-mac-clips.tianli.cyou/images/icon.png",
+          "complete": true,
+          "natural_width": 1024,
+          "natural_height": 1024,
+          "rendered_width": 42,
+          "rendered_height": 42,
+          "alt": ""
+        },
+        {
+          "src": "https://app-mac-clips.tianli.cyou/media/overview.png",
+          "complete": true,
+          "natural_width": 1380,
+          "natural_height": 844,
+          "rendered_width": 674,
+          "rendered_height": 420,
+          "alt": "Clip 的真实三栏窗口：来源与类型筛选、剪贴板记录、正文编辑"
+        },
+        {
+          "src": "https://app-mac-clips.tianli.cyou/images/icon.png",
+          "complete": true,
+          "natural_width": 1024,
+          "natural_height": 1024,
+          "rendered_width": 78,
+          "rendered_height": 78,
+          "alt": "Clip 图标"
+        }
+      ],
+      "videos": [
+        {
+          "src": "https://app-mac-clips.tianli.cyou/media/clip-guide-0a6f43d83fa9.mp4",
+          "ready_state": 4,
+          "duration": 38.6,
+          "current_time": 1.878867,
+          "paused": false,
+          "error": null,
+          "video_width": 1920,
+          "video_height": 1080,
+          "tracks": 1,
+          "play_error": null
+        },
+        {
+          "src": "https://app-mac-clips.tianli.cyou/media/search.mp4",
+          "ready_state": 4,
+          "duration": 9.8,
+          "current_time": 1.37699,
+          "paused": false,
+          "error": null,
+          "video_width": 1280,
+          "video_height": 1024,
+          "tracks": 1,
+          "play_error": null
+        },
+        {
+          "src": "https://app-mac-clips.tianli.cyou/media/edit.mp4",
+          "ready_state": 4,
+          "duration": 11.2,
+          "current_time": 1.252596,
+          "paused": false,
+          "error": null,
+          "video_width": 1280,
+          "video_height": 1024,
+          "tracks": 1,
+          "play_error": null
+        },
+        {
+          "src": "https://app-mac-clips.tianli.cyou/media/organize.mp4",
+          "ready_state": 4,
+          "duration": 12.8,
+          "current_time": 1.169972,
+          "paused": false,
+          "error": null,
+          "video_width": 1280,
+          "video_height": 1024,
+          "tracks": 1,
+          "play_error": null
+        }
+      ],
+      "waited_ms": 5064,
+      "timed_out": false,
+      "play": true,
+      "entry_status": 200,
+      "entry_proxy_status": 200,
+      "completed_requests": [
+        {
+          "path": "/",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 14356,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.26,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 14356
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "text/html; charset=utf-8",
+          "content_length": null,
+          "content_range": null
+        },
+        {
+          "path": "/style.css?v=6dd5259f1bfb",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 6298,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.22,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 6298
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "text/css",
+          "content_length": "6298",
+          "content_range": null
+        },
+        {
+          "path": "/media/overview.png",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 184638,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.92,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 184638
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "image/png",
+          "content_length": "184638",
+          "content_range": null
+        },
+        {
+          "path": "/images/icon.png",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 516463,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 2.27,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 516463
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "image/png",
+          "content_length": "516463",
+          "content_range": null
+        },
+        {
+          "path": "/media/clip-guide-fe308c2a2dbc.jpg",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 58357,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.67,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 58357
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "image/jpeg",
+          "content_length": "58357",
+          "content_range": null
+        },
+        {
+          "path": "/media/organize.png",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 113630,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.75,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 113630
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "image/png",
+          "content_length": "113630",
+          "content_range": null
+        },
+        {
+          "path": "/media/edit.png",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 136285,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.77,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 136285
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "image/png",
+          "content_length": "136285",
+          "content_range": null
+        },
+        {
+          "path": "/media/search.png",
+          "media": false,
+          "range": null,
+          "status": 200,
+          "bytes": 129064,
+          "complete": true,
+          "phase": "complete",
+          "elapsed_s": 1.84,
+          "proxy_status": 200,
+          "status_source": "upstream",
+          "attempts": [
+            {
+              "status": 200,
+              "bytes": 129064
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false,
+          "http_error": false,
+          "content_type": "image/png",
+          "content_length": "129064",
+          "content_range": null
+        },
+        {
+          "path": "/media/edit.mp4",
+          "media": true,
+          "range": "bytes=0-",
+          "status": 206,
+          "bytes": 207308,
+          "complete": true,
+          "phase": "complete",
+          "status_source": "upstream",
+          "http_error": false,
+          "content_type": "video/mp4",
+          "content_length": "207308",
+          "content_range": "bytes 0-207307/207308",
+          "elapsed_s": 1.9,
+          "proxy_status": 206,
+          "attempts": [
+            {
+              "status": 206,
+              "bytes": 207308,
+              "streamed": true
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false
+        },
+        {
+          "path": "/media/search.mp4",
+          "media": true,
+          "range": "bytes=0-",
+          "status": 206,
+          "bytes": 230600,
+          "complete": true,
+          "phase": "complete",
+          "status_source": "upstream",
+          "http_error": false,
+          "content_type": "video/mp4",
+          "content_length": "230600",
+          "content_range": "bytes 0-230599/230600",
+          "elapsed_s": 2.03,
+          "proxy_status": 206,
+          "attempts": [
+            {
+              "status": 206,
+              "bytes": 230600,
+              "streamed": true
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false
+        },
+        {
+          "path": "/media/organize.mp4",
+          "media": true,
+          "range": "bytes=0-",
+          "status": 206,
+          "bytes": 301269,
+          "complete": true,
+          "phase": "complete",
+          "status_source": "upstream",
+          "http_error": false,
+          "content_type": "video/mp4",
+          "content_length": "301269",
+          "content_range": "bytes 0-301268/301269",
+          "elapsed_s": 2.07,
+          "proxy_status": 206,
+          "attempts": [
+            {
+              "status": 206,
+              "bytes": 301269,
+              "streamed": true
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false
+        },
+        {
+          "path": "/media/clip-guide-0a6f43d83fa9.mp4",
+          "media": true,
+          "range": "bytes=0-",
+          "status": 206,
+          "bytes": 4510037,
+          "complete": true,
+          "phase": "complete",
+          "status_source": "upstream",
+          "http_error": false,
+          "content_type": "video/mp4",
+          "content_length": "4510037",
+          "content_range": "bytes 0-4510036/4510037",
+          "elapsed_s": 2.8,
+          "proxy_status": 206,
+          "attempts": [
+            {
+              "status": 206,
+              "bytes": 4510037,
+              "streamed": true
+            }
+          ],
+          "transport_error": null,
+          "client_closed": false
+        }
+      ],
+      "inflight_requests": [],
+      "browser": {
+        "binary": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "kind": "chrome_headless",
+        "version": "Google Chrome 155.0.8059.85",
+        "exit_code": 0,
+        "error": null,
+        "stderr_tail": "app_wakeall.cc:68] `/Users/tianli/Library/Application Support/Google/GoogleUpdater/157.0.8089.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --wake` exited 0\n[40212:39596405:1018/174546.759856:VERBOSE1:chrome/updater/app/app.cc:52] Shutdown: 0\n[40212:39596405:1018/174546.760424:VERBOSE2:chrome/updater/event_history.cc:266] Emitted a UPDATER_PROCESS END event to the history log\n[40212:39596405:1018/174546.760460:VERBOSE1:chrome/updater/updater.cc:420] UpdaterMain (--wake-all) returned 0.\n[40278:39596546:1018/174556.776846:VERBOSE2:chrome/updater/event_history.cc:266] Emitted a UPDATER_PROCESS END event to the history log\n[40278:39596546:1018/174556.777068:VERBOSE1:chrome/updater/updater.cc:420] UpdaterMain (--crash-handler) returned 0.\n[40230:39596470:1018/174556.781137:VERBOSE2:chrome/updater/event_history.cc:266] Emitted a UPDATER_PROCESS END event to the history log\n[40230:39596470:1018/174556.781224:VERBOSE1:chrome/updater/updater.cc:420] UpdaterMain (--crash-handler) returned 0.\n"
+      },
+      "requested_wait_ms": 20000,
+      "requested_url": "https://app-mac-clips.tianli.cyou/",
+      "failed_requests": [],
+      "transport_errors": [],
+      "retried_requests": [],
+      "requests": 12,
+      "elapsed_s": 51.85
+    },
     "page_videos": [
       {
         "src": "https://app-mac-clips.tianli.cyou/media/clip-guide-0a6f43d83fa9.mp4",
         "ready_state": 4,
         "duration": 38.6,
-        "current_time": 1.171207,
+        "current_time": 1.878867,
         "paused": false,
         "error": null,
         "video_width": 1920,
@@ -273,7 +675,7 @@
         "src": "https://app-mac-clips.tianli.cyou/media/search.mp4",
         "ready_state": 4,
         "duration": 9.8,
-        "current_time": 1.428556,
+        "current_time": 1.37699,
         "paused": false,
         "error": null,
         "video_width": 1280,
@@ -286,7 +688,7 @@
         "src": "https://app-mac-clips.tianli.cyou/media/edit.mp4",
         "ready_state": 4,
         "duration": 11.2,
-        "current_time": 1.58292,
+        "current_time": 1.252596,
         "paused": false,
         "error": null,
         "video_width": 1280,
@@ -299,7 +701,7 @@
         "src": "https://app-mac-clips.tianli.cyou/media/organize.mp4",
         "ready_state": 4,
         "duration": 12.8,
-        "current_time": 1.399963,
+        "current_time": 1.169972,
         "paused": false,
         "error": null,
         "video_width": 1280,
@@ -309,12 +711,15 @@
         "ok": true
       }
     ],
-    "page_title": "Clip · 复制过的，再找回来",
+    "page_title": "Clip · 剪贴板",
     "page_screenshot": "perf/acceptance/media_playback.png",
     "browser": {
-      "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",
-      "kind": "headless_shell",
-      "version": "Google Chrome for Testing 151.0.7922.34"
+      "binary": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "kind": "chrome_headless",
+      "version": "Google Chrome 155.0.8059.85",
+      "exit_code": 0,
+      "error": null,
+      "stderr_tail": "app_wakeall.cc:68] `/Users/tianli/Library/Application Support/Google/GoogleUpdater/157.0.8089.0/GoogleUpdater.app/Contents/MacOS/GoogleUpdater --wake` exited 0\n[40212:39596405:1018/174546.759856:VERBOSE1:chrome/updater/app/app.cc:52] Shutdown: 0\n[40212:39596405:1018/174546.760424:VERBOSE2:chrome/updater/event_history.cc:266] Emitted a UPDATER_PROCESS END event to the history log\n[40212:39596405:1018/174546.760460:VERBOSE1:chrome/updater/updater.cc:420] UpdaterMain (--wake-all) returned 0.\n[40278:39596546:1018/174556.776846:VERBOSE2:chrome/updater/event_history.cc:266] Emitted a UPDATER_PROCESS END event to the history log\n[40278:39596546:1018/174556.777068:VERBOSE1:chrome/updater/updater.cc:420] UpdaterMain (--crash-handler) returned 0.\n[40230:39596470:1018/174556.781137:VERBOSE2:chrome/updater/event_history.cc:266] Emitted a UPDATER_PROCESS END event to the history log\n[40230:39596470:1018/174556.781224:VERBOSE1:chrome/updater/updater.cc:420] UpdaterMain (--crash-handler) returned 0.\n"
     },
     "local_sha256": [
       "0970d028365672d985c0a2a1a60598fe6173e9b281829c013ff12e47555e3849",
@@ -339,5 +744,11 @@
     "limits": [
       "静音自动播放；字幕文字与拖动进度未做人工审阅"
     ]
-  }
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/media_playback/20261018T174410174817+0800-blbdlzg3",
+    "manifest_sha256": "5e103b771ed38505c331a05c0bdabe2e5bfd3712a2e0822544c2a742f61cc659"
+  },
+  "run_id": "run-gqgzlybd",
+  "evidence_file": "perf/acceptance/run-gqgzlybd/media_playback.json"
 }

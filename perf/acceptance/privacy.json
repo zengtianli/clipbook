@@ -5,15 +5,15 @@
   "command": "bash scripts/accept/privacy.sh",
   "exit_code": 0,
   "status": "passed",
-  "started_at": "2026-10-01T10:17:03.410810+08:00",
-  "finished_at": "2026-10-01T10:17:14.615173+08:00",
-  "input_sha256": "8ec3b832ca041c342e6bd8e2e689f8c0ecf69daa0e39e9710e8f4f994e6dace1",
-  "log": "perf/acceptance/privacy.log",
-  "log_sha256": "9dd1c5d4aa5968e24e5c962eb9a8db3e1905ed29054f3a462edf99ff208a76d2",
-  "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
+  "started_at": "2026-10-18T13:25:11.561223+08:00",
+  "finished_at": "2026-10-18T13:25:15.496280+08:00",
+  "input_sha256": "e5dbae72efdb3f55dbaf85e5b2163f3e6690544ef42ae505035a8151ecad0612",
+  "log": "perf/acceptance/run-gwlgcfu6/privacy.log",
+  "log_sha256": "9dcb9d4262e4b456f4d2dfd2a36bc5b6fce741ccec59f03243967573a93d0b81",
+  "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 a8f5ff9b9c39；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
   "detail": {
-    "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
-    "executable_sha256": "f84c89d35a35e095068a43d8aba2db4bf4d1a842d322c8d72dd1a22e6925bfa9",
+    "summary": "隐私边界自检 17/17 项通过（当前源码 Release 构建，Clipbook --privacy-test，可执行 a8f5ff9b9c39；隔离数据/偏好/剪贴板）；构建静态检查 6/6 项通过",
+    "executable_sha256": "a8f5ff9b9c3973e158830928c7c30e0ed9d6d90075a97014d5882b15ca1f8d42",
     "entry": "--privacy-test",
     "exit_code": 0,
     "checks": {
@@ -55,10 +55,18 @@
         "non_system_libs": [],
         "usage_strings": "",
         "network_source_files": [
-          "Sources/Native/LinkTitle.swift"
+          "Sources/Native/LinkTitle.swift",
+          "Sources/Shared/AppLifecycle.swift",
+          "Sources/Shared/AppLifecycleUI.swift"
         ],
         "third_party_urls": []
       }
     }
-  }
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/privacy/20261018T132511482175+0800-for_m9mw",
+    "manifest_sha256": "47673db0325c177e07292d3032f8cbcfc79252c45bd60665463f3b4b97d225d1"
+  },
+  "run_id": "run-gwlgcfu6",
+  "evidence_file": "perf/acceptance/run-gwlgcfu6/privacy.json"
 }

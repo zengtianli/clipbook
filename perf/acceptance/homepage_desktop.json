@@ -5,14 +5,14 @@
   "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/homepage.py --viewport desktop",
   "exit_code": 0,
   "status": "passed",
-  "started_at": "2026-09-29T09:53:24.575054+08:00",
-  "finished_at": "2026-09-29T09:53:36.944673+08:00",
-  "input_sha256": "62655a1f5b11a2cc5473d04d0129e896ab4b31439725d8d2992340ecc97558c6",
-  "log": "perf/acceptance/homepage_desktop.log",
-  "log_sha256": "df65931f779c0e1d380442b85f0078813bdee70a2b4af2a975a8863511b1df83",
-  "summary": "desktop 1440px：HTTP 200，标题「Clip · 复制过的，再找回来」，无横向溢出，3 张图片全部加载",
+  "started_at": "2026-10-12T00:48:13.139984+08:00",
+  "finished_at": "2026-10-12T00:48:17.699646+08:00",
+  "input_sha256": "f33e11899e9d1a1d80eca1275f5a15188921a908bc05442616cdf16e21a9da3a",
+  "log": "perf/acceptance/run-5ifuix1n/homepage_desktop.log",
+  "log_sha256": "2f64729985be28105f29702f4d4ec8fc7da2841fb9491bbf2ec4e33262e2a880",
+  "summary": "desktop 1440px：HTTP 200，标题「Clip · 剪贴板」，无横向溢出，3 张图片全部加载",
   "detail": {
-    "summary": "desktop 1440px：HTTP 200，标题「Clip · 复制过的，再找回来」，无横向溢出，3 张图片全部加载",
+    "summary": "desktop 1440px：HTTP 200，标题「Clip · 剪贴板」，无横向溢出，3 张图片全部加载",
     "passed": true,
     "url": "https://app-mac-clips.tianli.cyou/",
     "viewport": [
@@ -20,7 +20,7 @@
       900
     ],
     "http_status": 200,
-    "title": "Clip · 复制过的，再找回来",
+    "title": "Clip · 剪贴板",
     "inner_width": 1440,
     "scroll_width": 1440,
     "horizontal_overflow": false,
@@ -104,9 +104,10 @@
       }
     ],
     "failed_requests": [],
+    "retried_requests": [],
     "requests": 12,
     "screenshot": "perf/acceptance/homepage_desktop.png",
-    "screenshot_sha256": "888879000613028188e402ef4cfb71608178212b7fff1d1f67a4134eeda266f5",
+    "screenshot_sha256": "950796a477a04b27057b06395aa06d0747f4a53db4ce4bca538de5ea1f128eef",
     "screenshot_check": "极差 255，标准差 31.2",
     "browser": {
       "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",
@@ -119,5 +120,11 @@
       "单一桌面视口",
       "机器判定布局与资源；视觉美观未做人工审阅"
     ]
-  }
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/homepage_desktop/20261012T004813138918+0800-z1s6qtlw",
+    "manifest_sha256": "cec329bc8dd29aee20979e594291293aafb8721469690466ee1037d76d6e29f2"
+  },
+  "run_id": "run-5ifuix1n",
+  "evidence_file": "perf/acceptance/run-5ifuix1n/homepage_desktop.json"
 }

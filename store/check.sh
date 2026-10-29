@@ -24,6 +24,17 @@ entitlements = target['entitlements']['properties']
 assert entitlements['com.apple.security.app-sandbox'] is True
 assert not any('temporary-exception' in key for key in entitlements)
 assert 'APP_STORE' in settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'].split()
+excludes = target['sources'][0]['excludes']
+assert 'Native/ClipCLI.swift' not in excludes, 'Store must ship the registered family CLI'
+assert 'Native/RuntimeSelfTest.swift' not in excludes, 'Store CLI must retain the production runtime acceptance entry'
+for source in ['Shared/AppLifecycleCLI.swift', 'Shared/AppLifecycle.swift', 'Shared/AppLifecycleUI.swift']:
+    assert source in excludes, 'Store must not link the downloadable app updater'
+assert any('../../MacOS/Clipbook' in script['script'] and '/bin/clip' in script['script']
+           for script in target.get('postBuildScripts', [])), 'Seal the clip link before signing'
+assert entitlements['com.apple.developer.icloud-container-identifiers'] == ['iCloud.cyou.tianli.clip']
+assert entitlements['com.apple.developer.icloud-services'] == ['CloudKit']
+assert entitlements['com.apple.developer.icloud-container-environment'] == 'Production'
+assert entitlements['com.apple.developer.aps-environment'] == 'production'
 assert not list(Path('../Sources').rglob('*sync-conflict-*')), 'Reconcile source conflict copies first'
 iconset = Path('Assets.xcassets/AppIcon.appiconset')
 contents = json.loads((iconset/'Contents.json').read_text())

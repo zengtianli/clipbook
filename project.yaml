@@ -13,7 +13,27 @@ sop:
   install: ~/Dev/.venv/bin/python scripts/install-local.py
   # 只构建（chapter l10n run 的 TestFlight 路径）：不签名、不装机，产物 .dd-cloud/Build/Products/Release/Clipbook.app 即 localization.shots 读取处。
   build: bash build.sh --compile-only
+  # 验收候选包（PRD-foundation R1）：原 CloudKit/Developer ID 流水线 --build-only（签名 + 生产 --selftest 门，不公证、不装机），
+  # 独立 DerivedData；产物用 ditto 重新放到 build/candidate/，每次都是新的可执行文件。回执由 Chapter 写。
+  candidate:
+    build: CLIP_DERIVED_DATA="$PWD/build/.dd-candidate" CLIP_CLOUD_BUILD_LOG="$PWD/build/candidate-build.log" bash build-cloud.sh --build-only && rm -rf build/candidate/Clipbook.app && mkdir -p build/candidate && ditto build/.dd-candidate/Build/Products/Release/Clipbook.app build/candidate/Clipbook.app
+    app: build/candidate/Clipbook.app
+    receipt: build/accept/candidate-receipt.json
+    source_globs: ['Sources/**/*.swift', 'Sources/*.xcstrings', cloud-project.yml, Cloud.entitlements, icon/AppIcon.icns, build.sh, build-cloud.sh, scripts/developer-id-profile.py]
   test: bash tests/test-link-title.sh
+  # 英文 + 简体中文界面（chapter l10n）：`--l10n-self-test` 在隔离 home / 偏好 / 后台模式下离屏出图
+  #（activation policy prohibited，不上屏、不进 Dock、不碰通用剪贴板）；先 `./build.sh --compile-only` 出包。
+  localization:
+    languages: [en, zh-Hans]
+    development: en
+    shots:
+      executable: .dd-cloud/Build/Products/Release/Clipbook.app/Contents/MacOS/Clipbook
+      args: ["--l10n-self-test", "{out}"]
+      env:
+        CLIPBOOK_HOME: /Users/tianli/Apps/clip/mac/build/l10n-home/{lang}
+        CLIPBOOK_PREFERENCES_SUITE: cyou.tianli.clipbook.cli-selftest.l10n-{lang}
+        CLIPBOOK_BACKGROUND: "1"
+      allow_chinese: ["剪贴板"]
   # Agent CLI: same executable as the app (Contents/Resources/bin/clip -> ../../MacOS/Clipbook),
   # linked to ~/.local/bin/clip by scripts/install-cli.py after build.sh installs.
   cli:
@@ -230,7 +250,9 @@ sop:
     data: 本机真实剪贴板库的快照副本（隔离数据目录，不碰原库）
   source:
   - Sources/**/*.swift
+  - Sources/*.xcstrings
   - cloud-project.yml
+  - store/project.yml
   - Cloud.entitlements
   - icon/AppIcon.icns
   - build.sh
@@ -245,3 +267,15 @@ sop:
     source_visibility: public
     source_url: https://github.com/zengtianli/clipbook
     rationale: 原生 Mac 剪贴板库。键盘顺手，轻量常驻，让查找与复用更快一步。 面向外部使用者提供现有公开产品与源码入口，持续维护获取、教程和版本证据。
+    role: application
+    product_id: clipbook
+    primary: true
+    public_summary: 把复制过的文字、链接和图片整理成可搜索、可编辑、可再次取用的本地资料库。
+    public_features:
+    - title: 搜索记录
+      text: 按内容、标题和来源查找历史，并筛选记录类型。
+    - title: 编辑与复用
+      text: 修改片段后保存或另存，再按需要手动复制。
+    - title: 收藏常用片段
+      text: 置顶和收藏经常使用的内容，保留在当前设备上。
+    public_icon: /Users/tianli/Apps/clip/mac/icon/AppIcon.png

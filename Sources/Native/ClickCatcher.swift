@@ -6,7 +6,7 @@ import SwiftUI
 struct ClickCatcher: NSViewRepresentable {
     let onClick: (NSEvent.ModifierFlags, Int) -> Void
     var onKey: ((NSEvent) -> Bool)? = nil
-    var accessibilityLabel: String = "选择记录"
+    var accessibilityLabel: String = String(localized: "选择记录")
 
     func makeNSView(context: Context) -> CatcherView {
         let v = CatcherView()
@@ -54,7 +54,7 @@ struct GridKeyboard: NSViewRepresentable {
         let view = Responder(); view.onKey = onKey
         view.setAccessibilityElement(true)
         view.setAccessibilityRole(.group)
-        view.setAccessibilityLabel("剪贴板网格，方向键选择，Shift 扩选，Return 复制")
+        view.setAccessibilityLabel(String(localized: "剪贴板网格，方向键选择，Shift 扩选，Return 复制"))
         return view
     }
     func updateNSView(_ view: Responder, context: Context) { view.onKey = onKey }

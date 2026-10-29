@@ -1,5 +1,5 @@
 {
-  "summary": "desktop 1440px：HTTP 200，标题「Clip · 复制过的，再找回来」，无横向溢出，3 张图片全部加载",
+  "summary": "desktop 1440px：HTTP 200，标题「Clip · 剪贴板」，无横向溢出，3 张图片全部加载",
   "passed": true,
   "url": "https://app-mac-clips.tianli.cyou/",
   "viewport": [
@@ -7,7 +7,7 @@
     900
   ],
   "http_status": 200,
-  "title": "Clip · 复制过的，再找回来",
+  "title": "Clip · 剪贴板",
   "inner_width": 1440,
   "scroll_width": 1440,
   "horizontal_overflow": false,
@@ -91,9 +91,10 @@
     }
   ],
   "failed_requests": [],
+  "retried_requests": [],
   "requests": 12,
   "screenshot": "perf/acceptance/homepage_desktop.png",
-  "screenshot_sha256": "888879000613028188e402ef4cfb71608178212b7fff1d1f67a4134eeda266f5",
+  "screenshot_sha256": "950796a477a04b27057b06395aa06d0747f4a53db4ce4bca538de5ea1f128eef",
   "screenshot_check": "极差 255，标准差 31.2",
   "browser": {
     "binary": "/Users/tianli/Library/Caches/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell",

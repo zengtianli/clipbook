@@ -118,9 +118,7 @@ final class AppSettings: ObservableObject {
 enum ProductIdentity {
     static var name: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? ProcessInfo.processInfo.processName }
     static var cloudSupported: Bool {
-        #if APP_STORE
-        false
-        #elseif CLIP_LOCAL_DISTRIBUTION
+        #if CLIP_LOCAL_DISTRIBUTION
         false
         #else
         true

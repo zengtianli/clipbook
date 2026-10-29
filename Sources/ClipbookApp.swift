@@ -39,9 +39,7 @@ enum Boot {
         }
         #endif
         // `clip …` (Contents/Resources/bin/clip) and CLI verbs: the agent-facing command line. No NSApplication.
-        #if !APP_STORE
         if ClipCLI.requested(CommandLine.arguments) { exit(ClipCLI.main(CommandLine.arguments)) }
-        #endif
         if CommandLine.arguments.contains("--keyboard-window-test") {
             exit(MainActor.assumeIsolated { KeyboardMemorySelfTest.windowRuntime() })
         }
@@ -82,6 +80,12 @@ enum Boot {
                 return UISelfTest.run(outdir: args.indices.contains(i + 1) ? args[i + 1] : nil)
             })
         }
+        if let i = args.firstIndex(of: "--l10n-self-test") {
+            exit(MainActor.assumeIsolated {
+                NSApplication.shared.setActivationPolicy(.prohibited)
+                return L10nShots.run(outdir: args.indices.contains(i + 1) ? args[i + 1] : nil)
+            })
+        }
         if args.contains("--recovery-test") {
             exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return RecoverySelfTest.run() })
         }
@@ -90,11 +94,9 @@ enum Boot {
         }
         // This process stands in for the running Clip (production wiring, nothing on screen) while the real `clip`
         // command runs beside it as separate processes. Opt-in (tests/test-runtime.sh): it registers two test hot keys.
-        #if !APP_STORE
         if args.contains("--runtime-self-test") {
             exit(MainActor.assumeIsolated { NSApplication.shared.setActivationPolicy(.prohibited); return RuntimeSelfTest.run() })
         }
-        #endif
         if CommandLine.arguments.contains("--selftest") {
             #if !APP_STORE
             #if CLIP_LOCAL_DISTRIBUTION
@@ -142,7 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 }
             } catch {
                 let a = NSAlert()
-                a.messageText = "\(ProductIdentity.name) 启动失败"
+                a.messageText = String(localized: "\(ProductIdentity.name) 启动失败")
                 a.informativeText = "\(error)"
                 a.runModal()
                 exit(2)
@@ -161,43 +163,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let main = NSMenu()
         let appItem = NSMenuItem(); main.addItem(appItem)
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "关于 \(ProductIdentity.name)", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: String(localized: "关于 \(ProductIdentity.name)"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        let settingsItem = appMenu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
+        let settingsItem = appMenu.addItem(withTitle: String(localized: "设置…"), action: #selector(menuSettings), keyEquivalent: "")
         settingsItem.target = self
         #if !APP_STORE
         for item in AppLifecycleUI.menuItems() { appMenu.addItem(item) }
         #endif
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "隐藏 \(ProductIdentity.name)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "")
-        appMenu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: String(localized: "隐藏 \(ProductIdentity.name)"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: String(localized: "退出 \(ProductIdentity.name)"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         appItem.submenu = appMenu
 
         let editItem = NSMenuItem(); main.addItem(editItem)
-        let edit = NSMenu(title: "编辑")
-        edit.addItem(withTitle: "撤销", action: Selector(("undo:")), keyEquivalent: "z")
-        edit.addItem(withTitle: "重做", action: Selector(("redo:")), keyEquivalent: "Z")
+        let edit = NSMenu(title: String(localized: "编辑"))
+        edit.addItem(withTitle: String(localized: "撤销"), action: Selector(("undo:")), keyEquivalent: "z")
+        edit.addItem(withTitle: String(localized: "重做"), action: Selector(("redo:")), keyEquivalent: "Z")
         edit.addItem(.separator())
-        edit.addItem(withTitle: "剪切", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        let copy = edit.addItem(withTitle: "拷贝", action: #selector(menuCopy), keyEquivalent: "c")
+        edit.addItem(withTitle: String(localized: "剪切"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        let copy = edit.addItem(withTitle: String(localized: "拷贝"), action: #selector(menuCopy), keyEquivalent: "c")
         copy.target = self
-        edit.addItem(withTitle: "粘贴", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        edit.addItem(withTitle: "全选", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        edit.addItem(withTitle: String(localized: "粘贴"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: String(localized: "全选"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
 
         let actionsItem = NSMenuItem(); main.addItem(actionsItem)
-        let actions = NSMenu(title: "记录")
+        let actions = NSMenu(title: String(localized: "记录"))
         for action in ClipAction.allCases where action != .quit && action != .settings {
-            let item = actions.addItem(withTitle: action.title, action: #selector(menuAction(_:)), keyEquivalent: "")
+            let item = actions.addItem(withTitle: L10n.display(action.title), action: #selector(menuAction(_:)), keyEquivalent: "")
             item.target = self; item.representedObject = action.rawValue
         }
         actions.delegate = self
         actionsItem.submenu = actions
 
         let windowItem = NSMenuItem(); main.addItem(windowItem)
-        let window = NSMenu(title: "窗口")
-        window.addItem(withTitle: "最小化", action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "")
-        window.addItem(withTitle: "关闭", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "")
+        let window = NSMenu(title: String(localized: "窗口"))
+        window.addItem(withTitle: String(localized: "最小化"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "")
+        window.addItem(withTitle: String(localized: "关闭"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "")
         windowItem.submenu = window
         NSApp.mainMenu = main
     }
@@ -217,9 +219,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if ProductIdentity.cloudSupported && AppPreferences.defaults.bool(forKey: "cloudEnabled") { AppModel.shared.cloud.start() }
             if !ProductIdentity.unattended { buildStatusItem() }
             buildWindow()
-            #if !APP_STORE
             connectCommandLine()
-            #endif
             if CommandLine.arguments.contains("--background") {
                 AppModel.shared.suspendInterface()
             } else {
@@ -253,6 +253,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// Builds the production window without showing it, only for isolated process-internal acceptance.
     func prepareBasicsWindow() -> NSWindow { buildWindow(); return window }
+
+    /// The main menu and the menu bar menu as the user gets them, written out as titles (`--l10n-self-test`).
+    func menuTitlesForCapture() -> [String] {
+        installMainMenu()
+        rebuildMenu()
+        var titles: [String] = []
+        for item in NSApp.mainMenu?.items ?? [] {
+            guard let submenu = item.submenu else { continue }
+            titles.append("▸ " + (submenu.title.isEmpty ? ProductIdentity.name : submenu.title))
+            titles += submenu.items.filter { !$0.isSeparatorItem }.map { "    " + $0.title }
+        }
+        titles.append("▸ " + ProductIdentity.name + " (menu bar)")
+        titles += menu.items.filter { !$0.isSeparatorItem }.map { "    " + $0.title }
+        return titles
+    }
 
     /// Everything `clip` asks of this running app and reads from it. Also called by `--runtime-self-test`.
     func connectCommandLine() {
@@ -312,15 +327,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func rebuildMenu() {
         menu.removeAllItems()
         let s = AppSettings.shared
-        menu.addItem(withTitle: "打开 \(ProductIdentity.name)", action: #selector(menuOpen), keyEquivalent: "")
-        let pause = menu.addItem(withTitle: "暂停记录", action: #selector(menuTogglePause), keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "打开 \(ProductIdentity.name)"), action: #selector(menuOpen), keyEquivalent: "")
+        let pause = menu.addItem(withTitle: String(localized: "暂停记录"), action: #selector(menuTogglePause), keyEquivalent: "")
         pause.state = s.paused ? .on : .off
         menu.addItem(.separator())
         let count = (try? AppModel.shared.store.count()) ?? AppModel.shared.totalAll
-        menu.addItem(withTitle: "\(count) 条记录", action: nil, keyEquivalent: "")
-        menu.addItem(withTitle: "设置…", action: #selector(menuSettings), keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "\(count) 条记录"), action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "设置…"), action: #selector(menuSettings), keyEquivalent: "")
         menu.addItem(.separator())
-        menu.addItem(withTitle: "退出 \(ProductIdentity.name)", action: #selector(menuQuit), keyEquivalent: "")
+        menu.addItem(withTitle: String(localized: "退出 \(ProductIdentity.name)"), action: #selector(menuQuit), keyEquivalent: "")
         for it in menu.items { it.target = self }
         #if !APP_STORE
         for item in AppLifecycleUI.menuItems() { menu.insertItem(item, at: menu.numberOfItems - 1) }
@@ -434,7 +449,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if settingsWindow == nil {
             let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 620, height: 650),
                              styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-            w.title = "\(ProductIdentity.name) 设置"
+            w.title = String(localized: "\(ProductIdentity.name) 设置")
             w.isReleasedWhenClosed = false
             w.delegate = self
             w.minSize = NSSize(width: 580, height: 450)
@@ -491,10 +506,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func confirmClear() {
         let a = NSAlert()
-        a.messageText = "清空剪贴板历史？"
-        a.informativeText = "置顶的和收藏夹里的会保留，其余全部删除，不可恢复。"
-        a.addButton(withTitle: "取消")
-        a.addButton(withTitle: "清空")
+        a.messageText = String(localized: "清空剪贴板历史？")
+        a.informativeText = String(localized: "置顶的和收藏夹里的会保留，其余全部删除，不可恢复。")
+        a.addButton(withTitle: String(localized: "取消"))
+        a.addButton(withTitle: String(localized: "清空"))
         a.buttons.forEach { $0.keyEquivalent = "" }
         a.alertStyle = .warning
         NSApp.activate(ignoringOtherApps: true)
@@ -506,9 +521,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func confirmDelete(_ ids: Set<Int64>) {
         guard !ids.isEmpty else { return }
         let alert = NSAlert()
-        alert.messageText = "删除所选 \(ids.count) 条记录？"
-        alert.informativeText = "记录与附带图片将从本地库删除，无法撤销。"
-        alert.addButton(withTitle: "取消"); alert.addButton(withTitle: "删除")
+        alert.messageText = String(localized: "删除所选 \(ids.count) 条记录？")
+        alert.informativeText = String(localized: "记录与附带图片将从本地库删除，无法撤销。")
+        alert.addButton(withTitle: String(localized: "取消")); alert.addButton(withTitle: String(localized: "删除"))
         alert.buttons.forEach { $0.keyEquivalent = "" }
         alert.alertStyle = .warning
         if alert.runModal() == .alertSecondButtonReturn { AppModel.shared.delete(ids) }
@@ -519,8 +534,8 @@ extension AppDelegate: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         for item in menu.items {
             guard let raw = item.representedObject as? String, let action = ClipAction(rawValue: raw) else { continue }
-            if let binding = shortcuts.binding(action) { item.title = "\(action.title)  ·  \(binding.chord.label)" }
-            else { item.title = action.title }
+            if let binding = shortcuts.binding(action) { item.title = "\(L10n.display(action.title))  ·  \(binding.chord.label)" }
+            else { item.title = L10n.display(action.title) }
         }
     }
 }

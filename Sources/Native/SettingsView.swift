@@ -82,10 +82,10 @@ struct SettingsView: View {
             Section("从 Deck 导入") {
                 if DeckImporter.available() {
                     HStack {
-                        Button(model.importing ? "导入中…" : "导入 Deck 历史") { model.importDeck() }.disabled(model.importing).accessibilityIdentifier("importDeck")
+                        Button(model.importing ? String(localized: "导入中…") : String(localized: "导入 Deck 历史")) { model.importDeck() }.disabled(model.importing).accessibilityIdentifier("importDeck")
                         if let at = model.deckImportedAt, let d = ISO8601DateFormatter().date(from: at) { Text("上次导入 \(Fmt.full(d))").font(.caption).foregroundStyle(.secondary) }
                     }
-                    if let r = model.importReport { Text(r).font(.caption) }
+                    if let r = model.importReport { Text(L10n.display(r)).font(.caption) }
                     Text("只读 Deck 的库，不改不删；重复内容自动合并，可以重复导。").font(.caption).foregroundStyle(.secondary)
                 } else {
                     Text("没找到 Deck 的数据目录。").foregroundStyle(.secondary)
@@ -112,8 +112,8 @@ struct SettingsView: View {
             }
             Section("其他") {
                 Toggle("开机自启", isOn: Binding(get: { settings.launchAtLogin }, set: { settings.setLaunchAtLogin($0) }))
-                Text(settings.launchStatus).font(.caption).foregroundStyle(.secondary)
-                if let error = settings.launchError { Text(error).font(.caption).foregroundStyle(.red) }
+                Text(L10n.display(settings.launchStatus)).font(.caption).foregroundStyle(.secondary)
+                if let error = settings.launchError { Text(L10n.display(error)).font(.caption).foregroundStyle(.red) }
                 HStack {
                     Text("自动粘贴（辅助功能）")
                     Spacer()

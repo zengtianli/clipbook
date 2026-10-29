@@ -197,6 +197,36 @@ enum ClipCLI {
 
     // MARK: - Help
 
+    // The Store target deliberately excludes the downloadable app's updater implementation.
+    private static var updateHelp: String {
+        #if APP_STORE
+        ""
+        #else
+        AppLifecycleCLI.helpUpdate
+        #endif
+    }
+    private static var installHelp: String {
+        #if APP_STORE
+        ""
+        #else
+        AppLifecycleCLI.helpInstall("clip") + "\n" + AppLifecycleCLI.helpOptions
+        #endif
+    }
+    private static var deckHelp: String {
+        #if APP_STORE
+        ""
+        #else
+        "  import-deck [--deck-home <dir>]"
+        #endif
+    }
+    private static var updateErrors: String {
+        #if APP_STORE
+        ""
+        #else
+        "        update install 另有 manual_install · needs_product_installer · upgrade_failed · replace_failed · cleanup_failed"
+        #endif
+    }
+
     static func usage() -> String {
         """
         usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据、同一份设置）
@@ -214,7 +244,7 @@ enum ClipCLI {
           shortcut list              每个动作的快捷键、作用范围与状态（全局键是否注册成功由运行中的 Clip 报告）
           config status              「使用 iCloud 记住配置」开关、开关下面那句同步状态、可迁移的偏好键
           config export -o <file>    导出配置（--force 覆盖；只写你指定的文件）
-        \(AppLifecycleCLI.helpUpdate)
+        \(updateHelp)
           cloud status               iCloud 归档开关、账户是否绑定、同步状态与错误（Clip 运行时）、归档计数与本机缓存统计
           cloud list [筛选]           本机归档缓存里 iPhone / iPad 可见的历史（与手机列表同一规则；local_id = Mac 库里的同一条）
           cloud show <key>           归档里一条的全文、来源、日期；-o <file> 导出图片（只写你指定的文件）
@@ -240,7 +270,7 @@ enum ClipCLI {
           shortcut scope <动作> application|global    改已有组合键的作用范围
           shortcut clear <动作>|--all                 清除绑定
           config import <file> --yes                 导入配置（原配置自动备份）
-          import-deck [--deck-home <dir>]
+        \(deckHelp)
 
         外部动作（只在用户明确要求时用）:
           copy <id>... [--dry-run]                   改写系统剪贴板；单条同时顶到最上
@@ -249,8 +279,7 @@ enum ClipCLI {
           cloud unfavorite <key> [--dry-run]         取消收藏（iPhone / iPad 上的「取消收藏」）
           cloud delete <key> --yes [--dry-run]       从同步历史里删除一条（iPhone / iPad 上的「删除」；不能恢复，Mac 自己的库不受影响）
           config sync on|off --yes [--dry-run]       请运行中的 Clip 开关「使用 iCloud 记住配置」
-        \(AppLifecycleCLI.helpInstall("clip"))
-        \(AppLifecycleCLI.helpOptions)
+        \(installHelp)
 
         Clip 本身（上面写「请运行中的 Clip」的命令在它没运行时退出码 4）:
           start [--wait <秒>] [--dry-run]            后台启动 Clip：不出主窗口、不抢焦点（Dock 与菜单栏图标照常出现）；已在运行则什么都不做
@@ -261,7 +290,7 @@ enum ClipCLI {
           失败  {"ok": false, "command": "<完整命令路径>", "error": "<稳定短码>", "message": "<原因>", "exit_code": N}
           短码：usage · invalid · conflict · confirmation_required · not_found · busy · store · app_not_running · system_setting ·
                 not_installed · unsupported_edition · sync_enabled · check_incomplete · launch_failed · app_busy · error；
-                update install 另有 manual_install · needs_product_installer · upgrade_failed · replace_failed · cleanup_failed
+        \(updateErrors)
 
         退出码:
           0  成功（查无结果也算成功）
@@ -298,7 +327,8 @@ enum ClipCLI {
           --json
         """
 
-    static let help: [String: String] = [
+    static let help: [String: String] = {
+        var commands: [String: String] = [
         "status": "usage: clip status [--json]\n版本、App 是否在运行、数据目录与库大小、记录数、最近记录时间、记录偏好、开机自启状态、Deck 导入、iCloud 开关。只读。\npermissions.accessibility：Clip.app 的辅助功能授权（只用于窗口里的自动粘贴），由运行中的 App 报告；trusted 为 true | false | null（这一版还没运行过），live = 报告它的 App 仍在运行，as_of = 报告时间。",
         "stats": "usage: clip stats [--json]\n与左栏一致的计数：全部、置顶、各类型、来源 app（全部，按条数）、各收藏夹。只读。",
         "list": "usage: clip list [选项]\n与网格相同的排序与筛选。只读。\n" + filterHelp,
@@ -443,7 +473,14 @@ enum ClipCLI {
                   已是目标状态：退出 0、changed 为 false，不发请求。delete 必须 --yes，删除后正文与图片清空、不能恢复。
                   退出码：3 没有这条可见记录（或没有归档缓存）· 4 需要改动而 Clip 没在运行（先 clip start）· 1 app_busy（Clip 没有按时回应）/ store（它没能改写）。
             """,
-    ]
+        ]
+        #if APP_STORE
+        commands.removeValue(forKey: "update")
+        commands.removeValue(forKey: "import-deck")
+        commands["config"] = commands["config"]?.replacingOccurrences(of: "检查更新见 clip update check，升级到新版见 clip update install。", with: "商店版更新由 TestFlight / App Store 负责。")
+        #endif
+        return commands
+    }()
 
     // MARK: - Output
 
@@ -522,7 +559,8 @@ enum ClipCLI {
                         edition: ProductIdentity.cloudSupported ? "icloud" : "local")
     }
 
-    static let appBundleID = "cyou.tianli.clipbook"
+    // Follow the executable's own identity, including a disposable sandbox acceptance bundle.
+    static var appBundleID: String { Bundle.main.bundleIdentifier ?? "cyou.tianli.clipbook" }
 
     static func runningApp() -> [Int32] {
         NSRunningApplication.runningApplications(withBundleIdentifier: appBundleID)
@@ -1303,7 +1341,11 @@ enum ClipCLI {
         case "status":
             guard p.positionals.count <= 1 else { throw Failure.usage(syntax) }
             // The sentence under the window's switch, read as the shared command layer reads it (it writes nothing).
+            #if APP_STORE
+            let sentence = StoreConfigurationTransfer.status(configuration, running: c.runningApp())
+            #else
             let sentence = AppLifecycleCLI.syncStatus(configuration, enabled: configuration.enabled, running: c.runningApp())
+            #endif
             if p.json { emitJSON(c, ["sync_enabled": configuration.enabled, "sync_status": sentence, "keys": ClipPortableConfiguration.keys, "app_running": running]) }
             else {
                 c.out("使用 iCloud 记住配置：\(configuration.enabled ? "开" : "关") · 可迁移的偏好：\(ClipPortableConfiguration.keys.joined(separator: " "))\n"
@@ -1359,6 +1401,9 @@ enum ClipCLI {
     /// `clip update check|install` runs AppLifecycleCLI with the window's own update source and re-wraps its answer in
     /// clip's envelope (flat "error" code plus "exit_code"), so every clip command answers in one shape.
     @MainActor static func update(_ args: [String], _ c: Context) throws {
+        #if APP_STORE
+        throw Failure(exit: .needsApp, code: "unsupported_edition", message: "商店版由 TestFlight / App Store 更新，请在对应商店中检查与安装。")
+        #else
         // An isolated run never reads the user's iCloud Drive: the shared layer then accepts only a test feed (APP_LIFECYCLE_CLOUD_DIR).
         let key = "APP_LIFECYCLE_SUPPORT_DIR"
         let redirect = c.isolated && (ProcessInfo.processInfo.environment[key] ?? "").isEmpty
@@ -1400,6 +1445,7 @@ enum ClipCLI {
         let error = body.removeValue(forKey: "error") as? [String: Any]
         throw Failure(exit: code == 2 ? .usage : .failure, code: error?["code"] as? String ?? "error",
                       message: error?["message"] as? String ?? complaints.joined(separator: " "), extra: body)
+        #endif
     }
 
     // MARK: - Clip itself: start in the background, quit
@@ -1522,6 +1568,9 @@ enum ClipCLI {
     // MARK: - Deck
 
     @MainActor static func importDeck(_ args: [String], _ c: Context) throws {
+        #if APP_STORE
+        throw Failure(exit: .needsApp, code: "unsupported_edition", message: "商店版不读取其他应用的 Deck 数据目录。")
+        #else
         let p = try parse(args, options: ["deck-home"], positionals: 0...0)
         let deck = p.options["deck-home"].map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath, isDirectory: true) } ?? c.deckHome
         guard DeckImporter.available(at: deck) else { throw Failure.notFound("没找到 Deck 的库：\(deck.appendingPathComponent("Deck.sqlite3").path)") }
@@ -1533,6 +1582,7 @@ enum ClipCLI {
                                         "by_kind": Dictionary(uniqueKeysWithValues: report.byKind.map { ($0.key.rawValue, $0.value) }),
                                         "imported_at": (try store.meta("deck_imported")) as Any? ?? NSNull(), "total": try store.count()])
         } else { c.out(report.description) }
+        #endif
     }
 
     // MARK: - iCloud (reads here; changes are run by the app that owns the sync)

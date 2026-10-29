@@ -1,16 +1,16 @@
 {
-  "summary": "当前源码 Release 构建：生产 --selftest 176 项断言全过，链接标题有界抓取测试通过，clip 命令行经包内入口隔离验证通过（可执行 f84c89d35a35）",
-  "executable_sha256": "f84c89d35a35e095068a43d8aba2db4bf4d1a842d322c8d72dd1a22e6925bfa9",
+  "summary": "当前源码 Release 构建：生产 --selftest 233 项断言全过，链接标题有界抓取测试通过，clip 命令行经包内入口隔离验证通过（可执行 96a75f63cefe）",
+  "executable_sha256": "96a75f63cefee959807d8fd7b5cb72059a78c69e45e4fde7aa344c06b51b6238",
   "checks": {
     "selftest_exit_0": true,
     "selftest_no_failures": true,
     "link_title_bounded_fetch": true,
     "cli_real_entry_isolated": true
   },
-  "selftest_assertions_passed": 176,
+  "selftest_assertions_passed": 233,
   "selftest_failures": [],
-  "link_title_output": "[xcode_env] Xcode.app (Xcode 27.0, macosx SDK 27.0)\nPASS: ignored Range response returns title before delayed body finishes",
-  "cli_output": "  ✅ clip --help 退出 0（23 ms，无界面）\n  ✅ 经链接重入真实可执行：Clip 1.2.0 (70)\n  ✅ 未知命令退出 2\n  ✅ 每个命令 --help 退出 0\n  ✅ status 只读：空目录不建库\n  ✅ 无库 list → ok:false 退出 3\n  ✅ add 新增并去重\n  ✅ add --stdin\n  ✅ list 顺序与总数\n  ✅ show 全文与来源\n  ✅ transform 保存\n  ✅ copy 写入隔离剪贴板\n  ✅ merge\n  ✅ delete 需 --yes，删后 show 退出 3\n  ✅ 收藏夹新建与加入\n  ✅ 设置范围校验与写入\n  ✅ 设置写入隔离偏好域\n  ✅ pause / resume\n  ✅ clear 需 --yes，保留收藏夹里的\n  ✅ 失败时 JSON command 与成功相同（collection create）\n  ✅ edit 先校验再写：被拒绝时标题不变\n  ✅ edit 正文未变不重写（changed:false）\n  ✅ 去重时给出原来源 previous_source\n  ✅ cloud 未知子命令退出 2\n  ✅ 无归档缓存 cloud list 退出 3\n  ✅ iCloud 归档未开时 cloud push 退出 2\n  ✅ cloud on 需 --yes；--dry-run 只报告\n  ✅ cloud on --yes：Clip 未运行→退出 4\n  ✅ 开机自启：隔离运行退出 4，--dry-run 只报告\n  ✅ 用户的通用剪贴板未被改动\nclip CLI 真实入口：30 项通过",
+  "link_title_output": "[xcode_env] Xcode.app (Xcode 27.1, macosx SDK 27.0)\nPASS: ignored Range response returns title before delayed body finishes",
+  "cli_output": "ortcut list 读回（默认仅 Clip 内）\n  ✅ shortcut set：被占用退出 2 并写明是谁（conflict），⌘⇧V 被拒，--dry-run 不写\n  ✅ shortcut clear --all 清掉 set 存下的绑定\n  ✅ config export 写出文件；已存在要 --force\n  ✅ config import 要 --yes；恢复导出时的值，备份留在隔离目录\n  ✅ config status 只读；config sync 没有 --yes 不发请求\n  ✅ config status 带开关下面那句同步状态（sync_status）\n  ✅ pause / resume\n  ✅ clear 需 --yes，保留收藏夹里的\n  ✅ 失败时 JSON command 与成功相同（collection create）\n  ✅ edit 先校验再写：被拒绝时标题不变\n  ✅ edit 正文未变不重写（changed:false）\n  ✅ 去重时给出原来源 previous_source\n  ✅ cloud 未知子命令退出 2\n  ✅ 无归档缓存 cloud list / cloud show 退出 3；cloud show 缺 key 退出 2\n  ✅ iCloud 归档未开时 cloud push 退出 2\n  ✅ cloud on 需 --yes；--dry-run 只报告\n  ✅ cloud on --yes：Clip 运行中→只发隔离范围的请求\n  ✅ 开机自启：隔离运行退出 4，--dry-run 只报告\n  ✅ update check：隔离运行没有发行记录时退出 1、check_incomplete，仍给出当前版本\n  ✅ update check：读到此渠道的新版，给出升级办法\n  ✅ update check：已是最新；不下载、不安装\n  ✅ update install --dry-run：报告会从哪版换到哪版，不替换\n  ✅ update install：缺 --yes 退出 2；隔离运行里 --yes 退出 4，被测的 App 没有被替换\n  ✅ update install：没有新版时退出 0、installed 为 false\n  ✅ update install 参数错误退出 2\n  ✅ start --dry-run 只报告；quit 在隔离运行里不退出别的 Clip；参数错误退出 2\n  ✅ cloud favorite：没有这条记录退出 3（本地版 4）；cloud delete 缺 key、--wait 越界退出 2\n  ✅ update check 参数错误退出 2；update --help 退出 0\n  ✅ 用户的通用剪贴板未被改动\nclip CLI 真实入口：52 项通过",
   "not_covered": [
     "真实前台 App 的 ⌘V 粘贴（需辅助功能授权与抢焦点，按约束不在自动验收里做）",
     "iCloud 真云端往返（需要账号）"

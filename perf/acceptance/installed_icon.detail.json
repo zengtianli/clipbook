@@ -1,12 +1,12 @@
 {
-  "summary": "系统实际显示的装机图标与源图标一致（Clip.app 1.2.0 (70)：256px 均差 5.22 超差 0.00%，512px 均差 6.67 超差 0.47%；macOS 27.2.0，离屏读取）",
+  "summary": "系统实际显示的装机图标与源图标一致（Clip.app 1.2.1 (1)：256px 均差 5.22 超差 0.00%，512px 均差 6.67 超差 0.00%；macOS 27.2.0，离屏读取）",
   "passed": true,
   "method": "NSWorkspace.icon(forFile:)（IconServices，Finder/Dock 同源）离屏渲染 256/512 px，与源图标比对内部像素；不启动 App、不开窗口、不合成输入、不抢焦点",
   "source_icon": "icon/AppIcon.icns",
   "source_icon_sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6",
   "system": {
     "os": "27.2.0",
-    "os_build": "Version 27.2 (Build 26B5091g)",
+    "os_build": "Version 27.2 (Build 26B5101f)",
     "appearance": "aqua",
     "system_icon_api": "NSWorkspace.shared.icon(forFile:)"
   },
@@ -16,10 +16,16 @@
     512
   ],
   "tolerance": {
+    "optical_enlargement_range": [
+      1.0,
+      1.06
+    ],
+    "same_scale_at_both_sizes": true,
     "erode_fraction": 0.08,
     "mean_max": 12.0,
     "bad_level": 48,
     "bad_fraction_max": 0.02,
+    "edge_shift_px": 1,
     "jail_scales": [
       0.55,
       0.92
@@ -29,10 +35,10 @@
     {
       "app": "/Applications/Clip.app",
       "bundle_id": "cyou.tianli.clipbook",
-      "version": "1.2.0",
-      "build": "70",
+      "version": "1.2.1",
+      "build": "1",
       "bundle_icon": "/Applications/Clip.app/Contents/Resources/AppIcon.icns",
-      "bundle_icon_sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6",
+      "bundle_icon_sha256": "bf25af45804baabf8997c9eb63816c1afe561f253fcf6c2f1a3855269d384df8",
       "passed": true,
       "diagnosis": null,
       "sizes": {
@@ -42,6 +48,7 @@
             "mean": 5.22,
             "p95": 6.0,
             "bad_fraction": 0.0,
+            "bad_fraction_plain": 0.0,
             "passed": true
           },
           "system_blank": false,
@@ -53,7 +60,8 @@
             "region_fraction": 0.5058,
             "mean": 6.67,
             "p95": 15.0,
-            "bad_fraction": 0.0047,
+            "bad_fraction": 0.0,
+            "bad_fraction_plain": 0.0047,
             "passed": true
           },
           "system_blank": false,
@@ -64,5 +72,5 @@
     }
   ],
   "contact_sheet": "perf/acceptance/installed_icon.png",
-  "contact_sheet_sha256": "428fdd70dcb08265911ec57ac582e92bc6d47640e0fb98bca26debbeefb08670"
+  "contact_sheet_sha256": "cdc244e98d07a6e095d11471402ca4d05d7881515ab657959f72fbfb87577698"
 }

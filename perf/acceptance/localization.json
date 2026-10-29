@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "name": "localization",
+  "app_id": "clipbook",
+  "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/localization.py",
+  "exit_code": 1,
+  "status": "failed",
+  "started_at": "2026-10-18T17:53:52.283932+08:00",
+  "finished_at": "2026-10-18T17:55:09.051793+08:00",
+  "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
+  "log": "perf/acceptance/run-qtvxu_cd/localization.log",
+  "log_sha256": "1af243c009885e8bfbdcbe321dc7f00d6f323ca36cba214a385f965f3f3daf54",
+  "summary": "缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执",
+  "detail": {
+    "summary": "缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执",
+    "passed": false,
+    "spec": {
+      "label": "多语言",
+      "applicable": true,
+      "registered": false,
+      "default_basis": "客户端形态 mac 默认须提供英文与简体中文界面",
+      "languages": [
+        "en",
+        "zh-Hans"
+      ],
+      "development": "en",
+      "problems": []
+    },
+    "issues": [
+      "缺 Info.plist 本地化声明",
+      "缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源",
+      "缺 en 界面截图",
+      "缺 zh-Hans 界面截图",
+      "缺截图源码输入绑定 JSON 回执"
+    ],
+    "apple": {
+      "plists": [],
+      "inspection_basis": "repository_bundle_fallback",
+      "total_keys": 0,
+      "missing_english_keys": [],
+      "missing_english_count": 0,
+      "missing_english_ratio": null,
+      "english_coverage": 0.0
+    },
+    "screenshots": {
+      "images": {
+        "en": [],
+        "zh-Hans": []
+      },
+      "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
+      "current_binding": false,
+      "issues": []
+    },
+    "localization_status": "missing"
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/localization/20261018T175351877476+0800-4adbgda2",
+    "manifest_sha256": "707cdea16d7bec6a8888e0040a72d5c1df4bd95c3b32ced1f14cc9935d359eab"
+  },
+  "run_id": "run-qtvxu_cd",
+  "evidence_file": "perf/acceptance/run-qtvxu_cd/localization.json"
+}

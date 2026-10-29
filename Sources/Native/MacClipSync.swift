@@ -174,15 +174,15 @@ struct ClipCloudSettings: View {
             Section("iPhone / iPad") {
                 Toggle("iCloud 历史归档", isOn: Binding(get: { library.cloudEnabled }, set: { enabled in Task { await sync.enable(enabled) } }))
                     .accessibilityIdentifier("clipCloudSync")
-                Text(library.syncStatus).foregroundStyle(.secondary)
+                Text(L10n.display(library.syncStatus)).foregroundStyle(.secondary)
                 Text("首次开启整理最近 500 条，随后记录的新内容自动加入。文本、链接、图片可在 iOS Clip 取用；文件路径不上传，富文本按纯文本归档。")
                     .font(.caption).foregroundStyle(.secondary)
                 Text("这是独立同步历史：Mac 本地的清理、删除与保留天数不会删除云端归档。iOS 删除只作用于同步历史。")
                     .font(.caption).foregroundStyle(.secondary)
-                Button(sync.busy ? "正在整理…" : "补充最近历史") { Task { await sync.sendRecent() } }
+                Button(sync.busy ? String(localized: "正在整理…") : String(localized: "补充最近历史")) { Task { await sync.sendRecent() } }
                     .disabled(!library.cloudEnabled || sync.busy)
-                Text(sync.status).font(.caption)
-                if let error = library.error { Text(error).font(.caption).foregroundStyle(.red) }
+                Text(L10n.display(sync.status)).font(.caption)
+                if let error = library.error { Text(L10n.display(error)).font(.caption).foregroundStyle(.red) }
             }
         }.padding()
     }

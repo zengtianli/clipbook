@@ -5,15 +5,15 @@
   "command": "bash scripts/accept/recovery.sh",
   "exit_code": 0,
   "status": "passed",
-  "started_at": "2026-10-01T10:17:03.414815+08:00",
-  "finished_at": "2026-10-01T10:17:12.055077+08:00",
-  "input_sha256": "8ec3b832ca041c342e6bd8e2e689f8c0ecf69daa0e39e9710e8f4f994e6dace1",
-  "log": "perf/acceptance/recovery.log",
-  "log_sha256": "076ce641d9f66fd2113b5e72af5f73b2b30874797091516c1e1d404dea062d11",
-  "summary": "故障与恢复自检 18/18 项通过（当前源码 Release 构建，Clipbook --recovery-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）",
+  "started_at": "2026-10-18T13:22:56.995770+08:00",
+  "finished_at": "2026-10-18T13:23:24.220044+08:00",
+  "input_sha256": "e5dbae72efdb3f55dbaf85e5b2163f3e6690544ef42ae505035a8151ecad0612",
+  "log": "perf/acceptance/run-t9by0nij/recovery.log",
+  "log_sha256": "b7a657796b46f3eee13f47b551e74376b04347613e61e8958c5cffaafd150fc4",
+  "summary": "故障与恢复自检 18/18 项通过（当前源码 Release 构建，Clipbook --recovery-test，可执行 a8f5ff9b9c39；隔离数据/偏好/剪贴板）",
   "detail": {
-    "summary": "故障与恢复自检 18/18 项通过（当前源码 Release 构建，Clipbook --recovery-test，可执行 f84c89d35a35；隔离数据/偏好/剪贴板）",
-    "executable_sha256": "f84c89d35a35e095068a43d8aba2db4bf4d1a842d322c8d72dd1a22e6925bfa9",
+    "summary": "故障与恢复自检 18/18 项通过（当前源码 Release 构建，Clipbook --recovery-test，可执行 a8f5ff9b9c39；隔离数据/偏好/剪贴板）",
+    "executable_sha256": "a8f5ff9b9c3973e158830928c7c30e0ed9d6d90075a97014d5882b15ca1f8d42",
     "entry": "--recovery-test",
     "exit_code": 0,
     "checks": {
@@ -44,5 +44,11 @@
       "写 blob 成功但 INSERT 失败时遗留的孤儿文件（生产无清理保证）",
       "进程被真实 SIGKILL（以复制未 checkpoint 的 db+wal 快照代替）"
     ]
-  }
+  },
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/recovery/20261018T132256905873+0800-fx3cx5dn",
+    "manifest_sha256": "4bc43b748f7887ef43c8403e5a17f1256e44e07aad1cf4e9cc91fd312cd6bb5e"
+  },
+  "run_id": "run-t9by0nij",
+  "evidence_file": "perf/acceptance/run-t9by0nij/recovery.json"
 }

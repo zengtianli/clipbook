@@ -35,23 +35,41 @@ enum RuntimeSelfTest {
     /// `clip <args>` as its own process, to completion. The app side keeps receiving notifications meanwhile.
     static func clip(_ args: String...) -> Answer { clip(args) }
     static func clip(_ args: [String]) -> Answer {
+        // Hundreds of short-lived Foundation tasks run inside one outer main-thread turn.
+        // Drain each task's native temporary objects before launching the next command.
+        autoreleasepool { invokeClip(args) }
+    }
+
+    private static func invokeClip(_ args: [String]) -> Answer {
         spawned += 1
         let out = scratch.appendingPathComponent("clip-\(spawned).out")
+        let errorOut = scratch.appendingPathComponent("clip-\(spawned).err")
         FileManager.default.createFile(atPath: out.path, contents: nil)
+        FileManager.default.createFile(atPath: errorOut.path, contents: nil)
         guard let handle = try? FileHandle(forWritingTo: out) else { return Answer(code: -1, json: [:]) }
         defer { try? handle.close(); try? FileManager.default.removeItem(at: out) }
+        guard let errors = try? FileHandle(forWritingTo: errorOut) else { return Answer(code: -1, json: [:]) }
+        defer { try? errors.close(); try? FileManager.default.removeItem(at: errorOut) }
         let process = Process()
         process.executableURL = command
         process.arguments = args
         process.standardInput = FileHandle.nullDevice
         process.standardOutput = handle
-        process.standardError = FileHandle.nullDevice
-        do { try process.run() } catch { return Answer(code: -1, json: [:]) }
+        process.standardError = errors
+        do { try process.run() } catch {
+            print("CLI launch failed (\(args.prefix(2).joined(separator: " "))): \(error)")
+            return Answer(code: -1, json: [:])
+        }
         let deadline = now + 30
         while process.isRunning && now < deadline { RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.005)) }
         guard !process.isRunning else { process.terminate(); return Answer(code: -2, json: [:]) }
         let data = (try? Data(contentsOf: out)) ?? Data()
-        return Answer(code: process.terminationStatus, json: ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any]) ?? [:])
+        let json = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any]) ?? [:]
+        if json.isEmpty {
+            let diagnostic = (try? String(contentsOf: errorOut, encoding: .utf8)) ?? ""
+            print("CLI returned no JSON (\(args.prefix(2).joined(separator: " "))): exit \(process.terminationStatus), \(data.count) bytes; \(diagnostic.suffix(1000))")
+        }
+        return Answer(code: process.terminationStatus, json: json)
     }
 
     /// Fresh-process reads until one satisfies `condition`, or the deadline.
@@ -71,7 +89,13 @@ enum RuntimeSelfTest {
         repeat {
             samples += 1
             if !condition() { return (false, samples) }
+            #if APP_STORE
+            // Every child of this sandbox consumes sandbox extensions. Keep the same observation
+            // duration and assertions, with bounded fresh-process reads instead of a launch storm.
+            settle(0.2)
+            #else
             settle(0.02)
+            #endif
         } while now < deadline
         return (true, samples)
     }

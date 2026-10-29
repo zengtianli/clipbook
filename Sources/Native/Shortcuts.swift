@@ -324,7 +324,7 @@ struct ShortcutSettingsPane: View {
                 Text("自定义快捷键由你选择，默认不绑定全局键。").font(.headline)
                 Text("⌘C 在 Clip 内复制所选内容，支持多选。每项都可选择「仅 Clip 内」或「全局」；全局操作使用 Clip 中保留的选择。点击录制后按组合键，Esc 取消。")
                     .font(.callout).foregroundStyle(.secondary)
-                if let error = center.errors["load"] { Text(error).foregroundStyle(.red) }
+                if let error = center.errors["load"] { Text(L10n.display(error)).foregroundStyle(.red) }
             }
             Section("应用操作") {
                 ForEach(ClipAction.allCases) { action in ShortcutRow(center: center, action: action) }
@@ -347,7 +347,7 @@ private struct ShortcutRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
-                Text(action.title)
+                Text(L10n.display(action.title))
                 Spacer()
                 if action.allowsGlobal {
                     Picker("作用范围", selection: $scope) {
@@ -360,14 +360,14 @@ private struct ShortcutRow: View {
                         }
                     }
                 }
-                Button(capturing ? "按下组合键…" : center.binding(action)?.chord.label ?? (action == .copy ? "⌘C" : "点击录制")) {
+                Button(capturing ? String(localized: "按下组合键…") : center.binding(action)?.chord.label ?? (action == .copy ? "⌘C" : String(localized: "点击录制"))) {
                     if capturing { stop(nil) } else { center.beginRecording(action: action) }
                 }.frame(width: 130).accessibilityIdentifier("shortcut.\(action.rawValue)")
                     .background(KeyCapture(active: capturing, captured: stop).frame(width: 1, height: 1))
                 Button { _ = center.set(action, to: nil); if capturing { stop(nil) } } label: { Image(systemName: "xmark.circle") }
                     .buttonStyle(.plain).help("清除绑定").disabled(center.binding(action) == nil)
             }
-            Text(center.status(action)).font(.caption)
+            Text(L10n.display(center.status(action))).font(.caption)
                 .foregroundStyle(center.errors[action.rawValue] == nil ? Color.secondary : .red)
         }
         .onAppear { scope = center.binding(action)?.scope ?? .application }

@@ -18,6 +18,9 @@ def repository_root():
 
 
 ROOT = repository_root()
+# Manual runs test the installed app; Chapter hands the bundle under test (the current-source candidate) via --app/
+# --receipt or SOP_INSTALLED_APP/SOP_BUILD_RECEIPT with its scope in SOP_ACCEPTANCE_TARGET.
+INSTALLED = Path('/Applications/Clip.app')
 LS = '/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister'
 
 
@@ -43,7 +46,7 @@ def source_binding(app, receipt_path, candidate):
 
 
 def owner():
-    app = Path('/Applications/Clip.app/Contents/MacOS/Clipbook')
+    app = INSTALLED / 'Contents/MacOS/Clipbook'
     prefs = subprocess.run(['defaults', 'export', 'cyou.tianli.clipbook', '-'], capture_output=True)
     return {'installed_executable': sha(app) if app.is_file() else None,
             'preferences': hashlib.sha256(plistlib.dumps(plistlib.loads(prefs.stdout), sort_keys=True)).hexdigest() if prefs.returncode == 0 else None}
@@ -56,7 +59,11 @@ def main():
     args = parser.parse_args()
     if args.app and not args.receipt:
         parser.error('--app must bind an explicit source/build receipt')
-    app = (args.app or Path('/Applications/Clip.app')).resolve()
+    target = json.loads(os.environ.get('SOP_ACCEPTANCE_TARGET') or '{}')
+    if not args.app and os.environ.get('SOP_INSTALLED_APP') and os.environ.get('SOP_BUILD_RECEIPT'):
+        args.app, args.receipt = Path(os.environ['SOP_INSTALLED_APP']), Path(os.environ['SOP_BUILD_RECEIPT'])
+    candidate = bool(args.app) and (target.get('scope') != 'installed' or Path(args.app).resolve() != INSTALLED)
+    app = (args.app or INSTALLED).resolve()
     receipt_path = (args.receipt or ROOT / 'perf/build-receipt.json').resolve()
     spec = json.loads(os.environ['SOP_PRODUCT_BASICS_SPEC'])
     assert spec['app_id'] == os.environ['SOP_APP_ID'] == 'clipbook'
@@ -69,7 +76,7 @@ def main():
     cloned = run / 'fixture/Clip.app'
     identity = 'test.tianli.clipbook.basics.' + uuid.uuid4().hex
     before = owner()
-    binding = {'phase': 'candidate' if args.app else 'installed', 'app': str(app)}
+    binding = {'phase': 'candidate' if candidate else 'installed', 'app': str(app)}
     try:
         receipt = json.loads(receipt_path.read_text())
         artifact = receipt['artifact']
@@ -81,7 +88,7 @@ def main():
                    and sha(executable) == artifact['sha256'])
         checks['settings.artifact_matches_receipt'] = matched
         assert matched, 'Actual package does not match build receipt; refusing fixture execution'
-        code_digest, current, reason = source_binding(app, receipt_path, bool(args.app))
+        code_digest, current, reason = source_binding(app, receipt_path, candidate)
         binding.update(code_binding_sha256=code_digest, build_current=current)
         checks['settings.current_source_matches_receipt'] = current
         assert current, reason + '; refusing fixture execution'
@@ -89,7 +96,7 @@ def main():
         (run / 'signature.log').write_text(signature.stdout + signature.stderr)
         checks['settings.artifact_signature_valid'] = signature.returncode == 0
         assert signature.returncode == 0, 'Actual package signature is invalid; refusing fixture execution'
-        binding.update(receipt=str(receipt_path.relative_to(ROOT)), receipt_sha256=sha(receipt_path),
+        binding.update(receipt=str(receipt_path.relative_to(ROOT) if receipt_path.is_relative_to(ROOT) else receipt_path), receipt_sha256=sha(receipt_path),
                        source_sha256=receipt['source']['sha256'], source_commit=receipt['source']['commit'],
                        artifact=artifact, installed_by_this_task=False)
         cloned.parent.mkdir()

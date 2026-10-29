@@ -6,6 +6,17 @@ import UniformTypeIdentifiers
 /// User-selected settings files use the shared envelope and validation, never a second schema.
 @MainActor
 enum StoreConfigurationTransfer {
+    /// Read the configuration pane's own record without linking the downloadable app's updater.
+    static func status(_ configuration: AppConfiguration, running: [Int32]) -> [String: Any] {
+        if let record = configuration.statusRecord(),
+           running.contains(record.pid) || (running.isEmpty && (record.status == "iCloud 配置同步已关闭") == !configuration.enabled) {
+            return ["text": record.status, "at": ISO8601DateFormatter().string(from: Date(timeIntervalSince1970: record.at)),
+                    "from": running.isEmpty ? "record" : "app", "live": !running.isEmpty]
+        }
+        return ["text": configuration.enabled ? "等待 iCloud 配置同步" : "iCloud 配置同步已关闭",
+                "at": NSNull(), "from": "derived", "live": !running.isEmpty]
+    }
+
     static func export(_ configuration: AppConfiguration, to url: URL) throws {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
@@ -29,7 +40,7 @@ struct StoreConfigurationPane: View {
             Toggle("使用 iCloud 记住配置", isOn: Binding(get: { enabled }, set: {
                 configuration?.setEnabled($0); refresh()
             }))
-            Text(status).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.display(status)).font(.caption).foregroundStyle(.secondary)
             HStack {
                 Button("导出配置…") { exportSettings() }
                 Button("导入配置…") { importSettings() }

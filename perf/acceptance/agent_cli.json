@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "name": "agent_cli",
+  "app_id": "clipbook",
+  "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/agent_cli.py",
+  "exit_code": 78,
+  "status": "contract",
+  "failure_kind": "contract",
+  "reason": "TestFlight 渠道验收契约未接通：未登记 sop.acceptance_channels.testflight：须明确商店版实际能力、固定验收及原构建来源，不能沿用下载版契约",
+  "started_at": "2026-10-18T17:44:12.142657+08:00",
+  "finished_at": "2026-10-18T17:44:12.142712+08:00",
+  "input_sha256": "9212fa70af54f04ff0d49b268f737c414de45df842c09913f348fb105ba56894",
+  "log": "perf/acceptance/run-0yng8awf/agent_cli.log",
+  "log_sha256": "49e23bb2b58d1f91d8c9126bfd19a6c272954d8230dc5500406898954e488f6c",
+  "summary": "TestFlight 渠道验收契约未接通：未登记 sop.acceptance_channels.testflight：须明确商店版实际能力、固定验收及原构建来源，不能沿用下载版契约",
+  "detail": null,
+  "acceptance_channel": {
+    "channel": "testflight",
+    "installed_readback": {
+      "ok": true,
+      "app_id": "clipbook",
+      "policy": "testflight",
+      "update_source": "TestFlight",
+      "installed": [
+        {
+          "path": "/Applications/Clip.app",
+          "short": "1.2.1",
+          "build": "1",
+          "source": "testflight"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "run_id": "run-0yng8awf",
+  "evidence_file": "perf/acceptance/run-0yng8awf/agent_cli.json"
+}

@@ -3,6 +3,7 @@ name: Clip
 options:
   deploymentTarget:
     macOS: "14.0"
+  developmentLanguage: en
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -18,9 +19,7 @@ targets:
     sources:
       - path: ../Sources
         excludes:
-          - Native/ClipCLI.swift
           - Native/CLISelfTest.swift
-          - Native/RuntimeSelfTest.swift
           - Shared/AppLifecycleCLI.swift
           - Shared/AppLifecycle.swift
           - Shared/AppLifecycleUI.swift
@@ -41,6 +40,14 @@ targets:
       - name: Check shared version and store specification
         script: /bin/bash "$SRCROOT/check.sh"
         basedOnDependencyAnalysis: false
+    postBuildScripts:
+      - name: Link clip command
+        script: |
+          mkdir -p "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bin"
+          ln -sfn ../../MacOS/Clipbook "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/bin/clip"
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/bin/clip
+        basedOnDependencyAnalysis: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: cyou.tianli.clipbook
@@ -55,6 +62,8 @@ targets:
     info:
       path: Info.plist
       properties:
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, zh-Hans]
         CFBundleName: Clip
         CFBundleDisplayName: Clip
         CFBundleExecutable: Clipbook
@@ -81,5 +90,10 @@ targets:
         com.apple.security.files.user-selected.read-write: true
         # Optional title retrieval for copied web links; no incoming network service.
         com.apple.security.network.client: true
-        # Opt-in configuration sync; clipboard history remains local.
+        # Optional family history archive; the primary library stays in this app's sandbox.
+        com.apple.developer.icloud-container-identifiers: [iCloud.cyou.tianli.clip]
+        com.apple.developer.icloud-services: [CloudKit]
+        com.apple.developer.icloud-container-environment: Production
+        com.apple.developer.aps-environment: production
+        # Opt-in configuration sync is independent of history sync.
         com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)$(CFBundleIdentifier)

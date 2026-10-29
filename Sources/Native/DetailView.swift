@@ -75,8 +75,8 @@ struct DetailPane: View {
         HStack(spacing: 8) {
             Image(nsImage: model.appIcon(bundle: item.appBundle)).resizable().frame(width: 20, height: 20)
             VStack(alignment: .leading, spacing: 1) {
-                Text(item.appName.isEmpty ? "未知来源" : item.appName).font(.callout.weight(.medium))
-                Text("\(Fmt.full(item.createdAt)) · \(item.kind.label) · \(Fmt.meta(item))").font(.caption).foregroundStyle(.secondary)
+                Text(item.appName.isEmpty ? String(localized: "未知来源") : item.appName).font(.callout.weight(.medium))
+                Text("\(Fmt.full(item.createdAt)) · \(L10n.display(item.kind.label)) · \(Fmt.meta(item))").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             if item.pinned { Image(systemName: "pin.fill").foregroundStyle(.orange) }
@@ -157,7 +157,7 @@ struct DetailPane: View {
                 Spacer()
                 Menu("转换") {
                     ForEach(Transform.options(for: item.kind)) { t in
-                        Button(t.label) { model.apply(t, to: item) }
+                        Button(L10n.display(t.label)) { model.apply(t, to: item) }
                     }
                 }
                 .controlSize(.small).fixedSize()
@@ -179,9 +179,9 @@ struct DetailPane: View {
             Spacer()
             Button("复制") { model.copy(item) }.accessibilityIdentifier("copy")
             Button("粘贴") { model.paste(item, hideWindow: hideWindow) }.accessibilityIdentifier("paste")
-                .help("粘贴到打开窗口前的 app：\(model.previousApp?.localizedName ?? "无")；需要「辅助功能」授权")
+                .help("粘贴到打开窗口前的 app：\(model.previousApp?.localizedName ?? String(localized: "无"))；需要「辅助功能」授权")
             Menu {
-                Button(item.pinned ? "取消置顶" : "置顶") { model.togglePin(item) }
+                Button(item.pinned ? String(localized: "取消置顶") : String(localized: "置顶")) { model.togglePin(item) }
                 Menu("加入收藏夹") {
                     ForEach(model.collections) { c in
                         Button(model.detailCollections.contains(c.id) ? "✓ \(c.name)" : c.name) {

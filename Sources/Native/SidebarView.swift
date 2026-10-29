@@ -8,12 +8,12 @@ struct SidebarView: View {
     var body: some View {
         List(selection: Binding(get: { Optional(model.sidebar) }, set: { if let v = $0 { model.sidebar = v } })) {
             Section {
-                row("全部", "tray.full", model.totalAll, .all)
-                row("置顶", "pin", model.kindCounts.values.reduce(0, +) > 0 ? (try? model.store.count(.init(pinnedOnly: true))) ?? 0 : 0, .pinned)
+                row(String(localized: "全部"), "tray.full", model.totalAll, .all)
+                row(String(localized: "置顶"), "pin", model.kindCounts.values.reduce(0, +) > 0 ? (try? model.store.count(.init(pinnedOnly: true))) ?? 0 : 0, .pinned)
             }
             Section("类型") {
                 ForEach(ClipItem.Kind.allCases) { k in
-                    if let n = model.kindCounts[k], n > 0 { row(k.label, k.symbol, n, .kind(k)) }
+                    if let n = model.kindCounts[k], n > 0 { row(L10n.display(k.label), k.symbol, n, .kind(k)) }
                 }
             }
             Section("来源") {
@@ -91,7 +91,7 @@ struct CollectionEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(collection == nil ? "新建收藏夹" : "编辑收藏夹").font(.headline)
+            Text(collection == nil ? String(localized: "新建收藏夹") : String(localized: "编辑收藏夹")).font(.headline)
             TextField("名字", text: $name).accessibilityIdentifier("collectionName")
             // 16 个图标一行放不下 440 宽；HStack 会撑破 frame 再被居中裁掉（2026-09-05 实测左边被切）—— 用自适应网格换行
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 6)], spacing: 6) {
@@ -111,7 +111,7 @@ struct CollectionEditor: View {
             }
             HStack {
                 Spacer()
-                Button(collection == nil ? "新建" : "保存") {
+                Button(collection == nil ? String(localized: "新建") : String(localized: "保存")) {
                     let n = name.trimmingCharacters(in: .whitespaces)
                     guard !n.isEmpty else { return }
                     if var c = collection { c.name = n; c.icon = icon; c.color = color; model.updateCollection(c) }
