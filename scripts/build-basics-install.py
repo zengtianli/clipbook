@@ -73,7 +73,7 @@ python3 "$HOME/Dev/tools/dev/lib/tools/macapp/distribution_grade.py" check --sta
 ditto -c -k --keepParent Clipbook.app signed.zip
 shasum -a 256 signed.zip
 ''')
-    helper = Path.home() / 'Dev/tools/cc-home/skills/macmini/scripts/login_run.py'
+    helper = Path.home() / 'Dev/tools/cc-home/tools/mac_pair/login_run.py'
     run('python3', str(helper), '--host', HOST, '--name', name, '--script', str(script), '--timeout', '300', '--tail', '30')
     receipt = run('ssh', '-o', 'BatchMode=yes', HOST, f'shasum -a 256 {shlex.quote(remote + "/signed.zip")}', capture_output=True, text=True)
     signed = run('ssh', '-o', 'BatchMode=yes', HOST, f'cat {shlex.quote(remote + "/signed.zip")}', capture_output=True).stdout
