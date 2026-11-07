@@ -971,6 +971,22 @@
         }
       }
     },
+    "全部显示": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部显示"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show All"
+          }
+        }
+      }
+    },
     "关于 %@": {
       "localizations": {
         "zh-Hans": {
@@ -3527,6 +3543,22 @@
         }
       }
     },
+    "缩放": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "缩放"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom"
+          }
+        }
+      }
+    },
     "置顶": {
       "localizations": {
         "zh-Hans": {
@@ -4387,6 +4419,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hide %@"
+          }
+        }
+      }
+    },
+    "隐藏其他": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏其他"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Others"
           }
         }
       }

@@ -158,7 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// 标准主菜单。没有它，文本框里的 ⌘C / ⌘V / ⌘A / ⌘Z 这类**系统编辑命令**不工作
     /// （2026-09-05 实测：收藏夹名字框粘贴不进去）。这些是 macOS 文本框的标配，不是本 app 自定义的快捷键；
-    /// 本 app 自己不绑任何快捷键。
+    /// 窗口与隐藏的系统标配（⌘W 关闭、⌘M 最小化、⌘H 隐藏、⌥⌘H 隐藏其他）同理。本 app 自己不绑任何快捷键。
     private func installMainMenu() {
         let main = NSMenu()
         let appItem = NSMenuItem(); main.addItem(appItem)
@@ -171,7 +171,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         for item in AppLifecycleUI.menuItems() { appMenu.addItem(item) }
         #endif
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: String(localized: "隐藏 \(ProductIdentity.name)"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: String(localized: "隐藏 \(ProductIdentity.name)"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        let hideOthers = appMenu.addItem(withTitle: String(localized: "隐藏其他"), action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
+        hideOthers.keyEquivalentModifierMask = [.command, .option]
+        appMenu.addItem(withTitle: String(localized: "全部显示"), action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
+        appMenu.addItem(.separator())
+        // ⌘Q 不绑在这里：常驻菜单栏（MenuBarResident）把 ⌘Q 改成关窗，真退出走菜单栏下拉的「退出」。
         appMenu.addItem(withTitle: String(localized: "退出 \(ProductIdentity.name)"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         appItem.submenu = appMenu
 
@@ -198,9 +203,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         let windowItem = NSMenuItem(); main.addItem(windowItem)
         let window = NSMenu(title: String(localized: "窗口"))
-        window.addItem(withTitle: String(localized: "最小化"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "")
-        window.addItem(withTitle: String(localized: "关闭"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "")
+        window.addItem(withTitle: String(localized: "最小化"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        window.addItem(withTitle: String(localized: "缩放"), action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
+        window.addItem(.separator())
+        window.addItem(withTitle: String(localized: "关闭"), action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         windowItem.submenu = window
+        NSApp.windowsMenu = window
         NSApp.mainMenu = main
     }
 
