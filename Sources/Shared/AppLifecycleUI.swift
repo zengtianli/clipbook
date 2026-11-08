@@ -185,7 +185,8 @@ final class AppLifecycleUI: NSObject {
     }
 
     @objc private func openSettings() { show() }
-    @objc private func checkUpdates() { checkForUpdates() }
+    // An offscreen self-test (activation policy .prohibited) checks without showing the window.
+    @objc private func checkUpdates() { checkForUpdates(present: NSApp.activationPolicy() != .prohibited) }
 
     func show() {
         makeWindow()
