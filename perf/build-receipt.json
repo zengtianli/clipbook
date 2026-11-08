@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-08T21:21:02+08:00",
+  "built_at": "2026-11-08T22:02:35+08:00",
   "artifact": {
     "bundle_id": "cyou.tianli.clipbook",
     "version": "1.2.1",
-    "build": "157",
+    "build": "158",
     "executable": "Contents/MacOS/Clipbook",
-    "sha256": "4fb5a832cb216fe47e4c824f49f68aa7f8266722bb8b99ab8f652ece2782c7d4",
+    "sha256": "8ddbe5c8e1b34296a01596d4d85d92fa6f0aa890d8ac6d2434d8b18f4e53f378",
     "icon": {
       "path": "Contents/Resources/AppIcon.icns",
       "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
@@ -29,7 +29,7 @@
       "scripts/install-local.py",
       "project.yaml"
     ],
-    "sha256": "f694e3c7fa03084232477baecd9ad20c32634545b91d3a8d9ef196e4c70e0ad7",
+    "sha256": "ffeec575149cde1f5287ea616bd9611e195da4114e04d77f2f73687e52b8c0cc",
     "file_count": 54,
     "files": {
       "Sources/ClipbookApp.swift": "7bf642c9104967e8e40f734b15a4e5be4b697cb7806100673430a860b7784eab",
@@ -70,7 +70,7 @@
       "Sources/Native/StoreSelfTest.swift": "302d2308a166357c61544368837ad6a9c90db5232151521d201a55bb4e94db01",
       "Sources/Native/KeyboardMemorySelfTest.swift": "ce9c3909cb0aa200805ec3e1d4bd312196bbdf44aeae139a1387c0220f6c7061",
       "Sources/Shared/AppConfiguration.swift": "4de8302eb4c03ed4459e593aa751e025aa7b14d980e22d380664ac1a90e6e45e",
-      "Sources/Shared/AppLifecycleUI.swift": "f329a3b996e74b79e13a6a2e4bc93532639a67db0f2dbd68fa639972dad8f7a8",
+      "Sources/Shared/AppLifecycleUI.swift": "58383047331eec5c6fb97a0d2024010fc29762ca4d52cdbf4d8352ca3fcf6b11",
       "Sources/Shared/AppLifecycleCLI.swift": "77bc961b623610bdc1807a26fbed306e821c8fe20aca76bb6bf1ec7c7e6c36eb",
       "Sources/Shared/AppLifecycle.swift": "53981005fefe9c319868f5e7e769583185cc20f5ac137f08a8edded57a728020",
       "Sources/Localizable.xcstrings": "0d14c6be6e431ca9152ca9ea04afae3e6ebe7581101fb52a1c97518002980750",
@@ -79,7 +79,7 @@
       "Cloud.entitlements": "9bda3ada59a20dedbfad7657c098bfb1d35173a55796134b3870d6d7b6044b08",
       "icon/AppIcon.icns": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6",
       "build.sh": "21df370154c0077e9fb4b163f7690439301519d4e23e154a0267b8582db8585b",
-      "build-cloud.sh": "3f4b8cfb61155494199aa86c90e1e5567b38656a6fbfbb153d7028db4a025304",
+      "build-cloud.sh": "883e19b60723087be326e4e215e5ab80306f124839ba4aa55cf77e7b5f672da6",
       "release-local.sh": "5df88c80a5212a187a9c9db1f216033b3eca584490d4871e6c97922eb886ba54",
       "scripts/package-local.py": "1a6320f673f25dd40dd12db5c773c914431941485dc96b6f0ff28cbdadaf0a23",
       "scripts/install-cli.py": "27f07a08191bb61483647171747a178b2fc91e09f7bd0a0941f2898c24e04de5",
@@ -87,7 +87,7 @@
       "scripts/install-local.py": "9be6e9e8ba7936c272236ce77cf6cc2412a0a5fa00a5a889c31e3cefcf85f1d1",
       "project.yaml": "b098d38ffefc3acdf6456c1796b1908845b6e70d17f1f866269baa1314f17056"
     },
-    "commit": "6a53f1108cb5419020896c8a7477bf53dc57c2a3",
+    "commit": "60a59320138bfdfe05ff9edf23bdb6a8ffb442d3",
     "dirty_scope": "组件当前 Git 工作树；跨仓/软链输入的实际内容由 sha256 核验",
     "dirty": true
   },
