@@ -352,9 +352,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(withTitle: String(localized: "退出 \(ProductIdentity.name)"), action: #selector(menuQuit), keyEquivalent: "")
         for it in menu.items { it.target = self }
         #if !APP_STORE
-        // The same 设置… as ⌘, in the app menu (shared module), then the shared window's own items before 退出.
-        menu.insertItem(AppLifecycleUI.settingsMenuItem(), at: menu.index(of: countItem) + 1)
-        for item in AppLifecycleUI.menuItems() { menu.insertItem(item, at: menu.numberOfItems - 1) }
+        // The standard status-menu block (swift-shared「标准设置入口模块」): 设置… (⌘,), 配置与更新…, 检查更新…, after the count.
+        for (offset, item) in AppLifecycleUI.statusMenuItems().enumerated() { menu.insertItem(item, at: menu.index(of: countItem) + 1 + offset) }
         #endif
     }
 
