@@ -164,13 +164,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let appItem = NSMenuItem(); main.addItem(appItem)
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: String(localized: "关于 \(ProductIdentity.name)"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        #if APP_STORE
+        // The store build has no shared lifecycle layer: its own 设置… keeps ⌘, here.
         appMenu.addItem(.separator())
-        let settingsItem = appMenu.addItem(withTitle: String(localized: "设置…"), action: #selector(menuSettings), keyEquivalent: "")
+        let settingsItem = appMenu.addItem(withTitle: String(localized: "设置…"), action: #selector(menuSettings), keyEquivalent: ",")
         settingsItem.target = self
-        #if !APP_STORE
-        for item in AppLifecycleUI.menuItems() { appMenu.addItem(item) }
-        #endif
         appMenu.addItem(.separator())
+        #endif
+        // Otherwise 设置… (⌘,), 配置与更新…, 检查更新… and the separator after them go right after 关于, placed and kept
+        // there by the shared layer (swift-shared「标准设置入口模块」: AppLifecycleUI.useSettings in installLifecycle).
         appMenu.addItem(withTitle: String(localized: "隐藏 \(ProductIdentity.name)"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         let hideOthers = appMenu.addItem(withTitle: String(localized: "隐藏其他"), action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
         hideOthers.keyEquivalentModifierMask = [.command, .option]
@@ -256,6 +258,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         config.start()
         #else
         AppLifecycleUI.install(name: "Clip", configuration: config, updateSource: ClipUpdates.source)
+        // ⌘, 设置… opens Clip's own settings window; the shared window stays as 配置与更新….
+        AppLifecycleUI.useSettings { AppDelegate.shared.showSettings() }
         #endif
     }
 
@@ -340,12 +344,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         pause.state = s.paused ? .on : .off
         menu.addItem(.separator())
         let count = (try? AppModel.shared.store.count()) ?? AppModel.shared.totalAll
-        menu.addItem(withTitle: String(localized: "\(count) 条记录"), action: nil, keyEquivalent: "")
+        let countItem = menu.addItem(withTitle: String(localized: "\(count) 条记录"), action: nil, keyEquivalent: "")
+        #if APP_STORE
         menu.addItem(withTitle: String(localized: "设置…"), action: #selector(menuSettings), keyEquivalent: "")
+        #endif
         menu.addItem(.separator())
         menu.addItem(withTitle: String(localized: "退出 \(ProductIdentity.name)"), action: #selector(menuQuit), keyEquivalent: "")
         for it in menu.items { it.target = self }
         #if !APP_STORE
+        // The same 设置… as ⌘, in the app menu (shared module), then the shared window's own items before 退出.
+        menu.insertItem(AppLifecycleUI.settingsMenuItem(), at: menu.index(of: countItem) + 1)
         for item in AppLifecycleUI.menuItems() { menu.insertItem(item, at: menu.numberOfItems - 1) }
         #endif
     }

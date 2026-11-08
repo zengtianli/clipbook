@@ -27,6 +27,9 @@ clip, work = os.environ["CLIP"], os.environ["WORK"]
 env = {k: v for k, v in os.environ.items() if not k.startswith("CLIPBOOK_")}
 env.update(CLIPBOOK_HOME=os.environ["HOME_DIR"], CLIPBOOK_PREFERENCES_SUITE=os.environ["SUITE"], CLIPBOOK_BACKGROUND="1")
 failures, passed = [], 0
+# ⌘, 设置… is Clip's own settings window (AppLifecycleUI.useSettings); the shared window's name is this shared constant.
+import re
+WINDOW_ENTRY = re.search(r'static let updatesWindowEntry = "([^"]*)"', open("Sources/Shared/AppLifecycleCLI.swift", encoding="utf-8").read()).group(1)
 
 def run(*args, stdin=None):
     p = subprocess.run([clip, *args], env=env, input=stdin, capture_output=True, text=True, timeout=30)
@@ -161,7 +164,7 @@ if v["edition"] == "icloud":
         return p.returncode, json.loads(p.stdout)
     code, new = published("99.0", "1")
     check(code == 0 and new["ok"] and new["update_available"] and new["state"] == "update_available" and new["latest"]["version"] == "99.0"
-          and new["current"] == {"version": v["version"], "build": v["build"]} and "配置与更新" in new["upgrade"]["how"],
+          and new["current"] == {"version": v["version"], "build": v["build"]} and f"「{WINDOW_ENTRY}」" in new["upgrade"]["how"],
           "update check：读到此渠道的新版，给出升级办法")
     code, same = published(v["version"], v["build"])
     check(code == 0 and same["state"] == "up_to_date" and same["update_available"] is False and os.listdir(feed) == ["release.json"],

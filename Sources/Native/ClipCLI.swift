@@ -1416,7 +1416,9 @@ enum ClipCLI {
         let guarded = c.isolated && passed.first == "install" && passed.contains("--yes") && !passed.contains("--dry-run")
         if guarded { passed.append("--dry-run") }
         var printed: [String] = [], complaints: [String] = []
-        var product = AppLifecycleCLI.Product(command: "clip", name: hostInfo().name, configuration: nil, updateSource: ClipUpdates.source)
+        // ⌘, 设置… is Clip's own settings window (AppLifecycleUI.useSettings); the shared window is 配置与更新….
+        var product = AppLifecycleCLI.Product(command: "clip", name: hostInfo().name, configuration: nil, updateSource: ClipUpdates.source,
+                                              windowEntry: AppLifecycleCLI.updatesWindowEntry)
         product.out = { printed.append($0) }
         product.err = { complaints.append($0) }
         product.runningApp = c.runningApp

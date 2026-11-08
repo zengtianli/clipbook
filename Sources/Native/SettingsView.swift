@@ -6,9 +6,6 @@ struct SettingsView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var shortcuts: ClipShortcuts
     @State private var accessibilityTrusted = Paster.accessibilityTrusted
-    #if !APP_STORE
-    @State private var language = LifecycleLanguage.current
-    #endif
 
     var body: some View {
         TabView {
@@ -32,20 +29,8 @@ struct SettingsView: View {
     private var general: some View {
         Form {
             #if !APP_STORE
-            Section(LifecycleText.pick("Language", "语言")) {
-                Picker(LifecycleText.pick("App language", "界面语言"), selection: $language) {
-                    ForEach(LifecycleLanguage.allCases, id: \.self) { choice in
-                        Text(choice.title).tag(choice)
-                    }
-                }
-                .accessibilityIdentifier("appLanguage")
-                .onChange(of: language) { choice in LifecycleLanguage.set(choice) }
-                Text(LifecycleText.pick("Takes effect after reopening the app.", "重新打开 App 后生效。"))
-                    .font(.caption).foregroundStyle(.secondary)
-                if LifecycleLanguage.needsRelaunch {
-                    Button(LifecycleText.pick("Reopen Now", "立即重新打开")) { LifecycleLanguage.relaunch() }
-                }
-            }
+            // First section: the shared 界面语言 picker (swift-shared「标准设置入口模块」), not a hand-written one.
+            Section(LifecycleText.pick("Language", "语言")) { LifecycleLanguagePicker() }
             #endif
             Section("记录") {
                 Toggle("暂停记录", isOn: $settings.paused).accessibilityIdentifier("pauseRecording")

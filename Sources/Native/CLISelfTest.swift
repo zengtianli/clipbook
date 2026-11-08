@@ -381,7 +381,7 @@ enum CLISelfTest {
         check(newer.code == 0 && newer.json["ok"] as? Bool == true && newer.json["update_available"] as? Bool == true
               && newer.json["state"] as? String == "update_available" && (newer.json["latest"] as? [String: Any])?["version"] as? String == "99.0"
               && (newer.json["source"] as? [String: Any])?["kind"] as? String == "private_cloud"
-              && (newerUpgrade?["how"] as? String)?.contains("配置与更新") == true, "update check 报出此渠道的新版与升级办法（与窗口同一渠道）")
+              && (newerUpgrade?["how"] as? String)?.contains("「\(AppLifecycleCLI.updatesWindowEntry)」") == true, "update check 报出此渠道的新版与升级办法（与窗口同一渠道）")
         let host = ClipCLI.hostInfo()
         let current = publish(host.version, host.build)
         check(current.code == 0 && current.json["state"] as? String == "up_to_date" && current.json["update_available"] as? Bool == false

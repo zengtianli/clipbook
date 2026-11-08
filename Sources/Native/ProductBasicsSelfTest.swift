@@ -136,7 +136,8 @@ enum ProductBasicsSelfTest {
             try validFeed.write(to: feed)
             func lifecycle(_ words: [String]) -> (Int32, [String: Any]) {
                 var output: [String] = []
-                var product = AppLifecycleCLI.Product(command: "clip", name: "Clip", configuration: configuration, updateSource: .privateCloud(channel: "basics"))
+                var product = AppLifecycleCLI.Product(command: "clip", name: "Clip", configuration: configuration, updateSource: .privateCloud(channel: "basics"),
+                                                      windowEntry: AppLifecycleCLI.updatesWindowEntry)
                 product.out = { output.append($0) }; product.err = { _ in }; product.runningApp = { [] }
                 let code = AppLifecycleCLI.run(words + ["--json"], product: product)
                 let json = (try? JSONSerialization.jsonObject(with: Data(output.joined().utf8))) as? [String: Any] ?? [:]
