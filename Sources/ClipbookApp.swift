@@ -165,10 +165,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: String(localized: "关于 \(ProductIdentity.name)"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         #if APP_STORE
-        // The store build has no shared lifecycle layer: its own 设置… keeps ⌘, here.
+        // The store build has no shared lifecycle layer: the shared store module gives 设置… its ⌘, here.
         appMenu.addItem(.separator())
-        let settingsItem = appMenu.addItem(withTitle: String(localized: "设置…"), action: #selector(menuSettings), keyEquivalent: ",")
-        settingsItem.target = self
+        appMenu.addItem(StoreSettingsEntry.menuItem(target: self, action: #selector(menuSettings)))
         appMenu.addItem(.separator())
         #endif
         // Otherwise 设置… (⌘,), 配置与更新…, 检查更新… and the separator after them go right after 关于, placed and kept

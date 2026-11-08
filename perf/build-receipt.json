@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-08T22:02:35+08:00",
+  "built_at": "2026-11-08T22:43:48+08:00",
   "artifact": {
     "bundle_id": "cyou.tianli.clipbook",
     "version": "1.2.1",
-    "build": "158",
+    "build": "160",
     "executable": "Contents/MacOS/Clipbook",
-    "sha256": "8ddbe5c8e1b34296a01596d4d85d92fa6f0aa890d8ac6d2434d8b18f4e53f378",
+    "sha256": "385a8e7fd7a3ec633f376b2e8677980b7f334daa18e7502d4f757b001805eec8",
     "icon": {
       "path": "Contents/Resources/AppIcon.icns",
       "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
@@ -29,7 +29,7 @@
       "scripts/install-local.py",
       "project.yaml"
     ],
-    "sha256": "ffeec575149cde1f5287ea616bd9611e195da4114e04d77f2f73687e52b8c0cc",
+    "sha256": "3219becaab36af2c5701c15016a0f0f57bdc68698dbb229645cade47f8ed29da",
     "file_count": 54,
     "files": {
       "Sources/ClipbookApp.swift": "7bf642c9104967e8e40f734b15a4e5be4b697cb7806100673430a860b7784eab",
@@ -79,7 +79,7 @@
       "Cloud.entitlements": "9bda3ada59a20dedbfad7657c098bfb1d35173a55796134b3870d6d7b6044b08",
       "icon/AppIcon.icns": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6",
       "build.sh": "21df370154c0077e9fb4b163f7690439301519d4e23e154a0267b8582db8585b",
-      "build-cloud.sh": "883e19b60723087be326e4e215e5ab80306f124839ba4aa55cf77e7b5f672da6",
+      "build-cloud.sh": "0d5a0bc55ae141eaa7845c7377742c60c251d550316b4f906682368d75c68c4b",
       "release-local.sh": "5df88c80a5212a187a9c9db1f216033b3eca584490d4871e6c97922eb886ba54",
       "scripts/package-local.py": "1a6320f673f25dd40dd12db5c773c914431941485dc96b6f0ff28cbdadaf0a23",
       "scripts/install-cli.py": "27f07a08191bb61483647171747a178b2fc91e09f7bd0a0941f2898c24e04de5",
@@ -87,7 +87,7 @@
       "scripts/install-local.py": "9be6e9e8ba7936c272236ce77cf6cc2412a0a5fa00a5a889c31e3cefcf85f1d1",
       "project.yaml": "b098d38ffefc3acdf6456c1796b1908845b6e70d17f1f866269baa1314f17056"
     },
-    "commit": "60a59320138bfdfe05ff9edf23bdb6a8ffb442d3",
+    "commit": "d93e6a55905ea161aabf73aa2b113b6c7b748b01",
     "dirty_scope": "组件当前 Git 工作树；跨仓/软链输入的实际内容由 sha256 核验",
     "dirty": true
   },

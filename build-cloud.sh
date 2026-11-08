@@ -150,16 +150,11 @@ assert info['CFBundleIconFile'] == 'AppIcon'
 PY
 if [[ "$MODE" = --build-only || "$MODE" = --check-only ]]; then echo "Built and signed: $APP"; exit 0; fi
 DEST=/Applications/Clip.app
-# 本人 2026-10-23: a running Clip is quit (its exact executable, by PID) before the install and reopened in the
-# background after it. Left running, the old process keeps the moved-aside bundle and the hotkeys.
-EXE="$DEST/Contents/MacOS/Clipbook"
-RUNNING_PIDS="$(pgrep -f "^$EXE( |\$)" || true)"
-if [ -n "$RUNNING_PIDS" ]; then
-  kill -TERM $RUNNING_PIDS 2>/dev/null || true
-  for _ in $(seq 50); do pgrep -f "^$EXE( |\$)" >/dev/null || break; sleep 0.1; done
-  if pgrep -f "^$EXE( |\$)" >/dev/null; then kill -KILL $RUNNING_PIDS 2>/dev/null || true; sleep 0.5; fi
-  if pgrep -f "^$EXE( |\$)" >/dev/null; then echo "Clip did not quit; nothing was installed." >&2; exit 1; fi
-  echo "Quit the running Clip (pid $(echo $RUNNING_PIDS)); it is reopened in the background after the install."
+# 装前强退、装完后台重开，走共享 app_replace（本人 2026-10-23；Chapter 装机已在外层套上，直接运行时这里接上）。
+REPLACE="$HOME/Dev/tools/dev/lib/tools/macapp/app_replace.py"
+REPLACE_STATE="$(mktemp -t clip-replace)"
+if [ -f "$REPLACE" ]; then
+  python3 "$REPLACE" stop "$DEST" --state "$REPLACE_STATE" || { echo "Clip did not quit; nothing was installed." >&2; exit 1; }
 fi
 if [ -e "$DEST" ]; then
   ARCHIVE="$HOME/.Trash/clip-pre-icloud-$(date +%Y%m%d-%H%M%S)"
@@ -175,4 +170,5 @@ codesign --verify --deep --strict "$DEST"
 python3 "$GRADE" check --stage signed "$DEST"
 echo "Installed: $DEST"
 python3 scripts/install-cli.py "$DEST"
-if [ -n "$RUNNING_PIDS" ]; then open -g -j "$DEST"; echo "Reopened Clip in the background."; fi
+[ -f "$REPLACE" ] && python3 "$REPLACE" reopen "$DEST" --state "$REPLACE_STATE"
+rm -f "$REPLACE_STATE"
