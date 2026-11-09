@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "name": "product_basics",
+  "app_id": "clipbook",
+  "command": "~/Dev/.venv/bin/python scripts/accept/product_basics.py",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-11-09T13:30:58.963159+08:00",
+  "finished_at": "2026-11-09T13:31:29.584877+08:00",
+  "input_sha256": "b4c66319bd56fb6cf716c317632e0876799b6258267c9ffb4562b6e25beeb535",
+  "log": "perf/acceptance/run-ms5epw7_/product_basics.log",
+  "log_sha256": "07882ffeced3e333e1b0a18547e884e8fe127b900a6f08e77356a66502656cae",
+  "summary": "Clip 基础功能 通过；22 项真实检查；候选包，未安装；iCloud 为隔离本机链路",
+  "detail": {
+    "schema_version": 1,
+    "app_id": "clipbook",
+    "spec_digest": "814ca75ddaccbb188333cd58e1a91e21279e917b268143f06dbf1e6d319f6046",
+    "features": {
+      "settings": {
+        "result": "passed",
+        "method": "ui_automation",
+        "evidence": "perf/acceptance/product-basics-9aee93ea3d95493fb92a89c1cad9020f/raw.json",
+        "evidence_sha256": "bf0cb5221651cceb9167067e16a58194c53706232c6a2e4411b335b7e26b9e87",
+        "checks": [
+          "settings.artifact_matches_receipt",
+          "settings.current_source_matches_receipt",
+          "settings.artifact_signature_valid",
+          "settings.fixture_copied_actual_executable",
+          "settings.error_preserves_data",
+          "settings.interaction",
+          "settings.no_screen_or_dock",
+          "settings.persisted_readback",
+          "settings.real_views_offscreen",
+          "settings.process_exit_success"
+        ]
+      },
+      "shortcuts": {
+        "result": "passed",
+        "method": "real_product",
+        "evidence": "perf/acceptance/product-basics-9aee93ea3d95493fb92a89c1cad9020f/raw.json",
+        "evidence_sha256": "bf0cb5221651cceb9167067e16a58194c53706232c6a2e4411b335b7e26b9e87",
+        "checks": [
+          "shortcuts.action_path",
+          "shortcuts.conflict_or_reserved_keys",
+          "shortcuts.disable_restore"
+        ]
+      },
+      "icloud": {
+        "result": "passed",
+        "method": "real_product",
+        "evidence": "perf/acceptance/product-basics-9aee93ea3d95493fb92a89c1cad9020f/raw.json",
+        "evidence_sha256": "bf0cb5221651cceb9167067e16a58194c53706232c6a2e4411b335b7e26b9e87",
+        "checks": [
+          "icloud.conflict_or_corrupt_recovery",
+          "icloud.disable_preserves_data",
+          "icloud.push_pull",
+          "icloud.unavailable_local_fallback"
+        ]
+      },
+      "updates": {
+        "result": "passed",
+        "method": "real_product",
+        "evidence": "perf/acceptance/product-basics-9aee93ea3d95493fb92a89c1cad9020f/raw.json",
+        "evidence_sha256": "bf0cb5221651cceb9167067e16a58194c53706232c6a2e4411b335b7e26b9e87",
+        "checks": [
+          "updates.check_result",
+          "updates.data_preservation",
+          "updates.failure_recovery",
+          "updates.options_or_store_entry",
+          "updates.owner_and_installed_unchanged"
+        ]
+      }
+    },
+    "summary": "Clip 基础功能 通过；22 项真实检查；候选包，未安装；iCloud 为隔离本机链路",
+    "scope": "Actual receipt-bound candidate/installed executable; disposable identity; native offscreen views/actions, fresh-process reads, coordinated isolated configuration and test update feed. No Apple cross-device transport or installation.",
+    "binding": {
+      "phase": "candidate",
+      "app": "/Users/tianli/Apps/clip/mac/build/candidate/Clipbook.app",
+      "code_binding_sha256": "a4e33d32a5909f2a75086903da6e32bf7bc251b7f2c582d7e868c03e8df874f3",
+      "build_current": true,
+      "receipt": "build/accept/candidate-receipt.json",
+      "receipt_sha256": "4711752fd11641c83665dda4e9f454c3e9819c4bc5aa6bc52e81224f5216daa8",
+      "source_sha256": "0a39568ed6c05e379bf8e89f7a85d52abf8f4de1afd9d0753228c1a55dc2e0d0",
+      "source_commit": "570f5944bbbcfa1044fb96b9657103f1dd6d9fd3",
+      "artifact": {
+        "bundle_id": "cyou.tianli.clipbook",
+        "version": "1.2.1",
+        "build": "163",
+        "executable": "Contents/MacOS/Clipbook",
+        "sha256": "5077b254c0974eac354fbffceaaf117181584e3d319d05c6833c3043623dcb0b",
+        "icon": {
+          "path": "Contents/Resources/AppIcon.icns",
+          "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+        }
+      },
+      "installed_by_this_task": false
+    },
+    "error": null
+  },
+  "acceptance_target": {
+    "scope": "candidate",
+    "installed": false,
+    "app": "/Users/tianli/Apps/clip/mac/build/candidate/Clipbook.app",
+    "receipt": "/Users/tianli/Apps/clip/mac/build/accept/candidate-receipt.json",
+    "artifact": {
+      "bundle_id": "cyou.tianli.clipbook",
+      "version": "1.2.1",
+      "build": "163",
+      "executable": "Contents/MacOS/Clipbook",
+      "sha256": "5077b254c0974eac354fbffceaaf117181584e3d319d05c6833c3043623dcb0b",
+      "icon": {
+        "path": "Contents/Resources/AppIcon.icns",
+        "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+      }
+    },
+    "receipt_sha256": "4711752fd11641c83665dda4e9f454c3e9819c4bc5aa6bc52e81224f5216daa8",
+    "source_sha256": "0a39568ed6c05e379bf8e89f7a85d52abf8f4de1afd9d0753228c1a55dc2e0d0",
+    "version": "1.2.1",
+    "build": "163",
+    "built": true,
+    "reused": false,
+    "reason": "装机可执行文件、图标与当前构建输入均匹配 receipt",
+    "registered": true
+  },
+  "executed_command": "~/Dev/.venv/bin/python scripts/accept/product_basics.py",
+  "previous_observation": {
+    "path": "perf/acceptance/attempts/product_basics/20261109T132801969729+0800-1m5cjs8j",
+    "manifest_sha256": "2db76981126cfde0769d1307f6516d84ab1184a4947411b3e21ffa8afd9a987f"
+  },
+  "run_id": "run-ms5epw7_",
+  "evidence_file": "perf/acceptance/run-ms5epw7_/product_basics.json"
+}
