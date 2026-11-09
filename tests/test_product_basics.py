@@ -33,7 +33,10 @@ def rig(tmp_path, monkeypatch):
     out.mkdir(parents=True)
     features = {name: dict(required_checks=[name + '.behavior']) for name in ('settings', 'shortcuts', 'icloud', 'updates')}
     monkeypatch.setattr(accept, 'ROOT', tmp_path)
+    monkeypatch.setattr(accept, 'INSTALLED', app)
     monkeypatch.setattr(accept, 'owner', lambda: dict(unchanged=True))
+    for name in ('SOP_INSTALLED_APP', 'SOP_BUILD_RECEIPT', 'SOP_ACCEPTANCE_TARGET'):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv('SOP_APP_ID', 'clipbook')
     monkeypatch.setenv('SOP_PRODUCT_BASICS_SPEC', json.dumps(dict(app_id='clipbook', digest='fixture-spec', features=features)))
     monkeypatch.setenv('SOP_OUT_DIR', str(out))
@@ -71,7 +74,6 @@ def test_worktree_acceptance_uses_original_default_receipt_and_evidence(rig, mon
     monkeypatch.setattr(accept, 'ROOT', accept.repository_root())
     (original / 'perf/build-receipt.json').write_bytes(rig.receipt.read_bytes())
     monkeypatch.setattr(sys, 'argv', [str(frozen_script)])
-    monkeypatch.setattr(accept, 'Path', lambda value: rig.app if value == '/Applications/Clip.app' else Path(value))
     status, detail, raw = rig.result()
     assert status == 0 and raw['binding']['phase'] == 'installed'
     assert raw['binding']['receipt'] == 'perf/build-receipt.json'
@@ -112,7 +114,6 @@ def test_changed_actual_executable_is_rejected_despite_current_binding(rig):
 
 def test_early_installed_failure_is_never_labelled_candidate(rig, monkeypatch):
     monkeypatch.setattr(sys, 'argv', [str(SCRIPT), '--receipt', str(rig.receipt)])
-    monkeypatch.setattr(accept, 'Path', lambda value: rig.app if value == '/Applications/Clip.app' else Path(value))
     monkeypatch.setenv('SOP_BUILD_CURRENT', '0')
     status, detail, raw = rig.result()
     assert status == 1 and raw['binding']['phase'] == 'installed'

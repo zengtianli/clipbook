@@ -143,12 +143,22 @@ enum ProductBasicsSelfTest {
                 let json = (try? JSONSerialization.jsonObject(with: Data(output.joined().utf8))) as? [String: Any] ?? [:]
                 return (code, json)
             }
-            AppLifecycleUI.shared.checkForUpdates(present: false)
-            let uiUpdated = wait {
-                NSApp.windows.flatMap { $0.contentView.map(descendants) ?? [] }.compactMap { $0 as? NSTextField }.contains { $0.stringValue.contains("有新版 99.0") }
+            // Exercise both supported window languages; the CLI's message remains Chinese.
+            // A localized status must still identify the actual release, not just finish checking.
+            let previousLanguage = ProcessInfo.processInfo.environment["APP_LIFECYCLE_LANGUAGE"]
+            var localizedUpdates: [String: Bool] = [:]
+            for language in ["en", "zh-Hans"] {
+                setenv("APP_LIFECYCLE_LANGUAGE", language, 1)
+                let expected = LifecycleText.pick("Version 99.0 (999) is available;", "有新版 99.0 (999)，")
+                AppLifecycleUI.shared.checkForUpdates(present: false)
+                localizedUpdates[language] = wait {
+                    NSApp.windows.flatMap { $0.contentView.map(descendants) ?? [] }.compactMap { $0 as? NSTextField }.contains { $0.stringValue.hasPrefix(expected) }
+                }
             }
+            if let previousLanguage { setenv("APP_LIFECYCLE_LANGUAGE", previousLanguage, 1) }
+            else { unsetenv("APP_LIFECYCLE_LANGUAGE") }
             let checked = lifecycle(["update", "check"])
-            report.check(uiUpdated && checked.0 == 0 && checked.1["update_available"] as? Bool == true && (checked.1["latest"] as? [String: Any])?["version"] as? String == "99.0", "updates.check_result")
+            report.check(localizedUpdates.values.allSatisfy { $0 } && checked.0 == 0 && checked.1["update_available"] as? Bool == true && (checked.1["latest"] as? [String: Any])?["version"] as? String == "99.0", "updates.check_result", "localized UI=\(localizedUpdates), CLI=\(checked)")
             try Data("{bad feed".utf8).write(to: feed)
             let failedFeed = lifecycle(["update", "check"])
             try fm.removeItem(at: feed)
