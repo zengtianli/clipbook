@@ -3,21 +3,21 @@
   "name": "localization",
   "app_id": "clipbook",
   "command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/localization.py",
-  "exit_code": 1,
-  "status": "failed",
-  "started_at": "2026-10-18T17:53:52.283932+08:00",
-  "finished_at": "2026-10-18T17:55:09.051793+08:00",
-  "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
-  "log": "perf/acceptance/run-qtvxu_cd/localization.log",
-  "log_sha256": "1af243c009885e8bfbdcbe321dc7f00d6f323ca36cba214a385f965f3f3daf54",
-  "summary": "缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执",
+  "exit_code": 0,
+  "status": "passed",
+  "started_at": "2026-11-12T01:03:27.407806+08:00",
+  "finished_at": "2026-11-12T01:03:31.123623+08:00",
+  "input_sha256": "a4e33d32a5909f2a75086903da6e32bf7bc251b7f2c582d7e868c03e8df874f3",
+  "log": "perf/acceptance/run-lh1iprnc/localization.log",
+  "log_sha256": "12a619da4b7de87bfa63c98dc9824cf5c0c0e234ce5328e2b68f31bd0f2455d8",
+  "summary": "英文与简体中文资源及当前输入截图齐全",
   "detail": {
-    "summary": "缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执",
-    "passed": false,
+    "summary": "英文与简体中文资源及当前输入截图齐全",
+    "passed": true,
     "spec": {
       "label": "多语言",
       "applicable": true,
-      "registered": false,
+      "registered": true,
       "default_basis": "客户端形态 mac 默认须提供英文与简体中文界面",
       "languages": [
         "en",
@@ -26,37 +26,101 @@
       "development": "en",
       "problems": []
     },
-    "issues": [
-      "缺 Info.plist 本地化声明",
-      "缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源",
-      "缺 en 界面截图",
-      "缺 zh-Hans 界面截图",
-      "缺截图源码输入绑定 JSON 回执"
-    ],
+    "issues": [],
     "apple": {
-      "plists": [],
-      "inspection_basis": "repository_bundle_fallback",
-      "total_keys": 0,
+      "plists": [
+        "store/project.yml#Clip"
+      ],
+      "inspection_basis": "source",
+      "total_keys": 281,
       "missing_english_keys": [],
       "missing_english_count": 0,
-      "missing_english_ratio": null,
-      "english_coverage": 0.0
+      "missing_english_ratio": 0.0,
+      "english_coverage": 1.0
     },
     "screenshots": {
       "images": {
-        "en": [],
-        "zh-Hans": []
+        "en": [
+          "en/collection-new.png",
+          "en/lifecycle-settings.png",
+          "en/main-empty-search.png",
+          "en/main-image.png",
+          "en/main-multiple.png",
+          "en/main.png",
+          "en/menus.png",
+          "en/settings-general.png",
+          "en/settings-icloud.png",
+          "en/settings-shortcuts.png",
+          "en/collection-new.png",
+          "en/lifecycle-settings.png",
+          "en/main-empty-search.png",
+          "en/main-image.png",
+          "en/main-multiple.png",
+          "en/main.png",
+          "en/menus.png",
+          "en/settings-general.png",
+          "en/settings-icloud.png",
+          "en/settings-shortcuts.png"
+        ],
+        "zh-Hans": [
+          "zh-Hans/collection-new.png",
+          "zh-Hans/lifecycle-settings.png",
+          "zh-Hans/main-empty-search.png",
+          "zh-Hans/main-image.png",
+          "zh-Hans/main-multiple.png",
+          "zh-Hans/main.png",
+          "zh-Hans/menus.png",
+          "zh-Hans/settings-general.png",
+          "zh-Hans/settings-icloud.png",
+          "zh-Hans/settings-shortcuts.png",
+          "zh-Hans/collection-new.png",
+          "zh-Hans/lifecycle-settings.png",
+          "zh-Hans/main-empty-search.png",
+          "zh-Hans/main-image.png",
+          "zh-Hans/main-multiple.png",
+          "zh-Hans/main.png",
+          "zh-Hans/menus.png",
+          "zh-Hans/settings-general.png",
+          "zh-Hans/settings-icloud.png",
+          "zh-Hans/settings-shortcuts.png"
+        ]
       },
-      "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
-      "current_binding": false,
+      "input_sha256": "a4e33d32a5909f2a75086903da6e32bf7bc251b7f2c582d7e868c03e8df874f3",
+      "current_binding": true,
       "issues": []
     },
-    "localization_status": "missing"
+    "localization_status": "passed"
   },
+  "acceptance_target": {
+    "scope": "candidate",
+    "installed": false,
+    "app": "/Users/tianli/Apps/clip/mac/build/candidate/Clipbook.app",
+    "receipt": "/Users/tianli/Apps/clip/mac/build/accept/candidate-receipt.json",
+    "artifact": {
+      "bundle_id": "cyou.tianli.clipbook",
+      "version": "1.2.1",
+      "build": "163",
+      "executable": "Contents/MacOS/Clipbook",
+      "sha256": "5077b254c0974eac354fbffceaaf117181584e3d319d05c6833c3043623dcb0b",
+      "icon": {
+        "path": "Contents/Resources/AppIcon.icns",
+        "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+      }
+    },
+    "receipt_sha256": "4711752fd11641c83665dda4e9f454c3e9819c4bc5aa6bc52e81224f5216daa8",
+    "source_sha256": "0a39568ed6c05e379bf8e89f7a85d52abf8f4de1afd9d0753228c1a55dc2e0d0",
+    "version": "1.2.1",
+    "build": "163",
+    "built": false,
+    "reused": false,
+    "reason": "装机可执行文件、图标与当前构建输入均匹配 receipt",
+    "registered": true
+  },
+  "executed_command": "~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/localization.py",
   "previous_observation": {
-    "path": "perf/acceptance/attempts/localization/20261018T175351877476+0800-4adbgda2",
-    "manifest_sha256": "707cdea16d7bec6a8888e0040a72d5c1df4bd95c3b32ced1f14cc9935d359eab"
+    "path": "perf/acceptance/attempts/localization/20261112T010327311770+0800-2rrgcf1s",
+    "manifest_sha256": "57b1df30e0fe506413ababa16fb5f1d9df01028efa2498ebdbb3a40c70456992"
   },
-  "run_id": "run-qtvxu_cd",
-  "evidence_file": "perf/acceptance/run-qtvxu_cd/localization.json"
+  "run_id": "run-lh1iprnc",
+  "evidence_file": "perf/acceptance/run-lh1iprnc/localization.json"
 }

@@ -1,10 +1,10 @@
 {
-  "summary": "缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执",
-  "passed": false,
+  "summary": "英文与简体中文资源及当前输入截图齐全",
+  "passed": true,
   "spec": {
     "label": "多语言",
     "applicable": true,
-    "registered": false,
+    "registered": true,
     "default_basis": "客户端形态 mac 默认须提供英文与简体中文界面",
     "languages": [
       "en",
@@ -13,30 +13,68 @@
     "development": "en",
     "problems": []
   },
-  "issues": [
-    "缺 Info.plist 本地化声明",
-    "缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源",
-    "缺 en 界面截图",
-    "缺 zh-Hans 界面截图",
-    "缺截图源码输入绑定 JSON 回执"
-  ],
+  "issues": [],
   "apple": {
-    "plists": [],
-    "inspection_basis": "repository_bundle_fallback",
-    "total_keys": 0,
+    "plists": [
+      "store/project.yml#Clip"
+    ],
+    "inspection_basis": "source",
+    "total_keys": 281,
     "missing_english_keys": [],
     "missing_english_count": 0,
-    "missing_english_ratio": null,
-    "english_coverage": 0.0
+    "missing_english_ratio": 0.0,
+    "english_coverage": 1.0
   },
   "screenshots": {
     "images": {
-      "en": [],
-      "zh-Hans": []
+      "en": [
+        "en/collection-new.png",
+        "en/lifecycle-settings.png",
+        "en/main-empty-search.png",
+        "en/main-image.png",
+        "en/main-multiple.png",
+        "en/main.png",
+        "en/menus.png",
+        "en/settings-general.png",
+        "en/settings-icloud.png",
+        "en/settings-shortcuts.png",
+        "en/collection-new.png",
+        "en/lifecycle-settings.png",
+        "en/main-empty-search.png",
+        "en/main-image.png",
+        "en/main-multiple.png",
+        "en/main.png",
+        "en/menus.png",
+        "en/settings-general.png",
+        "en/settings-icloud.png",
+        "en/settings-shortcuts.png"
+      ],
+      "zh-Hans": [
+        "zh-Hans/collection-new.png",
+        "zh-Hans/lifecycle-settings.png",
+        "zh-Hans/main-empty-search.png",
+        "zh-Hans/main-image.png",
+        "zh-Hans/main-multiple.png",
+        "zh-Hans/main.png",
+        "zh-Hans/menus.png",
+        "zh-Hans/settings-general.png",
+        "zh-Hans/settings-icloud.png",
+        "zh-Hans/settings-shortcuts.png",
+        "zh-Hans/collection-new.png",
+        "zh-Hans/lifecycle-settings.png",
+        "zh-Hans/main-empty-search.png",
+        "zh-Hans/main-image.png",
+        "zh-Hans/main-multiple.png",
+        "zh-Hans/main.png",
+        "zh-Hans/menus.png",
+        "zh-Hans/settings-general.png",
+        "zh-Hans/settings-icloud.png",
+        "zh-Hans/settings-shortcuts.png"
+      ]
     },
-    "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
-    "current_binding": false,
+    "input_sha256": "a4e33d32a5909f2a75086903da6e32bf7bc251b7f2c582d7e868c03e8df874f3",
+    "current_binding": true,
     "issues": []
   },
-  "localization_status": "missing"
+  "localization_status": "passed"
 }

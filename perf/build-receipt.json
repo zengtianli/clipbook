@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "built_at": "2026-11-08T22:43:48+08:00",
+  "built_at": "2026-11-12T01:02:35+08:00",
   "artifact": {
     "bundle_id": "cyou.tianli.clipbook",
     "version": "1.2.1",
-    "build": "160",
+    "build": "164",
     "executable": "Contents/MacOS/Clipbook",
-    "sha256": "385a8e7fd7a3ec633f376b2e8677980b7f334daa18e7502d4f757b001805eec8",
+    "sha256": "fe02b4748c098c16dca4e35311f029419cf88c3debe1e124159320f9f23b550c",
     "icon": {
       "path": "Contents/Resources/AppIcon.icns",
       "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
@@ -29,15 +29,16 @@
       "scripts/install-local.py",
       "project.yaml"
     ],
-    "sha256": "3219becaab36af2c5701c15016a0f0f57bdc68698dbb229645cade47f8ed29da",
-    "file_count": 54,
+    "sha256": "7cccc676197ea204051a4a1e2f8ff87c571d5d187d29a4a3d796f9d403c10198",
+    "file_count": 55,
     "files": {
-      "Sources/ClipbookApp.swift": "7bf642c9104967e8e40f734b15a4e5be4b697cb7806100673430a860b7784eab",
+      "Sources/StoreLanguage.swift": "539241c097dda6268b824d511b0ec379ac6bf9fdad1728aab9cebf29a87e4c81",
+      "Sources/ClipbookApp.swift": "6ae8bc499ede414f26d8eba7d0f1729c80ac65e092dbe6797387bfeca6cf9c6a",
       "Sources/Native/StoreConfiguration.swift": "95263c353d2190920496429d4ab597529ce1694c41a2c8ff2da2c4c1b5552d11",
       "Sources/Native/L10n.swift": "031fbae9a1a34674bbcdf17924a03e4edb8c9e73510a444fc239deb6964789fd",
       "Sources/Native/L10nShots.swift": "189e9fa925252b63a3f3fe5bbc03905b87b7a55334787111f4738f0cfd8f02a6",
       "Sources/Native/DetailView.swift": "1cfb3d2074b4ace58442dde191afed106f89659df1ea9e04629211be60baa2a6",
-      "Sources/Native/ProductBasicsSelfTest.swift": "94984a2b06d82ccad70e55eb6222c58da81fe4cca0a625eda123ef5eda3c59ab",
+      "Sources/Native/ProductBasicsSelfTest.swift": "df48ce87ef24fb8c977099a1c6fbd8435c901acd5e79f81fbd8a68273f9c782e",
       "Sources/Native/SettingsView.swift": "16e3208c89106a68e93a755e6f876fe514701e3ecb5fcd01920dbb449090953c",
       "Sources/Native/ClipCopy.swift": "aa37424483ad8a857bdaa28ff3c64a7d9101246e3cbc8cb62ca211383024c6ae",
       "Sources/Native/Item.swift": "2d75d0a8ea5094ad1b6314af898c0a8a30ac600c8f48d47e95377c0cafabb6f2",
@@ -69,9 +70,9 @@
       "Sources/Native/GridView.swift": "5797ba8797a7bbf697d1286078d7aa08767998accbae66f91948486ea6dfe26e",
       "Sources/Native/StoreSelfTest.swift": "302d2308a166357c61544368837ad6a9c90db5232151521d201a55bb4e94db01",
       "Sources/Native/KeyboardMemorySelfTest.swift": "ce9c3909cb0aa200805ec3e1d4bd312196bbdf44aeae139a1387c0220f6c7061",
-      "Sources/Shared/AppConfiguration.swift": "4de8302eb4c03ed4459e593aa751e025aa7b14d980e22d380664ac1a90e6e45e",
-      "Sources/Shared/AppLifecycleUI.swift": "58383047331eec5c6fb97a0d2024010fc29762ca4d52cdbf4d8352ca3fcf6b11",
-      "Sources/Shared/AppLifecycleCLI.swift": "77bc961b623610bdc1807a26fbed306e821c8fe20aca76bb6bf1ec7c7e6c36eb",
+      "Sources/Shared/AppConfiguration.swift": "1f9c895d4edce78c9c46b0e43d5aede16bcdf1fa22b3a4e9bf00717c8e4ddf52",
+      "Sources/Shared/AppLifecycleUI.swift": "7af7292c8260af42f4cff41ff1bfdc70d18f6471de69107c4b8c80be4e1b476d",
+      "Sources/Shared/AppLifecycleCLI.swift": "9e927b8c2e127619495102edeb098e5262d5f66fb8727f0add8ed3493936563f",
       "Sources/Shared/AppLifecycle.swift": "53981005fefe9c319868f5e7e769583185cc20f5ac137f08a8edded57a728020",
       "Sources/Localizable.xcstrings": "0d14c6be6e431ca9152ca9ea04afae3e6ebe7581101fb52a1c97518002980750",
       "cloud-project.yml": "009e59af3ffafbf80f847a74db0b609ee7a24be147deac44ef3b477414a57a2e",
@@ -87,9 +88,9 @@
       "scripts/install-local.py": "9be6e9e8ba7936c272236ce77cf6cc2412a0a5fa00a5a889c31e3cefcf85f1d1",
       "project.yaml": "b098d38ffefc3acdf6456c1796b1908845b6e70d17f1f866269baa1314f17056"
     },
-    "commit": "d93e6a55905ea161aabf73aa2b113b6c7b748b01",
+    "commit": "ac6384c59d18c1e1c83d29321867b39a1d839936",
     "dirty_scope": "组件当前 Git 工作树；跨仓/软链输入的实际内容由 sha256 核验",
-    "dirty": true
+    "dirty": false
   },
   "build_command_sha256": "ce0d95bbe43237ab1fd97dbbe2a164c802902ae7ad4919a057c7dfa79b7c7552"
 }

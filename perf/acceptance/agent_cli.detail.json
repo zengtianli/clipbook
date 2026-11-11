@@ -1,0 +1,537 @@
+{
+  "summary": "界面功能对照 77 项：命令 64 项，只能真人或只在窗口 13 项，暂缺 0 项；读回 clip status",
+  "passed": true,
+  "registered": true,
+  "digest": "36e32714b9251c332f26c37739d8f4fa9eb4cb868b6b9c49a67262fad875dfb2",
+  "form": "mac",
+  "readback": "clip status",
+  "readback_found": true,
+  "readback_run": {
+    "exit_code": 0
+  },
+  "counts": {
+    "total": 77,
+    "command": 64,
+    "human": 13,
+    "device": 0,
+    "missing": 0
+  },
+  "missing": [],
+  "human": [
+    {
+      "name": "单击选中、⌘/⇧ 多选、方向键移动、全选本页、取消选择",
+      "reason": "窗口里的选择状态，只在窗口里有意义；命令直接传记录 id"
+    },
+    {
+      "name": "粘贴到前一个 app",
+      "reason": "只在窗口里有意义：「前一个 app」是打开 Clip 窗口之前的前台应用，粘贴要切回它并合成 ⌘V；命令不抢焦点、不合成按键，clip copy 写入剪贴板后由本人粘贴"
+    },
+    {
+      "name": "在 Finder 中显示（文件记录、详情按钮）",
+      "reason": "在访达中显示，只在窗口里有意义；路径见 clip show"
+    },
+    {
+      "name": "在浏览器打开（链接记录、详情「打开」）",
+      "reason": "打开浏览器窗口，只在窗口里有意义；链接见 clip show"
+    },
+    {
+      "name": "显示 / 隐藏主窗口（菜单栏图标、Dock、clipbook:// 链接、「打开 Clip」）",
+      "reason": "窗口显示，只在窗口里有意义"
+    },
+    {
+      "name": "打开设置窗口、「配置与更新…」窗口",
+      "reason": "窗口显示，只在窗口里有意义；设置项各有命令"
+    },
+    {
+      "name": "聚焦搜索",
+      "reason": "窗口里的输入焦点，只在窗口里有意义；搜索用 clip search"
+    },
+    {
+      "name": "编辑菜单（撤销、重做、剪切、粘贴、全选）",
+      "reason": "文本框里的系统编辑命令，只在窗口里有意义"
+    },
+    {
+      "name": "关于、隐藏、最小化、关闭窗口",
+      "reason": "应用与窗口本身的操作，只在窗口里有意义；停止记录用 clip pause"
+    },
+    {
+      "name": "试听",
+      "reason": "要真人听声音"
+    },
+    {
+      "name": "自动粘贴（辅助功能）「去授权…」",
+      "reason": "系统授权弹窗，要真人在系统设置里允许"
+    },
+    {
+      "name": "打开数据目录",
+      "reason": "在访达中显示，只在窗口里有意义；路径见 clip status"
+    },
+    {
+      "name": "录制快捷键（点「点击录制」后按下组合键）",
+      "reason": "按键捕获要真人按；把写出来的组合键存给动作用 clip shortcut set"
+    }
+  ],
+  "device": [],
+  "problems": [],
+  "commands": {
+    "clip": {
+      "link": "~/.local/bin/clip",
+      "exit_code": 0,
+      "has_json": true,
+      "has_exit_codes": true,
+      "summary": "usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据、同一份设置）",
+      "error": null
+    }
+  },
+  "features": [
+    {
+      "name": "侧栏计数（全部、置顶、类型、来源、收藏夹）",
+      "kind": "command",
+      "value": "clip stats",
+      "found": true
+    },
+    {
+      "name": "按全部 / 置顶 / 类型 / 来源 / 收藏夹筛选",
+      "kind": "command",
+      "value": "clip list",
+      "found": true
+    },
+    {
+      "name": "新建收藏夹（名字、图标、颜色）",
+      "kind": "command",
+      "value": "clip collection create",
+      "found": true
+    },
+    {
+      "name": "收藏夹 · 编辑…",
+      "kind": "command",
+      "value": "clip collection edit",
+      "found": true
+    },
+    {
+      "name": "收藏夹 · 上移 / 下移",
+      "kind": "command",
+      "value": "clip collection move",
+      "found": true
+    },
+    {
+      "name": "收藏夹 · 删除收藏夹",
+      "kind": "command",
+      "value": "clip collection delete",
+      "found": true
+    },
+    {
+      "name": "收藏夹列表与条数",
+      "kind": "command",
+      "value": "clip collections",
+      "found": true
+    },
+    {
+      "name": "记录网格（来源、时间、标题、预览、类型、大小、置顶）",
+      "kind": "command",
+      "value": "clip list",
+      "found": true
+    },
+    {
+      "name": "搜索正文、标题、来源",
+      "kind": "command",
+      "value": "clip search",
+      "found": true
+    },
+    {
+      "name": "翻页与总条数",
+      "kind": "command",
+      "value": "clip list",
+      "found": true
+    },
+    {
+      "name": "单击选中、⌘/⇧ 多选、方向键移动、全选本页、取消选择",
+      "kind": "human",
+      "value": "窗口里的选择状态，只在窗口里有意义；命令直接传记录 id"
+    },
+    {
+      "name": "双击卡片复制",
+      "kind": "command",
+      "value": "clip copy",
+      "found": true
+    },
+    {
+      "name": "批量 · 复制所选（含 ⌘C）",
+      "kind": "command",
+      "value": "clip copy",
+      "found": true
+    },
+    {
+      "name": "批量 · 加入收藏夹",
+      "kind": "command",
+      "value": "clip collection add",
+      "found": true
+    },
+    {
+      "name": "批量 · 合并成一条",
+      "kind": "command",
+      "value": "clip merge",
+      "found": true
+    },
+    {
+      "name": "删除记录（单条或所选，带确认）",
+      "kind": "command",
+      "value": "clip delete",
+      "found": true
+    },
+    {
+      "name": "粘贴到前一个 app",
+      "kind": "human",
+      "value": "只在窗口里有意义：「前一个 app」是打开 Clip 窗口之前的前台应用，粘贴要切回它并合成 ⌘V；命令不抢焦点、不合成按键，clip copy 写入剪贴板后由本人粘贴"
+    },
+    {
+      "name": "置顶",
+      "kind": "command",
+      "value": "clip pin",
+      "found": true
+    },
+    {
+      "name": "取消置顶",
+      "kind": "command",
+      "value": "clip unpin",
+      "found": true
+    },
+    {
+      "name": "在 Finder 中显示（文件记录、详情按钮）",
+      "kind": "human",
+      "value": "在访达中显示，只在窗口里有意义；路径见 clip show"
+    },
+    {
+      "name": "在浏览器打开（链接记录、详情「打开」）",
+      "kind": "human",
+      "value": "打开浏览器窗口，只在窗口里有意义；链接见 clip show"
+    },
+    {
+      "name": "详情（来源、时间、类型、大小、全文、图片、文件路径、富文本、链接标题、所在收藏夹）",
+      "kind": "command",
+      "value": "clip show",
+      "found": true
+    },
+    {
+      "name": "改标题",
+      "kind": "command",
+      "value": "clip edit",
+      "found": true
+    },
+    {
+      "name": "改正文并保存（富文本保存后变纯文本）",
+      "kind": "command",
+      "value": "clip edit",
+      "found": true
+    },
+    {
+      "name": "另存",
+      "kind": "command",
+      "value": "clip add",
+      "found": true
+    },
+    {
+      "name": "转换（纯文本、去空白、大小写、单行、JSON）",
+      "kind": "command",
+      "value": "clip transform",
+      "found": true
+    },
+    {
+      "name": "导出…（图片）",
+      "kind": "command",
+      "value": "clip export",
+      "found": true
+    },
+    {
+      "name": "复制",
+      "kind": "command",
+      "value": "clip copy",
+      "found": true
+    },
+    {
+      "name": "加入收藏夹（详情菜单）",
+      "kind": "command",
+      "value": "clip collection add",
+      "found": true
+    },
+    {
+      "name": "移出收藏夹",
+      "kind": "command",
+      "value": "clip collection remove",
+      "found": true
+    },
+    {
+      "name": "「已暂停记录」提示与记录条数",
+      "kind": "command",
+      "value": "clip status",
+      "found": true
+    },
+    {
+      "name": "暂停记录",
+      "kind": "command",
+      "value": "clip pause",
+      "found": true
+    },
+    {
+      "name": "恢复记录",
+      "kind": "command",
+      "value": "clip resume",
+      "found": true
+    },
+    {
+      "name": "显示 / 隐藏主窗口（菜单栏图标、Dock、clipbook:// 链接、「打开 Clip」）",
+      "kind": "human",
+      "value": "窗口显示，只在窗口里有意义"
+    },
+    {
+      "name": "打开设置窗口、「配置与更新…」窗口",
+      "kind": "human",
+      "value": "窗口显示，只在窗口里有意义；设置项各有命令"
+    },
+    {
+      "name": "聚焦搜索",
+      "kind": "human",
+      "value": "窗口里的输入焦点，只在窗口里有意义；搜索用 clip search"
+    },
+    {
+      "name": "编辑菜单（撤销、重做、剪切、粘贴、全选）",
+      "kind": "human",
+      "value": "文本框里的系统编辑命令，只在窗口里有意义"
+    },
+    {
+      "name": "关于、隐藏、最小化、关闭窗口",
+      "kind": "human",
+      "value": "应用与窗口本身的操作，只在窗口里有意义；停止记录用 clip pause"
+    },
+    {
+      "name": "退出 Clip",
+      "kind": "command",
+      "value": "clip quit",
+      "found": true
+    },
+    {
+      "name": "启动 Clip（后台启动，不出主窗口、不抢焦点）",
+      "kind": "command",
+      "value": "clip start",
+      "found": true
+    },
+    {
+      "name": "记录偏好与全部设置（读）",
+      "kind": "command",
+      "value": "clip settings",
+      "found": true
+    },
+    {
+      "name": "纯文本模式",
+      "kind": "command",
+      "value": "clip settings set",
+      "found": true
+    },
+    {
+      "name": "自动获取链接标题",
+      "kind": "command",
+      "value": "clip settings set",
+      "found": true
+    },
+    {
+      "name": "最多保留 N 条",
+      "kind": "command",
+      "value": "clip settings set",
+      "found": true
+    },
+    {
+      "name": "保留时长",
+      "kind": "command",
+      "value": "clip settings set",
+      "found": true
+    },
+    {
+      "name": "忽略名单（查看）",
+      "kind": "command",
+      "value": "clip ignore list",
+      "found": true
+    },
+    {
+      "name": "忽略名单 · 从来源里选 / 选择 app…",
+      "kind": "command",
+      "value": "clip ignore add",
+      "found": true
+    },
+    {
+      "name": "忽略名单 · 移出",
+      "kind": "command",
+      "value": "clip ignore remove",
+      "found": true
+    },
+    {
+      "name": "导入 Deck 历史",
+      "kind": "command",
+      "value": "clip import-deck",
+      "found": true
+    },
+    {
+      "name": "Deck 导入状态（上次导入时间、没找到 Deck 的数据目录）",
+      "kind": "command",
+      "value": "clip status",
+      "found": true
+    },
+    {
+      "name": "复制时播放声音、音效、音量",
+      "kind": "command",
+      "value": "clip settings set",
+      "found": true
+    },
+    {
+      "name": "试听",
+      "kind": "human",
+      "value": "要真人听声音"
+    },
+    {
+      "name": "开机自启",
+      "kind": "command",
+      "value": "clip settings set",
+      "found": true
+    },
+    {
+      "name": "开机自启状态与错误提示",
+      "kind": "command",
+      "value": "clip status",
+      "found": true
+    },
+    {
+      "name": "自动粘贴（辅助功能）是否已授权",
+      "kind": "command",
+      "value": "clip status",
+      "found": true
+    },
+    {
+      "name": "自动粘贴（辅助功能）「去授权…」",
+      "kind": "human",
+      "value": "系统授权弹窗，要真人在系统设置里允许"
+    },
+    {
+      "name": "打开数据目录",
+      "kind": "human",
+      "value": "在访达中显示，只在窗口里有意义；路径见 clip status"
+    },
+    {
+      "name": "清空历史（保留置顶与收藏夹）…",
+      "kind": "command",
+      "value": "clip clear",
+      "found": true
+    },
+    {
+      "name": "iCloud 历史归档 · 打开",
+      "kind": "command",
+      "value": "clip cloud on",
+      "found": true
+    },
+    {
+      "name": "iCloud 历史归档 · 关闭",
+      "kind": "command",
+      "value": "clip cloud off",
+      "found": true
+    },
+    {
+      "name": "iCloud 历史归档开关状态",
+      "kind": "command",
+      "value": "clip cloud status",
+      "found": true
+    },
+    {
+      "name": "iCloud 同步状态文字与错误提示",
+      "kind": "command",
+      "value": "clip cloud status",
+      "found": true
+    },
+    {
+      "name": "补充最近历史",
+      "kind": "command",
+      "value": "clip cloud push",
+      "found": true
+    },
+    {
+      "name": "各动作的快捷键与作用范围",
+      "kind": "command",
+      "value": "clip shortcut list",
+      "found": true
+    },
+    {
+      "name": "快捷键状态（全局键是否注册成功、系统拒绝注册的提示）",
+      "kind": "command",
+      "value": "clip shortcut list",
+      "found": true
+    },
+    {
+      "name": "录制快捷键（点「点击录制」后按下组合键）",
+      "kind": "human",
+      "value": "按键捕获要真人按；把写出来的组合键存给动作用 clip shortcut set"
+    },
+    {
+      "name": "给动作设置组合键（写出组合键并保存，与录制后保存同一个入口）",
+      "kind": "command",
+      "value": "clip shortcut set",
+      "found": true
+    },
+    {
+      "name": "作用范围（仅 Clip 内 / 全局）",
+      "kind": "command",
+      "value": "clip shortcut scope",
+      "found": true
+    },
+    {
+      "name": "清除绑定、清除所有快捷键",
+      "kind": "command",
+      "value": "clip shortcut clear",
+      "found": true
+    },
+    {
+      "name": "当前版本",
+      "kind": "command",
+      "value": "clip version",
+      "found": true
+    },
+    {
+      "name": "使用 iCloud 记住配置（状态）",
+      "kind": "command",
+      "value": "clip config status",
+      "found": true
+    },
+    {
+      "name": "开关下面那句同步状态",
+      "kind": "command",
+      "value": "clip config status",
+      "found": true
+    },
+    {
+      "name": "使用 iCloud 记住配置（开关）",
+      "kind": "command",
+      "value": "clip config sync",
+      "found": true
+    },
+    {
+      "name": "导出配置…",
+      "kind": "command",
+      "value": "clip config export",
+      "found": true
+    },
+    {
+      "name": "导入配置…",
+      "kind": "command",
+      "value": "clip config import",
+      "found": true
+    },
+    {
+      "name": "检查更新",
+      "kind": "command",
+      "value": "clip update check",
+      "found": true
+    },
+    {
+      "name": "升级到新版… / 下载新版…",
+      "kind": "command",
+      "value": "clip update install",
+      "found": true
+    }
+  ]
+}

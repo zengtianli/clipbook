@@ -116,45 +116,95 @@
       "detail": "builtin:installed_icon：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/installed_icon.py → 系统实际显示的装机图标与源图标一致（Clip.app 1.2.1 (1)：256px 均差 5.22 超差 0.00%，512px 均差 6.67 超差 0.00%；macOS 27.2.0，离屏读取）"
     },
     "cli_entry": {
-      "result": "failed",
+      "result": "passed",
       "scope": "cli_entry",
       "method": "real_product",
-      "checked_at": "2026-10-18T13:45:25.756588+08:00",
-      "input_sha256": "256686c786d8f6856b1744352dac200ed55cd1e6cc0365dc0ad6818d7fb12fc4",
-      "evidence": "perf/acceptance/run-m_nzbphk/cli_entry.json",
-      "evidence_sha256": "ae476ef33e447504bfd87689763aad07b4cd239deec41f5990735267d3ee0f41",
-      "detail": "builtin:cli_entry：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py → 命令行不在 App 里：clip 指向 /Applications/Clip.app/Contents/Resources/bin/clip，目标不存在或不可执行"
+      "checked_at": "2026-11-12T01:00:24.857562+08:00",
+      "input_sha256": "5243b10d097c676d50f67c8c00b478bd816e5212c952eb18ca591032ed341d93",
+      "evidence": "perf/acceptance/run-131ya9h_/cli_entry.json",
+      "evidence_sha256": "e4a3763a8be0919b065e790612d391967c86a361274ee9381279b6e336806e4c",
+      "detail": "builtin:cli_entry：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/cli_entry.py → 命令行在 App 里：clip — usage: clip <command> [options]   （Clip 剪贴板库的命令行；与 Clip.app 同一程序、同一数据、同一份设置）"
     },
     "agent_cli": {
-      "result": "failed",
+      "result": "passed",
       "scope": "agent_cli",
       "method": "real_product",
-      "checked_at": "2026-10-18T13:45:25.750349+08:00",
-      "input_sha256": "832db3c0abbf193a9847d7212a92c749894a913e497db82abe556537bdeada20",
-      "evidence": "perf/acceptance/run-t9vp02gf/agent_cli.json",
-      "evidence_sha256": "cca7ff7493aca1093386bb2a76f61675369aa96458d02c5e924e5156494a1f3d",
-      "detail": "builtin:agent_cli：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/agent_cli.py → 界面功能对照未通过：clip --help 退出码 None"
+      "checked_at": "2026-11-12T01:00:29.171557+08:00",
+      "input_sha256": "be2a2642f1053bfaff886237becd7c02e218b674f21a5a46e20b980585261633",
+      "evidence": "perf/acceptance/run-rzkrazv0/agent_cli.json",
+      "evidence_sha256": "050dee109e184280d9418558ae3ead81612b41a4b57f47177a10040d66c00d14",
+      "detail": "builtin:agent_cli：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/agent_cli.py → 界面功能对照 77 项：命令 64 项，只能真人或只在窗口 13 项，暂缺 0 项；读回 clip status"
     },
     "product_basics": {
-      "result": "failed",
+      "result": "passed",
       "scope": "product_basics",
       "method": "real_product",
-      "checked_at": "2026-10-18T13:26:55.713370+08:00",
-      "input_sha256": "b2c38454eb77d4a81711ae4419346969d2cb3d883c51ccb7eff0934b05ea0597",
-      "evidence": "perf/acceptance/run-bd4ttaoi/product_basics.json",
-      "evidence_sha256": "96800807ca19be427dcbe226fc096d1a9675da0375d1467cd147d851c6e2a1ce",
-      "detail": "sop.accept：~/Dev/.venv/bin/python scripts/accept/product_basics.py → Clip 基础功能 失败；3 项真实检查；实际已装原件；iCloud 为隔离本机链路"
+      "checked_at": "2026-11-09T13:31:29.584877+08:00",
+      "input_sha256": "b4c66319bd56fb6cf716c317632e0876799b6258267c9ffb4562b6e25beeb535",
+      "evidence": "perf/acceptance/run-ms5epw7_/product_basics.json",
+      "evidence_sha256": "688f8ef14c871f3916551f079aac03077a7e6ec3199218bb5a7546e0a7781463",
+      "detail": "sop.accept：~/Dev/.venv/bin/python scripts/accept/product_basics.py → Clip 基础功能 通过；22 项真实检查；候选包，未安装；iCloud 为隔离本机链路",
+      "acceptance_target": {
+        "scope": "candidate",
+        "installed": false,
+        "app": "/Users/tianli/Apps/clip/mac/build/candidate/Clipbook.app",
+        "receipt": "/Users/tianli/Apps/clip/mac/build/accept/candidate-receipt.json",
+        "artifact": {
+          "bundle_id": "cyou.tianli.clipbook",
+          "version": "1.2.1",
+          "build": "163",
+          "executable": "Contents/MacOS/Clipbook",
+          "sha256": "5077b254c0974eac354fbffceaaf117181584e3d319d05c6833c3043623dcb0b",
+          "icon": {
+            "path": "Contents/Resources/AppIcon.icns",
+            "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+          }
+        },
+        "receipt_sha256": "4711752fd11641c83665dda4e9f454c3e9819c4bc5aa6bc52e81224f5216daa8",
+        "source_sha256": "0a39568ed6c05e379bf8e89f7a85d52abf8f4de1afd9d0753228c1a55dc2e0d0",
+        "version": "1.2.1",
+        "build": "163",
+        "built": true,
+        "reused": false,
+        "reason": "装机可执行文件、图标与当前构建输入均匹配 receipt",
+        "registered": true
+      }
     },
     "localization": {
-      "result": "failed",
+      "result": "passed",
       "scope": "code",
       "method": "real_product",
-      "checked_at": "2026-10-18T17:55:09.051793+08:00",
-      "input_sha256": "98cbbf6866fa3f6aa03ccacdf8e05282712326865bb858c24599a1a6beee4b54",
-      "evidence": "perf/acceptance/run-qtvxu_cd/localization.json",
-      "evidence_sha256": "bf7ae0916738fdf05da39f0a4ee0d74457580f7dd002816ffb59cac403ccd854",
-      "detail": "builtin:localization：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/localization.py → 缺 Info.plist 本地化声明；缺 .xcstrings 或 en/zh-Hans.lproj 字符串资源；缺 en 界面截图；缺 zh-Hans 界面截图；缺截图源码输入绑定 JSON 回执"
+      "checked_at": "2026-11-12T01:03:31.123623+08:00",
+      "input_sha256": "a4e33d32a5909f2a75086903da6e32bf7bc251b7f2c582d7e868c03e8df874f3",
+      "evidence": "perf/acceptance/run-lh1iprnc/localization.json",
+      "evidence_sha256": "5e7333c672ab6f219af71811c682c39da631a14f3dfd442c0127517a692d19f1",
+      "detail": "builtin:localization：~/Dev/.venv/bin/python ~/Apps/chapter/engine/acceptors/localization.py → 英文与简体中文资源及当前输入截图齐全",
+      "acceptance_target": {
+        "scope": "candidate",
+        "installed": false,
+        "app": "/Users/tianli/Apps/clip/mac/build/candidate/Clipbook.app",
+        "receipt": "/Users/tianli/Apps/clip/mac/build/accept/candidate-receipt.json",
+        "artifact": {
+          "bundle_id": "cyou.tianli.clipbook",
+          "version": "1.2.1",
+          "build": "163",
+          "executable": "Contents/MacOS/Clipbook",
+          "sha256": "5077b254c0974eac354fbffceaaf117181584e3d319d05c6833c3043623dcb0b",
+          "icon": {
+            "path": "Contents/Resources/AppIcon.icns",
+            "sha256": "90150b14dcaec06e1ce1a22823525ec6686d3bf33011a6331c7d3b28607a54b6"
+          }
+        },
+        "receipt_sha256": "4711752fd11641c83665dda4e9f454c3e9819c4bc5aa6bc52e81224f5216daa8",
+        "source_sha256": "0a39568ed6c05e379bf8e89f7a85d52abf8f4de1afd9d0753228c1a55dc2e0d0",
+        "version": "1.2.1",
+        "build": "163",
+        "built": false,
+        "reused": false,
+        "reason": "装机可执行文件、图标与当前构建输入均匹配 receipt",
+        "registered": true
+      }
     }
   },
-  "updated_at": "2026-10-19T02:28:40.217530+08:00"
+  "updated_at": "2026-11-12T01:03:31.149426+08:00"
 }
